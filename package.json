@@ -1,0 +1,68 @@
+{
+  "name": "@smable/ui",
+  "version": "0.1.0",
+  "description": "Shared UI components for Smable platform",
+  "license": "UNLICENSED",
+  "private": false,
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./tailwind.preset": "./tailwind.preset.js",
+    "./tailwind.preset.js": "./tailwind.preset.js"
+  },
+  "files": [
+    "dist",
+    "tailwind.preset.js",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "rimraf dist"
+  },
+  "peerDependencies": {
+    "clsx": "^2.0.0",
+    "date-fns": "^4.0.0",
+    "lucide-react": "^0.312.0",
+    "react": "^18.0.0",
+    "react-day-picker": "^9.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "date-fns": { "optional": true },
+    "react-day-picker": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "clsx": "^2.1.0",
+    "date-fns": "^4.1.0",
+    "lucide-react": "^0.312.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^9.14.0",
+    "react-dom": "^18.3.1",
+    "rimraf": "^6.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "~5.6.2"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smable/ui.git"
+  },
+  "homepage": "https://github.com/smable/ui",
+  "bugs": {
+    "url": "https://github.com/smable/ui/issues"
+  }
+}
