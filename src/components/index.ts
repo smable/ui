@@ -1,7 +1,4 @@
 export { SmableButton, type SmableButtonProps, type SmableButtonVariant, type SmableButtonSize } from './SmableButton'
-export { SmableInput, type SmableInputProps } from './SmableInput'
-export { SmableSelect, type SmableSelectProps } from './SmableSelect'
-export { SmableTextarea, type SmableTextareaProps } from './SmableTextarea'
 export { SmableDatePicker, type SmableDatePickerProps } from './SmableDatePicker'
 export { SmableDrawer, type SmableDrawerProps } from './SmableDrawer'
 export { SmableActionsMenu, type SmableActionsMenuProps, type SmableActionItem } from './SmableActionsMenu'
