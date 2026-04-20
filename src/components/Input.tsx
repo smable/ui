@@ -1,5 +1,6 @@
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react'
 import clsx from 'clsx'
+import { useFieldVariant } from './FieldVariantContext'
 
 /**
  * Input — unified text input with two visual variants.
@@ -45,8 +46,11 @@ const defaultLabel = "block text-sm font-medium text-neutral-700 dark:text-neutr
 const errorMsgClass = "mt-1.5 text-xs text-red-600 dark:text-red-400"
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
-  if (props.variant === 'floating') {
-    const { label, error, trailing, size = 'large', className, id, required, ...rest } = props
+  const contextVariant = useFieldVariant()
+  const resolvedVariant = props.variant ?? contextVariant
+  if (resolvedVariant === 'floating') {
+    const floatingProps = props as FloatingInputProps & { placeholder?: undefined }
+    const { label, error, trailing, size = 'large', className, id, required, variant: _v, ...rest } = floatingProps
     const autoId = useId()
     const inputId = id ?? `input-${autoId}`
     const hasError = Boolean(error)
@@ -103,7 +107,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
     )
   }
 
-  const { label, labelAction, error, required, prefix, suffix, className, variant: _v, ...rest } = props
+  const defaultProps = props as DefaultInputProps
+  const { label, labelAction, error, required, prefix, suffix, className, variant: _v, ...rest } = defaultProps
   const wrapped = prefix || suffix
   return (
     <div>

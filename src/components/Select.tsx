@@ -1,6 +1,7 @@
 import { forwardRef, useId, type SelectHTMLAttributes, type ReactNode } from 'react'
 import { ChevronDown } from 'lucide-react'
 import clsx from 'clsx'
+import { useFieldVariant } from './FieldVariantContext'
 
 /**
  * Select — unified `<select>` with two visual variants.
@@ -36,8 +37,11 @@ const defaultLabel = "block text-sm font-medium text-neutral-700 dark:text-neutr
 const errorMsgClass = "mt-1.5 text-xs text-red-600 dark:text-red-400"
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(props, ref) {
-  if (props.variant === 'floating') {
-    const { label, error, size = 'large', className, id, required, children, ...rest } = props
+  const contextVariant = useFieldVariant()
+  const resolvedVariant = props.variant ?? contextVariant
+  if (resolvedVariant === 'floating') {
+    const floatingProps = props as FloatingSelectProps
+    const { label, error, size = 'large', className, id, required, children, variant: _v, ...rest } = floatingProps
     const autoId = useId()
     const selectId = id ?? `select-${autoId}`
     const hasError = Boolean(error)
@@ -88,7 +92,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
     )
   }
 
-  const { label, error, required, className, variant: _v, children, ...rest } = props
+  const defaultProps = props as DefaultSelectProps
+  const { label, error, required, className, variant: _v, children, ...rest } = defaultProps
   return (
     <div>
       {label && (

@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode, type RefObject } from 'react'
 import { X } from 'lucide-react'
 import clsx from 'clsx'
+import { FieldVariantProvider } from './FieldVariantContext'
 
 /**
  * SmableDrawer — slide-in side panel (40% on desktop, fullscreen on mobile).
@@ -106,7 +107,9 @@ export function SmableDrawer({
           )}
         </div>
 
-        <div ref={bodyRef} className="flex-1 overflow-y-auto">{children}</div>
+        <div ref={bodyRef} className="flex-1 overflow-y-auto">
+          <FieldVariantProvider variant="floating">{children}</FieldVariantProvider>
+        </div>
 
         {footer && (
           <div className="flex-shrink-0 border-t border-neutral-200 dark:border-neutral-800 px-4 sm:px-5 py-3">

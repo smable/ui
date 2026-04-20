@@ -2,6 +2,45 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.4.0 — 2026-04-20
+
+### ✨ New: `FieldVariantContext`
+
+`SmableDrawer` nyní automaticky přepíná `Input`, `Select` a `Textarea`
+do floating varianty pro všechny children — bez nutnosti na každém
+poli psát `variant="floating"`.
+
+Pod kapotou je nový `FieldVariantProvider` (+ hook `useFieldVariant`),
+který `Input`/`Select`/`Textarea` čtou když prop `variant` není
+explicitně předán.
+
+```tsx
+// Před 0.4.0 — každý input musel mít explicitní variant
+<SmableDrawer open={open} onClose={...}>
+  <Input variant="floating" label="Název" ... />
+  <Select variant="floating" label="Kategorie" ...>...</Select>
+</SmableDrawer>
+
+// Od 0.4.0 — floating je default uvnitř drawera
+<SmableDrawer open={open} onClose={...}>
+  <Input label="Název" ... />
+  <Select label="Kategorie" ...>...</Select>
+</SmableDrawer>
+```
+
+Explicitní `variant="default"` uvnitř drawera funguje jako opt-out.
+Mimo drawer se chování nemění — default zůstává label-above.
+
+Použití v jiných kontextech (auth stránky, onboarding…):
+
+```tsx
+import { FieldVariantProvider } from '@smable/ui'
+
+<FieldVariantProvider variant="floating">
+  {/* všechny Input/Select/Textarea uvnitř jsou floating */}
+</FieldVariantProvider>
+```
+
 ## 0.3.0 — 2026-04-18
 
 ### ⚠️ BREAKING CHANGES

@@ -1,5 +1,6 @@
 import { forwardRef, useId, type TextareaHTMLAttributes } from 'react'
 import clsx from 'clsx'
+import { useFieldVariant } from './FieldVariantContext'
 
 /**
  * Textarea — unified multiline input with two visual variants.
@@ -35,8 +36,11 @@ const defaultLabel = "block text-sm font-medium text-neutral-700 dark:text-neutr
 const errorMsgClass = "mt-1.5 text-xs text-red-600 dark:text-red-400"
 
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
-  if (props.variant === 'floating') {
-    const { label, error, size = 'large', className, id, required, rows, ...rest } = props
+  const contextVariant = useFieldVariant()
+  const resolvedVariant = props.variant ?? contextVariant
+  if (resolvedVariant === 'floating') {
+    const floatingProps = props as FloatingTextareaProps & { placeholder?: undefined }
+    const { label, error, size = 'large', className, id, required, rows, variant: _v, ...rest } = floatingProps
     const autoId = useId()
     const textareaId = id ?? `textarea-${autoId}`
     const hasError = Boolean(error)
@@ -88,7 +92,8 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
     )
   }
 
-  const { label, error, required, className, variant: _v, ...rest } = props
+  const defaultProps = props as DefaultTextareaProps
+  const { label, error, required, className, variant: _v, ...rest } = defaultProps
   return (
     <div>
       {label && (
