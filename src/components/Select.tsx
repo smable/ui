@@ -18,6 +18,7 @@ interface BaseSelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 
   error?: string
   required?: boolean
   children: ReactNode
+  size?: 'medium' | 'large'
 }
 
 interface DefaultSelectProps extends BaseSelectProps {
@@ -27,7 +28,6 @@ interface DefaultSelectProps extends BaseSelectProps {
 interface FloatingSelectProps extends BaseSelectProps {
   variant: 'floating'
   label: string
-  size?: 'medium' | 'large'
 }
 
 export type SelectProps = DefaultSelectProps | FloatingSelectProps
@@ -93,7 +93,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   }
 
   const defaultProps = props as DefaultSelectProps
-  const { label, error, required, className, variant: _v, children, ...rest } = defaultProps
+  const { label, error, required, className, variant: _v, size: _size, children, ...rest } = defaultProps
   return (
     <div>
       {label && (

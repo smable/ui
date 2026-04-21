@@ -2,6 +2,33 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.4.1 — 2026-04-21
+
+### 🐛 Fix: `size` a `trailing` nyní fungují i bez explicitní `variant`
+
+0.4.0 FieldVariantContext slibovalo floating-default uvnitř drawera,
+ale props jako `size="medium"` nebo `trailing` byly typově deklarované
+jen na `FloatingInputProps` v diskriminované unii. To znamenalo, že
+konzument stejně musel psát `variant="floating"` pokaždé, když chtěl
+kompaktnější pole nebo ikonu na pravé straně — i když byl v drawer
+kontextu.
+
+Přesunuto do base propů:
+- `Input`: `size`, `trailing`
+- `Select`: `size`
+- `Textarea`: `size`
+
+Default varianta tyto propy tiše ignoruje (neleakují do DOM).
+Floating varianta je používá stejně jako dřív.
+
+Výsledek — uvnitř `SmableDrawer` stačí:
+```tsx
+<Input size="medium" label="Název" ... />
+<Select size="medium" label="Kategorie" ...>...</Select>
+```
+
+Žádné `variant="floating"` potřeba.
+
 ## 0.4.0 — 2026-04-20
 
 ### ✨ New: `FieldVariantContext`

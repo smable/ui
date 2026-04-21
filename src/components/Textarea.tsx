@@ -16,6 +16,7 @@ interface BaseTextareaProps extends Omit<TextareaHTMLAttributes<HTMLTextAreaElem
   label?: string
   error?: string
   required?: boolean
+  size?: 'medium' | 'large'
 }
 
 interface DefaultTextareaProps extends BaseTextareaProps {
@@ -26,7 +27,6 @@ interface DefaultTextareaProps extends BaseTextareaProps {
 interface FloatingTextareaProps extends BaseTextareaProps {
   variant: 'floating'
   label: string
-  size?: 'medium' | 'large'
 }
 
 export type TextareaProps = DefaultTextareaProps | FloatingTextareaProps
@@ -93,7 +93,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   }
 
   const defaultProps = props as DefaultTextareaProps
-  const { label, error, required, className, variant: _v, ...rest } = defaultProps
+  const { label, error, required, className, variant: _v, size: _size, ...rest } = defaultProps
   return (
     <div>
       {label && (

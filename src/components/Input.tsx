@@ -20,6 +20,8 @@ interface BaseInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'si
   label?: string
   error?: string
   required?: boolean
+  size?: 'medium' | 'large'
+  trailing?: ReactNode
 }
 
 interface DefaultInputProps extends BaseInputProps {
@@ -33,8 +35,6 @@ interface DefaultInputProps extends BaseInputProps {
 interface FloatingInputProps extends BaseInputProps {
   variant: 'floating'
   label: string
-  trailing?: ReactNode
-  size?: 'medium' | 'large'
 }
 
 export type InputProps = DefaultInputProps | FloatingInputProps
@@ -108,7 +108,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   }
 
   const defaultProps = props as DefaultInputProps
-  const { label, labelAction, error, required, prefix, suffix, className, variant: _v, ...rest } = defaultProps
+  const { label, labelAction, error, required, prefix, suffix, className, variant: _v, size: _size, trailing: _trailing, ...rest } = defaultProps
   const wrapped = prefix || suffix
   return (
     <div>
