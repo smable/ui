@@ -59,7 +59,7 @@ function getExportData<T>(table: Table<T>): { headers: string[]; rows: string[][
 // CSV Export
 // ============================================================================
 
-function exportCSV<T>(table: Table<T>, filename: string) {
+export function exportCSV<T>(table: Table<T>, filename: string) {
   const { headers, rows } = getExportData(table)
 
   const bom = '\uFEFF'
@@ -76,7 +76,7 @@ function exportCSV<T>(table: Table<T>, filename: string) {
 // Excel Export
 // ============================================================================
 
-function exportExcel<T>(table: Table<T>, filename: string) {
+export function exportExcel<T>(table: Table<T>, filename: string) {
   const { headers, rows } = getExportData(table)
 
   const wsData = [headers, ...rows]
@@ -106,7 +106,7 @@ function exportExcel<T>(table: Table<T>, filename: string) {
 // PDF Export
 // ============================================================================
 
-async function exportPDF<T>(table: Table<T>, filename: string, title?: string) {
+export async function exportPDF<T>(table: Table<T>, filename: string, title?: string) {
   const { default: jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
 
@@ -144,7 +144,7 @@ async function exportPDF<T>(table: Table<T>, filename: string, title?: string) {
 // Print
 // ============================================================================
 
-function printTable<T>(table: Table<T>, title?: string) {
+export function printTable<T>(table: Table<T>, title?: string) {
   const { headers, rows } = getExportData(table)
 
   const printWindow = window.open('', '_blank')
