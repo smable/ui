@@ -4,6 +4,7 @@ export { SmableDrawer, type SmableDrawerProps } from './SmableDrawer'
 export { SmableActionsMenu, type SmableActionsMenuProps, type SmableActionItem } from './SmableActionsMenu'
 
 export * from './AlertBanner'
+export * from './Badge'
 export * from './BulkActionsBar'
 export * from './Checkbox'
 export * from './DataTable'

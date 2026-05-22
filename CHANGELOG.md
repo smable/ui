@@ -2,6 +2,31 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.5.0 — 2026-05-22
+
+### 🎉 New: `Badge` primitive
+
+Generic chip pro stage / status / score / severity. Konzumenti (CRM lead
+stage, helpdesk ticket status, …) si mapují business hodnoty na tone
+v thin wrapperu na své straně.
+
+```tsx
+<Badge tone="emerald">Vyhráno</Badge>
+<Badge tone="red" size="sm" icon={<AlertOctagon className="w-3 h-3" />}>
+  Kritické
+</Badge>
+```
+
+Props:
+- `tone` — `neutral | blue | cyan | purple | pink | amber | orange | emerald | red | brand` (default `neutral`)
+- `size` — `sm | md` (default `md`)
+- `icon` — optional `ReactNode` (rendered před children)
+- `children` — text
+
+Cíl: nahradí ad-hoc badges v CRM (LeadStageBadge, LeadScoreBadge, ChurnBadge)
+a helpdesk (TicketStatusBadge / TicketPriorityBadge / TicketSlaBadge).
+Konzument vytvoří thin wrapper s mapping (`stage → tone`).
+
 ## 0.4.1 — 2026-04-21
 
 ### 🐛 Fix: `size` a `trailing` nyní fungují i bez explicitní `variant`
