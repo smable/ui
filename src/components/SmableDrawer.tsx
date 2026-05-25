@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode, type RefObject } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import clsx from 'clsx'
 import { FieldVariantProvider } from './FieldVariantContext'
@@ -8,6 +9,10 @@ import { FieldVariantProvider } from './FieldVariantContext'
  *
  * Header layout: close button (X) on left, title/subtitle center, action slot
  * on right (typically Save button). Body scrolls; header/footer stay fixed.
+ *
+ * Renders via portal to document.body so consumers can place it as a sibling
+ * inside `space-y-*` / `divide-y` / any `> * + *` adjacent-sibling-margin
+ * parent without those rules shifting the fixed inset-0 wrapper.
  */
 export interface SmableDrawerProps {
   open: boolean
@@ -48,7 +53,8 @@ export function SmableDrawer({
     }
   }, [open, onClose])
 
-  return (
+  if (typeof document === 'undefined') return null
+  return createPortal(
     <div
       className={clsx(
         'fixed inset-0 z-50 flex',
@@ -117,6 +123,7 @@ export function SmableDrawer({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
