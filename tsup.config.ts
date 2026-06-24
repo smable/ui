@@ -13,6 +13,7 @@ export default defineConfig({
     'lucide-react',
     'date-fns',
     'react-day-picker',
+    '@radix-ui/react-tooltip',
   ],
   treeshake: true,
   splitting: false,

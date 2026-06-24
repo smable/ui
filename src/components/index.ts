@@ -29,3 +29,5 @@ export * from './StatusTabs'
 export * from './Textarea'
 export * from './Toggle'
 export * from './ViewToggle'
+
+export * from './app-shell'

@@ -37,6 +37,10 @@ export default {
           800: '#00695c',
           900: '#004d40',
           950: '#003330',
+          DEFAULT: '#009688',
+          light: '#26a899',
+          dark: '#00695c',
+          muted: '#0096881a',
         },
         primary: {
           50: '#eef2ff',

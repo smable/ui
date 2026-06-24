@@ -2,6 +2,37 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.6.0 — 2026-06-24
+
+### 🎉 New: App Shell (dvouúrovňový Platform Rail)
+
+Port levého menu z `upsearch-ui` → základ `PlatformShell` (Platform Rail).
+Dvouúrovňový shell: `AppRail` (ikonová lišta produktů) + `Sidebar` (panel
+sekcí) + obsah. Router-agnostic (link se injektuje propou), collapse s
+hover-peek, mobilní drawer, rekurzivní položky s badge a auto-expandem.
+
+```tsx
+<AppShell
+  pathname={location.pathname}
+  linkComponent={RouterLink}
+  apps={apps}
+  appTitle="Admin"
+  items={navItems}
+  brand={<Logo />}
+  railAccount={<SidebarPinToggle />}
+>
+  <Outlet />
+</AppShell>
+```
+
+Nové exporty: `AppShell`, `AppRail`, `Sidebar`, `SidebarNav`,
+`SidebarProvider`, `useSidebar`, `SidebarPinToggle`, `DefaultShellLink`,
+`Tooltip*`, `isNavItemActive`; typy `NavItem`, `AppRailApp`, `ShellLink`.
+
+- Barva menu jede přes `brand` token (teal) — preset doplněn o
+  `brand.DEFAULT/light/dark/muted`.
+- Nová (optional) peer dependency: `@radix-ui/react-tooltip` (collapsed fly-out).
+
 ## 0.5.0 — 2026-05-22
 
 ### 🎉 New: `Badge` primitive
