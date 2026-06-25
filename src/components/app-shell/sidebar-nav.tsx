@@ -56,7 +56,7 @@ function NavItemRow({
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 )}
               >
-                <Icon className="h-5 w-5" />
+                {Icon && <Icon className="h-5 w-5" />}
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" className="flex flex-col gap-1 p-0" sideOffset={10}>
@@ -76,7 +76,7 @@ function NavItemRow({
                       childIsActive && 'text-brand bg-brand/5'
                     )}
                   >
-                    <ChildIcon className="h-4 w-4" />
+                    {ChildIcon && <ChildIcon className="h-4 w-4" />}
                     {child.label}
                   </Link>
                 )
@@ -101,7 +101,7 @@ function NavItemRow({
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               )}
             >
-              <Icon className="h-5 w-5" />
+              {Icon && <Icon className="h-5 w-5" />}
               {item.badge && (
                 <span className="absolute -top-1 -right-1 h-4 w-4 text-[10px] font-bold bg-white text-brand rounded-full flex items-center justify-center">
                   {item.badge}
@@ -130,7 +130,7 @@ function NavItemRow({
               : 'text-white/70 hover:text-white hover:bg-white/10'
           )}
         >
-          <Icon className="h-5 w-5 shrink-0" />
+          {Icon && <Icon className="h-5 w-5 shrink-0" />}
           <span className="flex-1 text-left">{item.label}</span>
           <ChevronDown
             className={clsx('h-4 w-4 transition-transform duration-200', isOpen && 'rotate-180')}
@@ -167,7 +167,7 @@ function NavItemRow({
           : 'text-white/70 hover:text-white hover:bg-white/10'
       )}
     >
-      <Icon className="h-5 w-5 shrink-0" />
+      {Icon && <Icon className="h-5 w-5 shrink-0" />}
       <span className="flex-1">{item.label}</span>
       {item.badge && (
         <span className="px-2 py-0.5 text-xs font-semibold bg-white text-brand rounded-full">

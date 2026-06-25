@@ -4,7 +4,8 @@ import type React from 'react'
 export interface NavItem {
   label: string
   href: string
-  icon: React.ElementType
+  /** Optional — sub-items are commonly text-only. */
+  icon?: React.ElementType
   badge?: string | number
   children?: NavItem[]
 }
