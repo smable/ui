@@ -14,11 +14,14 @@ import {
   type ColumnFiltersState,
   type VisibilityState,
   type ColumnOrderState,
+  type PaginationState,
   type OnChangeFn,
 } from '@tanstack/react-table'
-import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, GripVertical, Columns3, Eye, Check, X } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, GripVertical, Columns3, X } from 'lucide-react'
 import clsx from 'clsx'
 import { DataTableExport, type ExportFormat } from './DataTableExport'
+import { DataTableColumnsMenu } from './DataTableColumnsMenu'
+import { usePersistentTableState } from '../lib/usePersistentTableState'
 import { normalize } from '../lib/search'
 
 function DefaultColumnFilter({ column }: { column: any }) {
@@ -43,6 +46,37 @@ interface DataTableProps<T> {
   columns: ColumnDef<T, any>[]
   globalFilter?: string
   pageSize?: number
+
+  /**
+   * Persistence stavu do localStorage (`smable:table:{persistKey}`):
+   * sorting, columnVisibility, columnOrder a pageSize. Hydratace je lazy
+   * (bez flashe), SSR-safe, neznámá column id v uloženém stavu se tiše
+   * ignorují a payload nese `v: 1` pro budoucí invalidaci.
+   *
+   * Priorita: explicitní controlled props (`sorting`/`onSortingChange`,
+   * `columnVisibility`/`onColumnVisibilityChange`, `columnOrder`/
+   * `onColumnOrderChange`, `paginationState`/`onPaginationChange`) mají
+   * VŽDY přednost před persistKey — pro daný kus stavu se pak persistence
+   * nepoužije (stránka si ji může řešit sama přes usePersistentTableState).
+   * Klíč musí být stabilní po celý život komponenty.
+   */
+  persistKey?: string
+
+  // Sorting (controlled / server-side)
+  /** Server-side řazení — TanStack passthrough; řazení dat dělá server. */
+  manualSorting?: boolean
+  sorting?: SortingState
+  onSortingChange?: OnChangeFn<SortingState>
+
+  // Pagination (controlled / server-side)
+  /** Server-side stránkování — `data` je jen aktuální stránka. */
+  manualPagination?: boolean
+  /** Počet stránek při manualPagination (alternativa: totalCount). */
+  pageCount?: number
+  /** Celkový počet záznamů na serveru — přesné totály v patičce. */
+  totalCount?: number
+  paginationState?: PaginationState
+  onPaginationChange?: OnChangeFn<PaginationState>
 
   // Selection
   selectable?: boolean
@@ -101,6 +135,15 @@ export function DataTable<T>({
   columns,
   globalFilter,
   pageSize = 20,
+  persistKey,
+  manualSorting = false,
+  sorting: externalSorting,
+  onSortingChange: externalOnSortingChange,
+  manualPagination = false,
+  pageCount: externalPageCount,
+  totalCount,
+  paginationState: externalPagination,
+  onPaginationChange: externalOnPaginationChange,
   selectable = false,
   rowSelection: externalRowSelection,
   onRowSelectionChange: externalOnRowSelectionChange,
@@ -158,22 +201,47 @@ export function DataTable<T>({
       ]
     : columns
 
-  // Internal state (used when external not provided)
-  const [sorting, setSorting] = useState<SortingState>([])
+  // Internal state — persistent hook doubles as plain state when persistKey
+  // is undefined. Explicit controlled props always win over persistKey.
+  const persistent = usePersistentTableState(persistKey, { defaultPageSize: pageSize })
   const [internalSelection, setInternalSelection] = useState<RowSelectionState>({})
-  const [internalColumnOrder, setInternalColumnOrder] = useState<ColumnOrderState>([])
   const [internalColumnFilters, setInternalColumnFilters] = useState<ColumnFiltersState>([])
   const [internalShowFilters, setInternalShowFilters] = useState(false)
-  const [internalColumnVisibility, setInternalColumnVisibility] = useState<VisibilityState>({})
-  const [showColumnMenu, setShowColumnMenu] = useState(false)
+  const [internalPagination, setInternalPagination] = useState<PaginationState>(() => ({
+    pageIndex: 0,
+    pageSize: persistent.pageSize,
+  }))
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null)
 
+  const sortingState = externalSorting ?? persistent.sorting
+  const handleSortingChange: OnChangeFn<SortingState> =
+    externalOnSortingChange ?? persistent.onSortingChange
   const rowSelectionState = externalRowSelection ?? internalSelection
   const setRowSelection = externalOnRowSelectionChange ?? setInternalSelection
-  const columnOrderState = externalColumnOrder ?? internalColumnOrder
-  const setColumnOrder = onColumnOrderChange ?? setInternalColumnOrder
+  const columnOrderState = externalColumnOrder ?? persistent.columnOrder
+  const setColumnOrder = onColumnOrderChange ?? persistent.onColumnOrderChange
+  // Legacy prop type is (order) => void — resolve TanStack updaters first
+  const handleColumnOrderChange: OnChangeFn<ColumnOrderState> = updater => {
+    const next = typeof updater === 'function' ? updater(columnOrderState) : updater
+    setColumnOrder(next)
+  }
+  const columnVisibilityState = externalColumnVisibility ?? persistent.columnVisibility
+  const handleColumnVisibilityChange: OnChangeFn<VisibilityState> =
+    onColumnVisibilityChange ?? persistent.onColumnVisibilityChange
   const columnFiltersState = externalColumnFilters ?? internalColumnFilters
   const setColumnFilters = onColumnFiltersChange ?? setInternalColumnFilters
+  const paginationState = externalPagination ?? internalPagination
+  const handlePaginationChange: OnChangeFn<PaginationState> = updater => {
+    if (externalOnPaginationChange) {
+      externalOnPaginationChange(updater)
+      return
+    }
+    const next = typeof updater === 'function' ? updater(paginationState) : updater
+    setInternalPagination(next)
+    if (next.pageSize !== paginationState.pageSize) {
+      persistent.onPageSizeChange(next.pageSize)
+    }
+  }
   const isShowFilters = showColumnFilters !== undefined ? showColumnFilters : internalShowFilters
   const toggleShowFilters = () => {
     if (onShowColumnFiltersChange) {
@@ -187,15 +255,13 @@ export function DataTable<T>({
   const table = useReactTable<T>({
     data,
     columns: allColumns as ColumnDef<T, unknown>[],
-    initialState: {
-      pagination: { pageIndex: 0, pageSize },
-    },
     state: {
-      sorting,
+      sorting: sortingState,
       globalFilter,
+      pagination: paginationState,
       ...(selectable ? { rowSelection: rowSelectionState } : {}),
-      ...(draggableColumns ? { columnOrder: columnOrderState } : {}),
-      columnVisibility: externalColumnVisibility ?? internalColumnVisibility,
+      ...(draggableColumns || persistKey ? { columnOrder: columnOrderState } : {}),
+      columnVisibility: columnVisibilityState,
       ...(filterable ? { columnFilters: columnFiltersState } : {}),
     },
     globalFilterFn: (row, columnId, filterValue) => {
@@ -206,9 +272,23 @@ export function DataTable<T>({
       const terms = normalize(String(filterValue)).split(/\s+/).filter(Boolean)
       return terms.some(term => normalizedValue.includes(term))
     },
-    onSortingChange: setSorting,
+    manualSorting,
+    ...(manualPagination
+      ? {
+          manualPagination: true,
+          autoResetPageIndex: false,
+          ...(externalPageCount !== undefined
+            ? { pageCount: externalPageCount }
+            : totalCount !== undefined
+              ? { rowCount: totalCount }
+              : { pageCount: -1 }),
+        }
+      : {}),
+    onSortingChange: handleSortingChange,
+    onPaginationChange: handlePaginationChange,
     onRowSelectionChange: selectable ? setRowSelection : undefined,
-    onColumnVisibilityChange: onColumnVisibilityChange ?? setInternalColumnVisibility,
+    onColumnVisibilityChange: handleColumnVisibilityChange,
+    onColumnOrderChange: handleColumnOrderChange,
     onColumnFiltersChange: filterable ? setColumnFilters : undefined,
     enableRowSelection: selectable,
     enableColumnFilters: filterable,
@@ -237,10 +317,18 @@ export function DataTable<T>({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
-  const pageCount = table.getPageCount()
+  const tablePageCount = table.getPageCount()
   const currentPage = table.getState().pagination.pageIndex
+  const currentPageSize = table.getState().pagination.pageSize
   const filteredCount = table.getFilteredRowModel().rows.length
-  const showPagination = filteredCount > pageSize
+  const totalRows = manualPagination ? totalCount : filteredCount
+  const showPagination = manualPagination
+    ? tablePageCount > 1 || tablePageCount === -1
+    : filteredCount > pageSize
+  const rangeFrom = currentPage * currentPageSize + 1
+  const rangeTo = manualPagination
+    ? currentPage * currentPageSize + table.getRowModel().rows.length
+    : Math.min((currentPage + 1) * currentPageSize, filteredCount)
 
   // Drag & drop handlers
   const handleDragStart = (columnId: string, e: React.DragEvent) => {
@@ -319,53 +407,7 @@ export function DataTable<T>({
                 {filterable && (
                   <div className="hidden sm:block w-px h-6 bg-neutral-200 dark:bg-neutral-800" />
                 )}
-                <div className="relative hidden sm:block">
-                  <button
-                    onClick={() => setShowColumnMenu(!showColumnMenu)}
-                    className="inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
-                  >
-                    <Eye className="w-4 h-4" />
-                    <span className="hidden sm:inline">Sloupce</span>
-                  </button>
-                  {showColumnMenu && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setShowColumnMenu(false)} />
-                      <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden">
-                        <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
-                          <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">Zobrazit sloupce</p>
-                        </div>
-                        <div className="max-h-64 overflow-y-auto py-1">
-                          {table.getAllLeafColumns()
-                            .filter(col => col.id !== 'select' && col.id !== 'actions')
-                            .map(col => {
-                              const isVisible = col.getIsVisible()
-                              const header = col.columnDef.header
-                              const label = typeof header === 'string' ? header : col.id
-                              return (
-                                <label
-                                  key={col.id}
-                                  className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer transition-colors"
-                                  onClick={() => col.toggleVisibility(!isVisible)}
-                                >
-                                  <div
-                                    className={clsx(
-                                      "w-4 h-4 rounded border-2 flex items-center justify-center transition-colors",
-                                      isVisible
-                                        ? "bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white"
-                                        : "border-neutral-300 dark:border-neutral-600"
-                                    )}
-                                  >
-                                    {isVisible && <Check className="w-3 h-3 text-white dark:text-neutral-900" />}
-                                  </div>
-                                  <span className="text-sm text-neutral-700 dark:text-neutral-300">{label}</span>
-                                </label>
-                              )
-                            })}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <DataTableColumnsMenu table={table} className="hidden sm:block" />
               </>
             )}
 
@@ -517,15 +559,27 @@ export function DataTable<T>({
       {showPagination && (
         <div className="px-6 py-4 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-neutral-500">
-              Zobrazeno{' '}
-              <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                {currentPage * table.getState().pagination.pageSize + 1}–{Math.min((currentPage + 1) * table.getState().pagination.pageSize, filteredCount)}
-              </span>{' '}
-              z <span className="font-medium text-neutral-700 dark:text-neutral-300">{filteredCount}</span>
-            </span>
+            {totalRows !== undefined ? (
+              <span className="text-sm text-neutral-500">
+                Zobrazeno{' '}
+                <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                  {rangeFrom}–{rangeTo}
+                </span>{' '}
+                z <span className="font-medium text-neutral-700 dark:text-neutral-300">{totalRows}</span>
+              </span>
+            ) : (
+              <span className="text-sm text-neutral-500">
+                Stránka{' '}
+                <span className="font-medium text-neutral-700 dark:text-neutral-300">{currentPage + 1}</span>
+                {tablePageCount > 0 && (
+                  <>
+                    {' '}z <span className="font-medium text-neutral-700 dark:text-neutral-300">{tablePageCount}</span>
+                  </>
+                )}
+              </span>
+            )}
             <select
-              value={table.getState().pagination.pageSize}
+              value={currentPageSize}
               onChange={e => table.setPageSize(Number(e.target.value))}
               className="h-8 px-3 text-sm bg-neutral-50 dark:bg-neutral-800 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-neutral-600 dark:text-neutral-400"
             >
@@ -550,14 +604,14 @@ export function DataTable<T>({
             </button>
 
             <div className="flex items-center gap-1 mx-2">
-              {pageCount > 0 && Array.from({ length: Math.min(pageCount, 5) }, (_, i) => {
+              {tablePageCount > 0 && Array.from({ length: Math.min(tablePageCount, 5) }, (_, i) => {
                 let pageNum: number
-                if (pageCount <= 5) {
+                if (tablePageCount <= 5) {
                   pageNum = i
                 } else if (currentPage < 3) {
                   pageNum = i
-                } else if (currentPage > pageCount - 4) {
-                  pageNum = pageCount - 5 + i
+                } else if (currentPage > tablePageCount - 4) {
+                  pageNum = tablePageCount - 5 + i
                 } else {
                   pageNum = currentPage - 2 + i
                 }

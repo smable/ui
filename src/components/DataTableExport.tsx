@@ -18,6 +18,34 @@ import clsx from 'clsx'
 
 export type ExportFormat = 'csv' | 'excel' | 'pdf' | 'print'
 
+/** Raw hodnota buňky pro export (žádné JSX). */
+export type DataTableExportValue = string | number | boolean | Date | null | undefined
+
+/**
+ * Export kontrakt pro ColumnDef (přes `meta`):
+ *
+ * Hodnota buňky se bere z accessoru (`accessorKey` / `accessorFn`) přes
+ * `row.getValue(columnId)` — NIKDY z `cell` rendereru (ten vrací JSX).
+ * Display sloupce (jen `cell`, bez accessoru) se exportují prázdné,
+ * pokud nedodají `meta.exportValue`.
+ *
+ *   {
+ *     id: 'price',
+ *     accessorFn: row => row.price,          // raw číslo pro sort + export
+ *     cell: info => <Price value={info.getValue()} />,  // JSX jen pro UI
+ *     meta: {
+ *       exportValue: row => row.price,       // override, když accessor nestačí
+ *       exportHeader: 'Cena (Kč)',           // když header není string
+ *     },
+ *   }
+ */
+export interface DataTableColumnExportMeta<T = any> {
+  /** Raw hodnota řádku pro export — má přednost před accessorem. */
+  exportValue?: (row: T) => DataTableExportValue
+  /** Hlavička pro export, když `header` není plain string (je JSX/funkce). */
+  exportHeader?: string
+}
+
 interface DataTableExportProps<T> {
   table: Table<T>
   filename?: string
@@ -29,26 +57,36 @@ interface DataTableExportProps<T> {
 // Helpers — extract visible data from TanStack Table
 // ============================================================================
 
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (value instanceof Date) return value.toLocaleDateString('cs-CZ')
+  if (typeof value === 'boolean') return value ? 'Ano' : 'Ne'
+  return String(value)
+}
+
 function getExportData<T>(table: Table<T>): { headers: string[]; rows: string[][] } {
+  // DataTables parita: jen viditelné sloupce (`:visible`)…
   const visibleColumns = table.getVisibleLeafColumns().filter(
     col => col.id !== 'select' && col.id !== 'actions'
   )
 
   const headers = visibleColumns.map(col => {
+    const meta = col.columnDef.meta as DataTableColumnExportMeta<T> | undefined
+    if (meta?.exportHeader) return meta.exportHeader
     const header = col.columnDef.header
     if (typeof header === 'string') return header
     return col.id
   })
 
+  // …a všechny filtrované řádky před stránkováním (ne jen aktuální stránka).
+  // Pozn.: při manualPagination drží row model jen načtenou stránku.
   const filteredRows = table.getFilteredRowModel().rows
 
   const rows = filteredRows.map(row => {
     return visibleColumns.map(col => {
-      const value = row.getValue(col.id)
-      if (value === null || value === undefined) return ''
-      if (value instanceof Date) return value.toLocaleDateString('cs-CZ')
-      if (typeof value === 'boolean') return value ? 'Ano' : 'Ne'
-      return String(value)
+      const meta = col.columnDef.meta as DataTableColumnExportMeta<T> | undefined
+      const value = meta?.exportValue ? meta.exportValue(row.original) : row.getValue(col.id)
+      return formatValue(value)
     })
   })
 
@@ -59,16 +97,20 @@ function getExportData<T>(table: Table<T>): { headers: string[]; rows: string[][
 // CSV Export
 // ============================================================================
 
+function csvCell(value: string): string {
+  return /[";\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+}
+
+/** UTF-8 s BOM, st\u0159edn\u00EDk jako odd\u011Blova\u010D, CRLF \u2014 \u010Desk\u00E1 Excel konvence. */
 export function exportCSV<T>(table: Table<T>, filename: string) {
   const { headers, rows } = getExportData(table)
 
   const bom = '\uFEFF'
-  const csvContent = [
-    headers.join(';'),
-    ...rows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(';'))
-  ].join('\n')
+  const csvContent = [headers, ...rows]
+    .map(row => row.map(csvCell).join(';'))
+    .join('\r\n')
 
-  const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8' })
+  const blob = new Blob([bom + csvContent + '\r\n'], { type: 'text/csv;charset=utf-8' })
   saveAs(blob, `${filename}.csv`)
 }
 
@@ -106,6 +148,22 @@ export function exportExcel<T>(table: Table<T>, filename: string) {
 // PDF Export
 // ============================================================================
 
+/**
+ * Standardní fonty jsPDF (helvetica) pokrývají jen CP1252 — česká
+ * diakritika (ě š č ř ž ů …) by se rozsypala. Transliterace přes NFD
+ * dekompozici + odstranění diakritických znamének; normalizují se i
+ * typografické mezery/pomlčky z Intl formátování (stejná konvence jako
+ * lib/export.ts v app.smable.cz, bez nových závislostí).
+ */
+function pdfText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[\u00a0\u202f]/g, ' ')
+    .replace(/\u2212/g, '-')
+    .replace(/[\u2013\u2014]/g, '-')
+}
+
 export async function exportPDF<T>(table: Table<T>, filename: string, title?: string) {
   const { default: jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
@@ -116,12 +174,12 @@ export async function exportPDF<T>(table: Table<T>, filename: string, title?: st
 
   if (title) {
     doc.setFontSize(16)
-    doc.text(title, 14, 20)
+    doc.text(pdfText(title), 14, 20)
   }
 
   autoTable(doc, {
-    head: [headers],
-    body: rows,
+    head: [headers.map(pdfText)],
+    body: rows.map(row => row.map(pdfText)),
     startY: title ? 30 : 15,
     styles: {
       fontSize: 8,
