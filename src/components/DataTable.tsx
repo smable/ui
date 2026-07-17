@@ -19,9 +19,9 @@ import {
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, GripVertical, Columns3, X } from 'lucide-react'
 import clsx from 'clsx'
-import { DataTableExport, type ExportFormat } from './DataTableExport'
+import { DataTableExport, type ExportFormat, type DataTableExportExtraOption } from './DataTableExport'
 import { DataTableColumnsMenu } from './DataTableColumnsMenu'
-import { usePersistentTableState } from '../lib/usePersistentTableState'
+import { usePersistentTableState, type UsePersistentTableStateOptions } from '../lib/usePersistentTableState'
 import { normalize } from '../lib/search'
 
 function DefaultColumnFilter({ column }: { column: any }) {
@@ -61,6 +61,18 @@ interface DataTableProps<T> {
    * Klíč musí být stabilní po celý život komponenty.
    */
   persistKey?: string
+
+  /**
+   * Options pro interní usePersistentTableState (defaultSorting,
+   * defaultColumnVisibility, defaultColumnOrder, defaultPageSize,
+   * knownColumnIds). Použije se JEN spolu s `persistKey` — bez něj se
+   * ignoruje. Explicitní fieldy mají přednost před interními defaulty;
+   * `defaultPageSize` má jako fallback prop `pageSize`. Controlled props
+   * (`columnVisibility`, `sorting`, …) mají dál přednost před celou
+   * persistencí — chování se nemění. Options se čtou jen při hydrataci
+   * a resetu (musí být stabilní jako persistKey).
+   */
+  persistOptions?: UsePersistentTableStateOptions
 
   // Sorting (controlled / server-side)
   /** Server-side řazení — TanStack passthrough; řazení dat dělá server. */
@@ -113,6 +125,8 @@ interface DataTableProps<T> {
   exportFilename?: string
   exportTitle?: string
   exportFormats?: ('csv' | 'excel' | 'pdf' | 'print')[]
+  /** Extra položky export menu (pod vestavěnými formáty) — viz DataTableExport. */
+  exportExtraOptions?: DataTableExportExtraOption[]
 
   // Empty state
   emptyIcon?: ReactNode
@@ -136,6 +150,7 @@ export function DataTable<T>({
   globalFilter,
   pageSize = 20,
   persistKey,
+  persistOptions,
   manualSorting = false,
   sorting: externalSorting,
   onSortingChange: externalOnSortingChange,
@@ -165,6 +180,7 @@ export function DataTable<T>({
   exportFilename = 'export',
   exportTitle,
   exportFormats,
+  exportExtraOptions,
   emptyIcon,
   filterable = false,
   emptyTitle = 'Žádné záznamy',
@@ -203,7 +219,14 @@ export function DataTable<T>({
 
   // Internal state — persistent hook doubles as plain state when persistKey
   // is undefined. Explicit controlled props always win over persistKey.
-  const persistent = usePersistentTableState(persistKey, { defaultPageSize: pageSize })
+  // persistOptions apply only with persistKey; explicit fields win over the
+  // internal defaults, `pageSize` prop stays the defaultPageSize fallback.
+  const persistent = usePersistentTableState(
+    persistKey,
+    persistKey
+      ? { ...persistOptions, defaultPageSize: persistOptions?.defaultPageSize ?? pageSize }
+      : { defaultPageSize: pageSize },
+  )
   const [internalSelection, setInternalSelection] = useState<RowSelectionState>({})
   const [internalColumnFilters, setInternalColumnFilters] = useState<ColumnFiltersState>([])
   const [internalShowFilters, setInternalShowFilters] = useState(false)
@@ -422,6 +445,7 @@ export function DataTable<T>({
                   filename={exportFilename}
                   title={exportTitle}
                   formats={exportFormats as ExportFormat[]}
+                  extraOptions={exportExtraOptions}
                 />
               </>
             )}

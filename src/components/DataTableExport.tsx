@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react'
-import { Download, ChevronDown, FileSpreadsheet, FileText, Printer } from 'lucide-react'
+import { Download, ChevronDown, FileSpreadsheet, FileText, Printer, Loader2 } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
 import type { Table } from '@tanstack/react-table'
@@ -46,11 +46,32 @@ export interface DataTableColumnExportMeta<T = any> {
   exportHeader?: string
 }
 
+/**
+ * Vlastní položka export menu (mimo vestavěné formáty) — např. server-side
+ * export „CSV — vše (server)" u stránkovaných tabulek, kde vestavěný export
+ * umí jen načtená data.
+ */
+export interface DataTableExportExtraOption {
+  /** Stabilní klíč položky (React key + tracking běhu). */
+  key: string
+  label: string
+  /**
+   * Handler položky. Může být async — po dobu běhu je položka disabled
+   * (spinner + opacity). Chyby se nepolykají, propagují se volajícímu.
+   */
+  onSelect: () => void | Promise<void>
+}
+
 interface DataTableExportProps<T> {
   table: Table<T>
   filename?: string
   formats?: ExportFormat[]
   title?: string
+  /**
+   * Extra položky vykreslené v dropdownu POD vestavěnými formáty,
+   * oddělené separátorem.
+   */
+  extraOptions?: DataTableExportExtraOption[]
 }
 
 // ============================================================================
@@ -258,8 +279,10 @@ export function DataTableExport<T>({
   filename = 'export',
   formats = ['csv', 'excel', 'pdf', 'print'],
   title,
+  extraOptions,
 }: DataTableExportProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
+  const [runningExtraKey, setRunningExtraKey] = useState<string | null>(null)
 
   const handleExport = (format: ExportFormat) => {
     switch (format) {
@@ -269,6 +292,18 @@ export function DataTableExport<T>({
       case 'print': printTable(table, title); break
     }
     setIsOpen(false)
+  }
+
+  const handleExtraSelect = async (option: DataTableExportExtraOption) => {
+    if (runningExtraKey) return
+    setRunningExtraKey(option.key)
+    try {
+      // Chyby se nechytají (žádné vlastní error UI) — propagují se volajícímu.
+      await option.onSelect()
+      setIsOpen(false)
+    } finally {
+      setRunningExtraKey(null)
+    }
   }
 
   const filteredCount = table.getFilteredRowModel().rows.length
@@ -305,6 +340,34 @@ export function DataTableExport<T>({
                 </button>
               </div>
             ))}
+            {extraOptions && extraOptions.length > 0 && (
+              <>
+                {formats.length > 0 && (
+                  <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
+                )}
+                {extraOptions.map(option => {
+                  const isRunning = runningExtraKey === option.key
+                  return (
+                    <button
+                      key={option.key}
+                      onClick={() => handleExtraSelect(option)}
+                      disabled={isRunning}
+                      className={clsx(
+                        'w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-700 dark:text-neutral-300',
+                        isRunning && 'opacity-50 cursor-wait'
+                      )}
+                    >
+                      {isRunning ? (
+                        <Loader2 className="w-4 h-4 text-neutral-500 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4 text-neutral-500" />
+                      )}
+                      {option.label}
+                    </button>
+                  )
+                })}
+              </>
+            )}
           </div>
         </>
       )}
