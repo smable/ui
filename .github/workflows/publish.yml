@@ -29,7 +29,24 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Releases are sometimes published locally before the tag push lands
+      # (registry token works while git push may lag on permissions). A
+      # duplicate `npm publish` would fail the whole run — check first.
+      - name: Check if version already published
+        id: check
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if npm view "@smable/ui@$VERSION" version > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "@smable/ui@$VERSION is already in the registry — skipping publish."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish
+        if: steps.check.outputs.exists == 'false'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
