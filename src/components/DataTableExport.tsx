@@ -72,6 +72,27 @@ interface DataTableExportProps<T> {
    * oddělené separátorem.
    */
   extraOptions?: DataTableExportExtraOption[]
+  /**
+   * Načte PŮVODNÍ row objekty (typ `T`) VŠECH stránek pro export — použij
+   * u server-side stránkovaných tabulek (`manualPagination`), kde row model
+   * drží jen načtenou stránku a vestavěný export by jinak tiše exportoval
+   * jen ji.
+   *
+   * Když je zadán, klik na formát (csv/excel/pdf/print) nejdřív zavolá
+   * `fetchAllRows()` (položka menu mezitím ukazuje spinner a je disabled,
+   * ostatní položky jsou guardnuté proti souběhu — stejný vzor jako async
+   * `extraOptions`) a export se vygeneruje z vrácených řádků. Hodnoty se
+   * extrahují se stejným kontraktem jako z row modelu: `meta.exportValue`
+   * → accessor (`accessorFn` / `accessorKey` vč. tečkové notace) → display
+   * sloupec bez accessoru prázdný. Chyby se nepolykají — propagují se
+   * volajícímu (menu zůstane otevřené).
+   *
+   * Bez tohoto propu je chování beze změny (exportuje se row model — BC).
+   *
+   * Pozor: PDF a tisk s desítkami tisíc řádků jsou pomalé
+   * (jspdf-autotable / render tabulky) — zodpovědnost volajícího.
+   */
+  fetchAllRows?: () => Promise<T[]>
 }
 
 // ============================================================================
@@ -85,7 +106,34 @@ function formatValue(value: unknown): string {
   return String(value)
 }
 
-function getExportData<T>(table: Table<T>): { headers: string[]; rows: string[][] } {
+/**
+ * Zdrojový řádek exportu — buď z TanStack row modelu (`getValue` čte přes
+ * `row.getValue`), nebo raw objekt mimo row model (`getValue` chybí a hodnota
+ * se resolvuje přes `column.accessorFn`).
+ */
+interface ExportSourceRow<T> {
+  original: T
+  index: number
+  getValue?: (columnId: string) => unknown
+}
+
+/**
+ * Sestaví export data ze zdrojových řádků. Obě větve (row model / raw rows
+ * z `fetchAllRows`) sdílejí tuto jedinou cestu — stejné sloupce, hlavičky,
+ * priorita hodnot i formátování (`formatValue`).
+ *
+ * Priorita hodnoty buňky:
+ *   1. `meta.exportValue(original)` — má vždy přednost
+ *   2. row model: `row.getValue(col.id)`; raw řádek: `col.accessorFn(original, index)`
+ *      — `column.accessorFn` je TanStackem už resolvnutý accessor (accessorFn
+ *      z definice, nebo accessorKey vč. tečkové notace `a.b`), takže obě
+ *      cesty čtou identickou hodnotu
+ *   3. display sloupec bez accessoru → prázdno
+ */
+function buildExportData<T>(
+  table: Table<T>,
+  sourceRows: ExportSourceRow<T>[]
+): { headers: string[]; rows: string[][] } {
   // DataTables parita: jen viditelné sloupce (`:visible`)…
   const visibleColumns = table.getVisibleLeafColumns().filter(
     col => col.id !== 'select' && col.id !== 'actions'
@@ -99,19 +147,50 @@ function getExportData<T>(table: Table<T>): { headers: string[]; rows: string[][
     return col.id
   })
 
-  // …a všechny filtrované řádky před stránkováním (ne jen aktuální stránka).
-  // Pozn.: při manualPagination drží row model jen načtenou stránku.
-  const filteredRows = table.getFilteredRowModel().rows
-
-  const rows = filteredRows.map(row => {
+  const rows = sourceRows.map(({ original, index, getValue }) => {
     return visibleColumns.map(col => {
       const meta = col.columnDef.meta as DataTableColumnExportMeta<T> | undefined
-      const value = meta?.exportValue ? meta.exportValue(row.original) : row.getValue(col.id)
+      const value = meta?.exportValue
+        ? meta.exportValue(original)
+        : getValue
+          ? getValue(col.id)
+          : col.accessorFn
+            ? col.accessorFn(original, index)
+            : undefined
       return formatValue(value)
     })
   })
 
   return { headers, rows }
+}
+
+/**
+ * Export data z tabulky, nebo z raw řádků všech stránek (`allRows` z
+ * `fetchAllRows` — server-side stránkované tabulky, kde row model drží
+ * jen načtenou stránku).
+ */
+function getExportData<T>(
+  table: Table<T>,
+  allRows?: T[]
+): { headers: string[]; rows: string[][] } {
+  if (allRows) {
+    return buildExportData(
+      table,
+      allRows.map((original, index) => ({ original, index }))
+    )
+  }
+
+  // Všechny filtrované řádky před stránkováním (ne jen aktuální stránka).
+  // Pozn.: při manualPagination drží row model jen načtenou stránku —
+  // pro plný export předej `allRows` (prop `fetchAllRows`).
+  return buildExportData(
+    table,
+    table.getFilteredRowModel().rows.map((row, index) => ({
+      original: row.original,
+      index,
+      getValue: (columnId: string) => row.getValue(columnId),
+    }))
+  )
 }
 
 // ============================================================================
@@ -123,8 +202,8 @@ function csvCell(value: string): string {
 }
 
 /** UTF-8 s BOM, st\u0159edn\u00EDk jako odd\u011Blova\u010D, CRLF \u2014 \u010Desk\u00E1 Excel konvence. */
-export function exportCSV<T>(table: Table<T>, filename: string) {
-  const { headers, rows } = getExportData(table)
+export function exportCSV<T>(table: Table<T>, filename: string, allRows?: T[]) {
+  const { headers, rows } = getExportData(table, allRows)
 
   const bom = '\uFEFF'
   const csvContent = [headers, ...rows]
@@ -139,8 +218,8 @@ export function exportCSV<T>(table: Table<T>, filename: string) {
 // Excel Export
 // ============================================================================
 
-export function exportExcel<T>(table: Table<T>, filename: string) {
-  const { headers, rows } = getExportData(table)
+export function exportExcel<T>(table: Table<T>, filename: string, allRows?: T[]) {
+  const { headers, rows } = getExportData(table, allRows)
 
   const wsData = [headers, ...rows]
   const ws = XLSX.utils.aoa_to_sheet(wsData)
@@ -185,11 +264,11 @@ function pdfText(value: string): string {
     .replace(/[\u2013\u2014]/g, '-')
 }
 
-export async function exportPDF<T>(table: Table<T>, filename: string, title?: string) {
+export async function exportPDF<T>(table: Table<T>, filename: string, title?: string, allRows?: T[]) {
   const { default: jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
 
-  const { headers, rows } = getExportData(table)
+  const { headers, rows } = getExportData(table, allRows)
 
   const doc = new jsPDF({ orientation: rows[0]?.length > 6 ? 'landscape' : 'portrait' })
 
@@ -223,8 +302,8 @@ export async function exportPDF<T>(table: Table<T>, filename: string, title?: st
 // Print
 // ============================================================================
 
-export function printTable<T>(table: Table<T>, title?: string) {
-  const { headers, rows } = getExportData(table)
+export function printTable<T>(table: Table<T>, title?: string, allRows?: T[]) {
+  const { headers, rows } = getExportData(table, allRows)
 
   const printWindow = window.open('', '_blank')
   if (!printWindow) return
@@ -280,29 +359,55 @@ export function DataTableExport<T>({
   formats = ['csv', 'excel', 'pdf', 'print'],
   title,
   extraOptions,
+  fetchAllRows,
 }: DataTableExportProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
-  const [runningExtraKey, setRunningExtraKey] = useState<string | null>(null)
+  // Klíč právě běžící položky menu — formát (`format:csv`) nebo extra option
+  // (`extra:{key}`). Dokud běží, je položka disabled (spinner) a ostatní
+  // položky jsou guardnuté proti souběhu.
+  const [runningKey, setRunningKey] = useState<string | null>(null)
 
-  const handleExport = (format: ExportFormat) => {
-    switch (format) {
-      case 'csv': exportCSV(table, filename); break
-      case 'excel': exportExcel(table, filename); break
-      case 'pdf': exportPDF(table, filename, title); break
-      case 'print': printTable(table, title); break
+  const handleExport = async (format: ExportFormat) => {
+    if (runningKey) return
+
+    if (!fetchAllRows) {
+      // BC: bez fetchAllRows synchronní export z row modelu, beze změny.
+      switch (format) {
+        case 'csv': exportCSV(table, filename); break
+        case 'excel': exportExcel(table, filename); break
+        case 'pdf': exportPDF(table, filename, title); break
+        case 'print': printTable(table, title); break
+      }
+      setIsOpen(false)
+      return
     }
-    setIsOpen(false)
+
+    setRunningKey(`format:${format}`)
+    try {
+      // Chyby se nechytají (žádné vlastní error UI) — propagují se
+      // volajícímu, menu zůstává otevřené.
+      const allRows = await fetchAllRows()
+      switch (format) {
+        case 'csv': exportCSV(table, filename, allRows); break
+        case 'excel': exportExcel(table, filename, allRows); break
+        case 'pdf': await exportPDF(table, filename, title, allRows); break
+        case 'print': printTable(table, title, allRows); break
+      }
+      setIsOpen(false)
+    } finally {
+      setRunningKey(null)
+    }
   }
 
   const handleExtraSelect = async (option: DataTableExportExtraOption) => {
-    if (runningExtraKey) return
-    setRunningExtraKey(option.key)
+    if (runningKey) return
+    setRunningKey(`extra:${option.key}`)
     try {
       // Chyby se nechytají (žádné vlastní error UI) — propagují se volajícímu.
       await option.onSelect()
       setIsOpen(false)
     } finally {
-      setRunningExtraKey(null)
+      setRunningKey(null)
     }
   }
 
@@ -326,27 +431,38 @@ export function DataTableExport<T>({
             <div className="px-4 py-2 text-xs text-neutral-400 border-b border-neutral-100 dark:border-neutral-800">
               {filteredCount} záznamů
             </div>
-            {formats.map((format, i) => (
-              <div key={format}>
-                {format === 'print' && i > 0 && (
-                  <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
-                )}
-                <button
-                  onClick={() => handleExport(format)}
-                  className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-700 dark:text-neutral-300"
-                >
-                  {FORMAT_CONFIG[format].icon}
-                  {FORMAT_CONFIG[format].label}
-                </button>
-              </div>
-            ))}
+            {formats.map((format, i) => {
+              const isRunning = runningKey === `format:${format}`
+              return (
+                <div key={format}>
+                  {format === 'print' && i > 0 && (
+                    <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
+                  )}
+                  <button
+                    onClick={() => handleExport(format)}
+                    disabled={isRunning}
+                    className={clsx(
+                      'w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-700 dark:text-neutral-300',
+                      isRunning && 'opacity-50 cursor-wait'
+                    )}
+                  >
+                    {isRunning ? (
+                      <Loader2 className="w-4 h-4 text-neutral-500 animate-spin" />
+                    ) : (
+                      FORMAT_CONFIG[format].icon
+                    )}
+                    {FORMAT_CONFIG[format].label}
+                  </button>
+                </div>
+              )
+            })}
             {extraOptions && extraOptions.length > 0 && (
               <>
                 {formats.length > 0 && (
                   <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
                 )}
                 {extraOptions.map(option => {
-                  const isRunning = runningExtraKey === option.key
+                  const isRunning = runningKey === `extra:${option.key}`
                   return (
                     <button
                       key={option.key}

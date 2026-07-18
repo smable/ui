@@ -144,6 +144,16 @@ interface DataTableProps<T> {
   exportFormats?: ('csv' | 'excel' | 'pdf' | 'print')[]
   /** Extra položky export menu (pod vestavěnými formáty) — viz DataTableExport. */
   exportExtraOptions?: DataTableExportExtraOption[]
+  /**
+   * Načte PŮVODNÍ row objekty (typ `T`) VŠECH stránek pro export — použij
+   * u `manualPagination` tabulek, kde `data` (a row model) drží jen načtenou
+   * serverovou stránku a vestavěný export by jinak exportoval jen ji.
+   * Passthrough do `DataTableExport` (prop `fetchAllRows`) — detail chování
+   * (loading stav, extrakce hodnot, propagace chyb) viz tam. Bez tohoto
+   * propu je chování exportu beze změny (BC). Pozor: PDF/tisk s desítkami
+   * tisíc řádků je pomalý (jspdf-autotable) — zodpovědnost volajícího.
+   */
+  exportFetchAllRows?: () => Promise<T[]>
 
   // Empty state
   emptyIcon?: ReactNode
@@ -198,6 +208,7 @@ export function DataTable<T>({
   exportTitle,
   exportFormats,
   exportExtraOptions,
+  exportFetchAllRows,
   emptyIcon,
   filterable = false,
   emptyTitle = 'Žádné záznamy',
@@ -469,6 +480,7 @@ export function DataTable<T>({
                   title={exportTitle}
                   formats={exportFormats as ExportFormat[]}
                   extraOptions={exportExtraOptions}
+                  fetchAllRows={exportFetchAllRows}
                 />
               </>
             )}
