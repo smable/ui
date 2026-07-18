@@ -43,6 +43,23 @@ function DefaultColumnFilter({ column }: { column: any }) {
 
 interface DataTableProps<T> {
   data: T[]
+  /**
+   * TanStack column definice. Pokud aspoň jeden viditelný sloupec definuje
+   * `footer`, tabulka vyrenderuje `<tfoot>` (součtový řádek) nad stránkovací
+   * patičkou — jinak se `<tfoot>` nerenderuje vůbec (zpětná kompatibilita).
+   * Footer callback dostává TanStack context (`{ table, column, header }`);
+   * součty počítej z `table.getFilteredRowModel().rows` (filtrovaná data
+   * před stránkováním = poctivé totály):
+   *
+   * ```tsx
+   * columns: [{ accessorKey: 'revenue', header: 'Tržby',
+   *   footer: ({ table }) => czk(table.getFilteredRowModel().rows.reduce((s, r) => s + r.getValue<number>('revenue'), 0)) }]
+   * ```
+   *
+   * Pozn.: při `manualPagination` obsahuje `getFilteredRowModel()` jen
+   * načtenou stránku — součet je tedy za stránku, ne za celý dataset.
+   * Export (`DataTableExport`) footer NEexportuje (parita s legacy chováním).
+   */
   columns: ColumnDef<T, any>[]
   globalFilter?: string
   pageSize?: number
@@ -340,6 +357,12 @@ export function DataTable<T>({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
+  // Footer (<tfoot>) renders only when at least one visible column defines
+  // a `footer` — zero markup change for existing consumers otherwise.
+  const hasFooter = table
+    .getVisibleLeafColumns()
+    .some(col => col.columnDef.footer != null)
+
   const tablePageCount = table.getPageCount()
   const currentPage = table.getState().pagination.pageIndex
   const currentPageSize = table.getState().pagination.pageSize
@@ -576,6 +599,35 @@ export function DataTable<T>({
               ))
             )}
           </tbody>
+
+          {/* Footer (souhrnný řádek) */}
+          {hasFooter && (
+            <tfoot>
+              {table.getFooterGroups().map(footerGroup =>
+                footerGroup.headers.some(
+                  header => !header.isPlaceholder && header.column.columnDef.footer != null
+                ) ? (
+                  <tr
+                    key={footerGroup.id}
+                    className="border-t border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50"
+                  >
+                    {footerGroup.headers.map(header => (
+                      <td
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className="px-4 py-4 first:pl-6 last:pr-6 font-medium text-neutral-700 dark:text-neutral-300"
+                        style={fixedLayout ? { width: header.getSize(), minWidth: header.getSize() } : undefined}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.footer, header.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ) : null
+              )}
+            </tfoot>
+          )}
         </table>
       </div>
 
