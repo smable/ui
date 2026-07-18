@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -29,6 +30,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Auth uses the built-in GITHUB_TOKEN (packages: write permission
+      # above) — it rotates automatically, unlike a PAT stored in a repo
+      # secret, which is how every publish run before v0.9.0 rotted to 401.
+      # Works because package.json `repository` links this repo, so the
+      # package accepts the repo-scoped token.
+      #
       # Releases are sometimes published locally before the tag push lands
       # (registry token works while git push may lag on permissions). A
       # duplicate `npm publish` would fail the whole run — check first.
@@ -43,10 +50,10 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish
         if: steps.check.outputs.exists == 'false'
         run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
