@@ -27,6 +27,11 @@ interface DefaultTextareaProps extends BaseTextareaProps {
 interface FloatingTextareaProps extends BaseTextareaProps {
   variant: 'floating'
   label: string
+  /**
+   * Nápověda uvnitř pole. Když je vyplněná, label zůstane trvale
+   * nahoře — jinak by oba texty seděly na stejném místě a překryly se.
+   */
+  placeholder?: string
 }
 
 export type TextareaProps = DefaultTextareaProps | FloatingTextareaProps
@@ -39,11 +44,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   const contextVariant = useFieldVariant()
   const resolvedVariant = props.variant ?? contextVariant
   if (resolvedVariant === 'floating') {
-    const floatingProps = props as FloatingTextareaProps & { placeholder?: undefined }
-    const { label, error, size = 'large', className, id, required, rows, variant: _v, ...rest } = floatingProps
+    const floatingProps = props as FloatingTextareaProps
+    const { label, error, size = 'large', className, id, required, rows, placeholder, variant: _v, ...rest } = floatingProps
     const autoId = useId()
     const textareaId = id ?? `textarea-${autoId}`
     const hasError = Boolean(error)
+    // Viz Input.tsx — se skutečným placeholderem platí `:placeholder-shown`
+    // i u prázdného pole, takže by label spadl přesně na jeho text.
+    const hasPlaceholder = typeof placeholder === 'string' && placeholder.trim() !== ''
     const sizeClasses = size === 'large' ? 'min-h-40 pt-7 pb-3 text-base' : 'min-h-32 pt-6 pb-2 text-sm'
 
     return (
@@ -54,7 +62,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
             id={textareaId}
             rows={rows}
             required={required}
-            placeholder=" "
+            placeholder={hasPlaceholder ? placeholder : ' '}
             aria-invalid={hasError || undefined}
             aria-describedby={hasError ? `${textareaId}-error` : undefined}
             className={clsx(
@@ -75,11 +83,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
             htmlFor={textareaId}
             className={clsx(
               'absolute left-4 top-2 text-xs font-medium transition-all duration-150 pointer-events-none',
-              'peer-placeholder-shown:top-6 peer-placeholder-shown:text-base peer-placeholder-shown:font-normal',
+              !hasPlaceholder &&
+                'peer-placeholder-shown:top-6 peer-placeholder-shown:text-base peer-placeholder-shown:font-normal',
               'peer-focus:top-2 peer-focus:text-xs peer-focus:font-medium',
               hasError
-                ? 'text-red-600 peer-placeholder-shown:text-red-400 peer-focus:text-red-600'
-                : 'text-neutral-500 dark:text-neutral-400 peer-placeholder-shown:text-neutral-400 dark:peer-placeholder-shown:text-neutral-500 peer-focus:text-neutral-900 dark:peer-focus:text-white'
+                ? clsx('text-red-600 peer-focus:text-red-600', !hasPlaceholder && 'peer-placeholder-shown:text-red-400')
+                : clsx(
+                    'text-neutral-500 dark:text-neutral-400 peer-focus:text-neutral-900 dark:peer-focus:text-white',
+                    !hasPlaceholder && 'peer-placeholder-shown:text-neutral-400 dark:peer-placeholder-shown:text-neutral-500'
+                  )
             )}
           >
             {label}{required && <span className="text-red-500"> *</span>}

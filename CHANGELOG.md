@@ -2,6 +2,22 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.9.1 — 2026-08-12
+
+### 🐛 Oprava: floating label se překrýval s placeholderem
+
+`Input` a `Textarea` ve variantě `floating` nastavovaly `placeholder=" "`
+jako CSS trik pro `:placeholder-shown` — jenže zápis byl **před** `{...rest}`,
+takže skutečný placeholder z propsů ho přebil. Prázdné pole pak splňovalo
+`:placeholder-shown`, label klesl doprostřed a sedl si přesně na text
+placeholderu.
+
+Nově: když je předaný neprázdný `placeholder`, label zůstává trvale nahoře
+a místo uprostřed pole patří placeholderu. Bez placeholderu se chování
+nemění. `placeholder` je nově součástí typů floating variant (dřív byl
+typem zakázaný, ale za běhu prošel).
+
+
 ## 0.6.0 — 2026-06-24
 
 ### 🎉 New: App Shell (dvouúrovňový Platform Rail)

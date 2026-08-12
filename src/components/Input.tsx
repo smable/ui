@@ -35,6 +35,12 @@ interface DefaultInputProps extends BaseInputProps {
 interface FloatingInputProps extends BaseInputProps {
   variant: 'floating'
   label: string
+  /**
+   * Nápověda uvnitř pole. Když je vyplněná, label zůstane trvale
+   * nahoře — jinak by oba texty seděly na stejném místě uprostřed
+   * pole a překryly se.
+   */
+  placeholder?: string
 }
 
 export type InputProps = DefaultInputProps | FloatingInputProps
@@ -49,12 +55,19 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   const contextVariant = useFieldVariant()
   const resolvedVariant = props.variant ?? contextVariant
   if (resolvedVariant === 'floating') {
-    const floatingProps = props as FloatingInputProps & { placeholder?: undefined }
-    const { label, error, trailing, size = 'large', className, id, required, variant: _v, ...rest } = floatingProps
+    const floatingProps = props as FloatingInputProps
+    const { label, error, trailing, size = 'large', className, id, required, placeholder, variant: _v, ...rest } = floatingProps
     const autoId = useId()
     const inputId = id ?? `input-${autoId}`
     const hasError = Boolean(error)
     const sizeClasses = size === 'large' ? 'h-16 pt-6 pb-2 text-base' : 'h-12 pt-5 pb-1 text-sm'
+
+    // Prázdné pole bez placeholderu drží label uprostřed přes
+    // `:placeholder-shown` — proto ta mezera místo prázdného řetězce.
+    // Se skutečným placeholderem ale `:placeholder-shown` platí taky
+    // (pole je prázdné), takže by label spadl doprostřed přesně na
+    // text placeholderu. V tom případě ho necháme trvale nahoře.
+    const hasPlaceholder = typeof placeholder === 'string' && placeholder.trim() !== ''
 
     return (
       <div>
@@ -63,7 +76,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
             ref={ref}
             id={inputId}
             required={required}
-            placeholder=" "
+            placeholder={hasPlaceholder ? placeholder : ' '}
             aria-invalid={hasError || undefined}
             aria-describedby={hasError ? `${inputId}-error` : undefined}
             className={clsx(
@@ -85,11 +98,17 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
             htmlFor={inputId}
             className={clsx(
               'absolute left-4 top-2 text-xs font-medium transition-all duration-150 pointer-events-none',
-              'peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:font-normal',
+              // Se skutečným placeholderem label nikdy neklesá — místo
+              // uprostřed pole už patří jemu.
+              !hasPlaceholder &&
+                'peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:font-normal',
               'peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-medium',
               hasError
-                ? 'text-red-600 peer-placeholder-shown:text-red-400 peer-focus:text-red-600'
-                : 'text-neutral-500 dark:text-neutral-400 peer-placeholder-shown:text-neutral-400 dark:peer-placeholder-shown:text-neutral-500 peer-focus:text-neutral-900 dark:peer-focus:text-white'
+                ? clsx('text-red-600 peer-focus:text-red-600', !hasPlaceholder && 'peer-placeholder-shown:text-red-400')
+                : clsx(
+                    'text-neutral-500 dark:text-neutral-400 peer-focus:text-neutral-900 dark:peer-focus:text-white',
+                    !hasPlaceholder && 'peer-placeholder-shown:text-neutral-400 dark:peer-placeholder-shown:text-neutral-500'
+                  )
             )}
           >
             {label}{required && <span className="text-red-500"> *</span>}
