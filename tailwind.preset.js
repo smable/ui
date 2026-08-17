@@ -21,6 +21,7 @@ export default {
   safelist: [
     { pattern: /^bg-(brand|neutral)-(50|100|200|300|400|500|600|700|800|900|950)$/ },
     { pattern: /^text-(3xl|2xl|xl|lg|base|sm|xs|2xs)$/ },
+    { pattern: /^text-(display|title-lg|title-sm|title|prose-lead|prose)$/ },
   ],
   theme: {
     extend: {
@@ -90,6 +91,7 @@ export default {
         sans: ['"Inter"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       fontSize: {
+        // Aplikační (hustá) škála — tabulky, formuláře, dashboardy.
         '2xs': ['0.6875rem', { lineHeight: '1rem' }],
         'xs': ['0.75rem', { lineHeight: '1.125rem' }],
         'sm': ['0.8125rem', { lineHeight: '1.25rem' }],
@@ -98,6 +100,20 @@ export default {
         'xl': ['1.125rem', { lineHeight: '1.75rem' }],
         '2xl': ['1.25rem', { lineHeight: '1.75rem' }],
         '3xl': ['1.5rem', { lineHeight: '2rem' }],
+
+        // Čtecí škála — plochy, které se čtou odshora dolů (nápověda, dokumentace,
+        // delší texty). Škála výše je záměrně hustá, protože je stavěná na hutné
+        // aplikační UI; na souvislý text je malá. Je to samostatná sada, ne posun
+        // té první — dashboardy se tím nemění.
+        //
+        // Doporučené použití: `prose` tělo, `prose-lead` perex,
+        // `title-sm`/`title`/`title-lg` nadpisy, `display` hero.
+        'prose': ['1rem', { lineHeight: '1.75rem' }],
+        'prose-lead': ['1.125rem', { lineHeight: '1.875rem' }],
+        'title-sm': ['1.375rem', { lineHeight: '1.75rem' }],
+        'title': ['1.75rem', { lineHeight: '2.125rem' }],
+        'title-lg': ['2.125rem', { lineHeight: '2.5rem' }],
+        'display': ['2.75rem', { lineHeight: '3rem' }],
       },
       spacing: {
         '4.5': '1.125rem',

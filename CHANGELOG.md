@@ -2,6 +2,32 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.10.0 — 2026-08-17
+
+### 🎉 New: čtecí typografická škála
+
+Preset měl jedinou škálu písma, laděnou na hutné aplikační UI — `base` je 14 px,
+`3xl` 24 px. Na tabulky a formuláře sedí, na plochy, které se čtou odshora dolů,
+je malá: nápověda měla tělo článku 14 px a nadpis 24 px, takže hierarchie byla plochá
+a delší text se špatně četl.
+
+Přibývá **samostatná čtecí sada**. Aplikační škála se nemění, dashboardy tím nejsou
+dotčené — čtecí plocha si o větší stupně řekne sama.
+
+| Třída | Velikost | Řádkování | K čemu |
+|---|---|---|---|
+| `text-prose` | 16 px | 28 px | tělo souvislého textu |
+| `text-prose-lead` | 18 px | 30 px | perex, úvodní odstavec |
+| `text-title-sm` | 22 px | 28 px | nadpis 3. úrovně |
+| `text-title` | 28 px | 34 px | nadpis 2. úrovně |
+| `text-title-lg` | 34 px | 40 px | nadpis stránky / článku |
+| `text-display` | 44 px | 48 px | hero |
+
+Míru řádku (délku řádku) preset neřeší — patří ke konkrétnímu layoutu. Pozor na `ch`:
+u Interu je `ch` šířka nuly (~0,63 em), takže `max-w-[70ch]` vyjde přes 700 px a sloupec
+o šířce 700 px vůbec neomezí. Na čtecí sloupec používejte `rem` (~38 rem ≈ 71 znaků).
+
+
 ## 0.9.1 — 2026-08-12
 
 ### 🐛 Oprava: floating label se překrýval s placeholderem
