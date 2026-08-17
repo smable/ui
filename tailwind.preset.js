@@ -108,10 +108,11 @@ export default {
         //
         // Doporučené použití: `prose` tělo, `prose-lead` perex,
         // `title-sm`/`title`/`title-lg` nadpisy, `display` hero.
-        'prose': ['1rem', { lineHeight: '1.75rem' }],
-        'prose-lead': ['1.125rem', { lineHeight: '1.875rem' }],
-        'title-sm': ['1.375rem', { lineHeight: '1.75rem' }],
-        'title': ['1.75rem', { lineHeight: '2.125rem' }],
+        // 17 px, ne 16: na nápovědě se 16 px na celé šířce obrazovky četlo drobně.
+        'prose': ['1.0625rem', { lineHeight: '1.8125rem' }],
+        'prose-lead': ['1.1875rem', { lineHeight: '1.9375rem' }],
+        'title-sm': ['1.4375rem', { lineHeight: '1.875rem' }],
+        'title': ['1.875rem', { lineHeight: '2.25rem' }],
         'title-lg': ['2.125rem', { lineHeight: '2.5rem' }],
         'display': ['2.75rem', { lineHeight: '3rem' }],
       },
