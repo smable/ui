@@ -108,13 +108,15 @@ export default {
         //
         // Doporučené použití: `prose` tělo, `prose-lead` perex,
         // `title-sm`/`title`/`title-lg` nadpisy, `display` hero.
-        // 17 px, ne 16: na nápovědě se 16 px na celé šířce obrazovky četlo drobně.
-        'prose': ['1.0625rem', { lineHeight: '1.8125rem' }],
-        'prose-lead': ['1.1875rem', { lineHeight: '1.9375rem' }],
-        'title-sm': ['1.4375rem', { lineHeight: '1.875rem' }],
-        'title': ['1.875rem', { lineHeight: '2.25rem' }],
-        'title-lg': ['2.125rem', { lineHeight: '2.5rem' }],
-        'display': ['2.75rem', { lineHeight: '3rem' }],
+        // Škála je srovnaná se Square Support Center (změřeno 17. 8. 2026 na
+        // squareup.com/help/us/en): tělo 16/28, h2 25/32, h3 18/26, h1 článku 48/56.
+        // Ne 17 px — Square drží 16 a řídkost dělá řádkováním 1,75, ne velikostí písma.
+        'prose': ['1rem', { lineHeight: '1.75rem' }],
+        'prose-lead': ['1.125rem', { lineHeight: '1.75rem' }],
+        'title-sm': ['1.125rem', { lineHeight: '1.625rem' }],
+        'title': ['1.5625rem', { lineHeight: '2rem' }],
+        'title-lg': ['2rem', { lineHeight: '2.5rem' }],
+        'display': ['3rem', { lineHeight: '3.5rem' }],
       },
       spacing: {
         '4.5': '1.125rem',
