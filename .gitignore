@@ -6,3 +6,7 @@ dist/
 .idea/
 .vscode/
 *.tsbuildinfo
+
+# Env — glob, ne vycet: .env.bak / .env.old / .env.save nesou stejna
+# ziva tajemstvi jako .env a staremu vyctu propadly.
+.env*
