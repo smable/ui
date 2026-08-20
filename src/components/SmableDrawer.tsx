@@ -10,6 +10,9 @@ import { FieldVariantProvider } from './FieldVariantContext'
  * Header layout: close button (X) on left, title/subtitle center, action slot
  * on right (typically Save button). Body scrolls; header/footer stay fixed.
  *
+ * Body is padded to match the header and footer. Pass `bodyFlush` when the
+ * content should reach the panel edge (tables, full-width rows, previews).
+ *
  * Renders via portal to document.body so consumers can place it as a sibling
  * inside `space-y-*` / `divide-y` / any `> * + *` adjacent-sibling-margin
  * parent without those rules shifting the fixed inset-0 wrapper.
@@ -25,6 +28,11 @@ export interface SmableDrawerProps {
   children: ReactNode
   widthClass?: string
   bodyRef?: RefObject<HTMLDivElement>
+  /**
+   * Vypne odsazeni tela draweru. Pro obsah, ktery ma sahat az ke kraji —
+   * tabulka, seznam s hover pruhy pres celou sirku, nahled obrazku.
+   */
+  bodyFlush?: boolean
 }
 
 export function SmableDrawer({
@@ -38,6 +46,7 @@ export function SmableDrawer({
   children,
   widthClass = 'md:w-[40%] md:min-w-[520px] md:max-w-[760px]',
   bodyRef,
+  bodyFlush = false,
 }: SmableDrawerProps) {
   useEffect(() => {
     if (!open) return
@@ -113,7 +122,16 @@ export function SmableDrawer({
           )}
         </div>
 
-        <div ref={bodyRef} className="flex-1 overflow-y-auto">
+        <div
+          ref={bodyRef}
+          className={clsx(
+            'flex-1 overflow-y-auto',
+            // Hlavicka i paticka drzi px-4 sm:px-5; telo je do 0.12.0 nemelo,
+            // takze obsah lezel na hrane panelu. Svisle odsazeni odděluje
+            // obsah od hlavicky, ktera nema spodni linku.
+            !bodyFlush && 'px-4 sm:px-5 py-4',
+          )}
+        >
           <FieldVariantProvider variant="floating">{children}</FieldVariantProvider>
         </div>
 
