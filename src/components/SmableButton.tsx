@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react'
 import clsx from 'clsx'
 
-export type SmableButtonVariant = 'primary' | 'secondary' | 'ghost'
+export type SmableButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 export type SmableButtonSize = 'sm' | 'md' | 'lg'
 
 export interface SmableButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -18,6 +18,8 @@ const VARIANT: Record<SmableButtonVariant, string> = {
     'bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white hover:bg-neutral-50 dark:hover:bg-neutral-800',
   ghost:
     'bg-transparent text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800',
+  danger:
+    'bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500',
 }
 
 const SIZE: Record<SmableButtonSize, string> = {
@@ -30,6 +32,7 @@ const SPINNER: Record<SmableButtonVariant, string> = {
   primary: 'border-white/30 dark:border-neutral-900/30 border-t-white dark:border-t-neutral-900',
   secondary: 'border-neutral-300 dark:border-neutral-700 border-t-neutral-900 dark:border-t-white',
   ghost: 'border-neutral-300 dark:border-neutral-700 border-t-neutral-900 dark:border-t-white',
+  danger: 'border-white/30 border-t-white',
 }
 
 export const SmableButton = forwardRef<HTMLButtonElement, SmableButtonProps>(

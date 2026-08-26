@@ -2,6 +2,37 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.13.0 — 2026-08-26
+
+### 🎉 New: `ConfirmDialog`
+
+Suite neměla sdílené potvrzení destruktivní akce. Konzumenti to řešili buď nativním
+`confirm()` (v `app.smable.cz` 13 souborů), nebo vůbec — audit tam našel pět míst, kde
+se nevratně mazalo na jeden klik: stůl, sekce stolů, pozice zaměstnance, naplánovaná
+směna a poznámka ke dni.
+
+`ConfirmDialog` je náhrada za `confirm()`, která navíc unese to, co nativní dialog neumí:
+
+| Prop | K čemu |
+|---|---|
+| `description` | co se stane a že to nejde vzít zpět |
+| `busy` | akce běží — tlačítka zamrznou, Escape ani klik na pozadí dialog nezavřou |
+| `error` | chyba z posledního pokusu; dialog zůstane otevřený a ukáže ji |
+| `tone` | `danger` (výchozí) nebo `default` pro nedestruktivní potvrzení |
+
+Fokus jde po otevření na **Zrušit**, ne na potvrzení — u nevratné akce nemá Enter omylem
+potvrdit. Role je `alertdialog`, renderuje se portálem do `body` jako `SmableDrawer`.
+
+`confirmLabel` a `cancelLabel` jsou povinné a nemají výchozí hodnotu: konzumenti jsou
+vícejazyční a natvrdo psaná čeština by se protekla do anglického UI.
+
+### ✨ `SmableButton` — varianta `danger`
+
+Solidní červené tlačítko pro potvrzení destruktivní akce. Doteď si ho konzumenti skládali
+ručně přes `variant="ghost"` + `className="text-red-600 …"`.
+
+> Poznámka: verze 0.11.0–0.12.1 nemají v tomhle souboru záznam.
+
 ## 0.10.0 — 2026-08-17
 
 ### 🎉 New: čtecí typografická škála
