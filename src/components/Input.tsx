@@ -103,11 +103,22 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
               !hasPlaceholder &&
                 'peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:text-base peer-placeholder-shown:font-normal',
               'peer-focus:top-2 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:font-medium',
+              // Klidový stav (label uprostřed prázdného pole) propadal WCAG AA:
+              // neutral-400 na bílé je 2,52:1 a neutral-500 na neutral-900 je
+              // 3,78:1, přitom text té velikosti potřebuje 4,5:1. Posunuto o
+              // stupeň tmavěji ve světlém a světleji v tmavém režimu.
+              // Chybová varianta neměla tmavou obdobu vůbec: red-600 je na
+              // neutral-900 jen 3,71:1. Žádný odstín červené nesedí v obou
+              // režimech, proto red-600 ve světlém (4,83:1) a red-400 v tmavém
+              // (6,48:1).
               hasError
-                ? clsx('text-red-600 peer-focus:text-red-600', !hasPlaceholder && 'peer-placeholder-shown:text-red-400')
+                ? clsx(
+                    'text-red-600 dark:text-red-400 peer-focus:text-red-600 dark:peer-focus:text-red-400',
+                    !hasPlaceholder && 'peer-placeholder-shown:text-red-600 dark:peer-placeholder-shown:text-red-400'
+                  )
                 : clsx(
-                    'text-neutral-500 dark:text-neutral-400 peer-focus:text-neutral-900 dark:peer-focus:text-white',
-                    !hasPlaceholder && 'peer-placeholder-shown:text-neutral-400 dark:peer-placeholder-shown:text-neutral-500'
+                    'text-neutral-600 dark:text-neutral-400 peer-focus:text-neutral-900 dark:peer-focus:text-white',
+                    !hasPlaceholder && 'peer-placeholder-shown:text-neutral-600 dark:peer-placeholder-shown:text-neutral-400'
                   )
             )}
           >
