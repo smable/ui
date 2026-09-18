@@ -32,6 +32,7 @@ export const PosSearchInput = forwardRef<HTMLInputElement, PosSearchInputProps>(
           }
         }}
         placeholder={placeholder}
+        aria-label={placeholder}
         autoComplete="off"
         spellCheck={false}
         className="min-w-0 flex-1 border-0 bg-transparent p-0 text-[15px] text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-0"
