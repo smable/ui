@@ -81,6 +81,26 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 - `SmableDrawer` — side drawer / modal
 - `SmableActionsMenu` — dropdown action menu
 
+### Pokladna (`pos/`)
+
+- `PosStatusBadge` — pilulka se stavovou tečkou (pokladna otevřena, tiskárna neodpovídá)
+- `PosTabBar` — hlavní záložky Pokladna / Transakce / Uzávěrka
+- `PosSegmentedControl` — přepínač Knihovna / Kalkulačka, 80/58 mm
+- `PosCategoryItem` — položka kategorie v levém sloupci prodejní plochy
+- `PosItemTile` — dlaždice položky, barva čitelná i na žluté (viz `readableTextClass`)
+- `PosSearchInput` — vyhledávání / pole čtečky s klávesovou zkratkou
+- `PosCartRow` — řádek účtu s krokováním množství
+- `PosActionButton` — Zaplatit / Uložit / Storno se zkratkou
+- `PosCodeInput` — políčka kódu párování a PINu
+- `PosKeypad` — numerická klávesnice
+- `PosCashPill` — rychlá bankovka pro dorovnání hotovosti
+- `PosStatTile` — statistická dlaždice uzávěrky (tržba, počet účtenek)
+- `PosKeyValueRow` — řádek popisek/hodnota v detailu účtenky
+- `PosPanel` — bílá karta se záhlavím (uzávěrka, detail účtenky, nastavení)
+- `PosTransactionRow` — řádek seznamu účtenek
+- `PosKbd` — klávesová zkratka (`Enter`, `Esc`, `F2`)
+- `readableTextClass(hex)` — vybere čitelnou barvu textu (bílá/tmavá) na barevné dlaždici
+
 ## Publishing a new version
 
 1. Bump version in `package.json`: `npm version patch|minor|major`
