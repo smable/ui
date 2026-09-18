@@ -19,7 +19,7 @@ export function PosSegmentedControl<T extends string>({ options, value, onChange
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(option.value)}
-            className={`rounded-[7px] px-[18px] py-2 text-[14px] leading-[17px] text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+            className={`relative before:absolute before:inset-x-0 before:-inset-y-[5px] rounded-[7px] px-[18px] py-2 text-[14px] leading-[17px] text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
               selected ? 'bg-white font-semibold shadow-sm' : 'hover:bg-neutral-100'
             }`}
           >

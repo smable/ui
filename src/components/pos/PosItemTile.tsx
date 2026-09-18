@@ -2,7 +2,7 @@ import { readableTextClass } from './color'
 
 export interface PosItemTileProps {
   name: string
-  /** Už naformátovaná cena („49,00"). */
+  /** Už naformátovaná cena („49,00“). */
   price: string
   /** Hex z backoffice; bez barvy = brand. */
   color?: string | null

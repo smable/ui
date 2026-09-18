@@ -25,7 +25,7 @@ export function PosStatusBadge({ status, children, onClick }: PosStatusBadgeProp
     </>
   )
   return onClick ? (
-    <button type="button" onClick={onClick} className={`${className} hover:bg-neutral-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500`}>
+    <button type="button" onClick={onClick} className={`${className} relative before:absolute before:inset-x-0 before:-inset-y-[6px] hover:bg-neutral-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500`}>
       {content}
     </button>
   ) : (

@@ -7,7 +7,7 @@ export type PosActionVariant = 'primary' | 'outline' | 'danger'
 export interface PosActionButtonProps {
   variant: PosActionVariant
   children: ReactNode
-  /** Klávesová zkratka zobrazená v tlačítku („Enter", „Esc", „F4"). */
+  /** Klávesová zkratka zobrazená v tlačítku („Enter“, „Esc“, „F4“). */
   hint?: string
   onClick?: () => void
   disabled?: boolean

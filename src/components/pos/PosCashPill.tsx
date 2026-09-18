@@ -6,7 +6,7 @@ export interface PosCashPillProps {
   onClick: () => void
 }
 
-/** Rychlá bankovka / „Jiná částka" u platby hotově. */
+/** Rychlá bankovka / „Jiná částka“ u platby hotově. */
 export function PosCashPill({ tone, children, onClick }: PosCashPillProps) {
   const toneClass = tone === 'brand' ? 'bg-brand-50 text-brand-600 hover:bg-brand-100' : 'bg-neutral-200 text-neutral-600 hover:bg-neutral-300'
   return (

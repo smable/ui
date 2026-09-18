@@ -17,7 +17,7 @@ export function PosTabBar<T extends string>({ tabs, value, onChange }: PosTabBar
             role="tab"
             aria-selected={selected}
             onClick={() => onChange(tab.value)}
-            className={`rounded-full px-[18px] py-2 text-[15px] leading-[18px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
+            className={`relative before:absolute before:inset-x-0 before:-inset-y-1 rounded-full px-[18px] py-2 text-[15px] leading-[18px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${
               selected ? 'bg-brand-500 font-semibold text-white' : 'text-neutral-600 hover:text-neutral-900'
             }`}
           >

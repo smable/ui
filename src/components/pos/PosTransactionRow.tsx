@@ -1,7 +1,7 @@
 export interface PosTransactionRowProps {
   amount: string
   method: string
-  /** Souhrn položek („Cappuccino × 2, Croissant…"). */
+  /** Souhrn položek („Cappuccino × 2, Croissant…“). */
   items: string
   time: string
   number: string

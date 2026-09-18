@@ -3,7 +3,7 @@ export interface PosCartRowProps {
   name: string
   /** Cena řádku po slevě, naformátovaná. */
   price: string
-  /** Sleva na řádku („−8,90"); bez ní se druhý řádek nekreslí. */
+  /** Sleva na řádku („−8,90“); bez ní se druhý řádek nekreslí. */
   discount?: string
   onIncrement: () => void
   onDecrement: () => void
@@ -12,7 +12,7 @@ export interface PosCartRowProps {
 }
 
 export function PosCartRow({ qty, name, price, discount, onIncrement, onDecrement, onClick }: PosCartRowProps) {
-  const step = 'flex h-8 w-8 items-center justify-center rounded-md text-[17px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
+  const step = 'flex h-[42px] w-[42px] items-center justify-center rounded-md text-[17px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
   return (
     <div className="flex items-center gap-2.5 border-b border-neutral-200 px-4 py-1.5">
       <div className="flex items-center">
