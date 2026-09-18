@@ -11,3 +11,7 @@ export { PosActionButton, type PosActionButtonProps, type PosActionVariant } fro
 export { PosCodeInput, type PosCodeInputProps } from './PosCodeInput'
 export { PosKeypad, type PosKeypadProps, type PosKey } from './PosKeypad'
 export { PosCashPill, type PosCashPillProps } from './PosCashPill'
+export { PosStatTile, type PosStatTileProps } from './PosStatTile'
+export { PosKeyValueRow, type PosKeyValueRowProps } from './PosKeyValueRow'
+export { PosPanel, type PosPanelProps } from './PosPanel'
+export { PosTransactionRow, type PosTransactionRowProps } from './PosTransactionRow'
