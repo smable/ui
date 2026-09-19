@@ -20,6 +20,12 @@ export interface PosSheetProps {
 export function PosSheet({ open, onClose, title, children, footer, closeLabel = 'Zavřít' }: PosSheetProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [shown, setShown] = useState(false)
+  // Fokus, zámek posunu i Esc se nastavují jen při otevření/zavření. Kdyby efekt závisel na `onClose`
+  // (konzumenti ho píší inline), každé překreslení rodiče by vzalo fokus z pole uvnitř panelu.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     if (!open) {
@@ -32,7 +38,7 @@ export function PosSheet({ open, onClose, title, children, footer, closeLabel = 
       panelRef.current?.focus()
     })
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') onCloseRef.current()
     }
     document.addEventListener('keydown', onKey)
     const overflow = document.body.style.overflow
@@ -41,9 +47,9 @@ export function PosSheet({ open, onClose, title, children, footer, closeLabel = 
       cancelAnimationFrame(frame)
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = overflow
-      previous?.focus()
+      if (previous && document.contains(previous)) previous.focus()
     }
-  }, [open, onClose])
+  }, [open])
 
   if (!open || typeof document === 'undefined') return null
   return createPortal(
@@ -55,7 +61,7 @@ export function PosSheet({ open, onClose, title, children, footer, closeLabel = 
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className={`relative flex max-h-[92vh] w-full flex-col rounded-t-2xl bg-white shadow-2xl outline-none transition-transform duration-200 ease-out ${shown ? 'translate-y-0' : 'translate-y-full'}`}
+        className={`relative flex max-h-[92%] w-full flex-col rounded-t-2xl bg-white shadow-2xl outline-none transition-transform duration-200 ease-out ${shown ? 'translate-y-0' : 'translate-y-full'}`}
       >
         <div className="flex shrink-0 justify-center pt-2">
           <span aria-hidden className="h-1 w-10 rounded-full bg-neutral-300" />
@@ -73,8 +79,8 @@ export function PosSheet({ open, onClose, title, children, footer, closeLabel = 
             </button>
           </div>
         )}
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">{children}</div>
-        {footer && <div className="shrink-0 border-t border-neutral-200 px-4 pb-5 pt-3">{footer}</div>}
+        <div className={`min-h-0 flex-1 overflow-y-auto px-4 ${footer ? 'pb-4' : 'pb-[max(1rem,env(safe-area-inset-bottom))]'}`}>{children}</div>
+        {footer && <div className="shrink-0 border-t border-neutral-200 px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3">{footer}</div>}
       </div>
     </div>,
     document.body,
