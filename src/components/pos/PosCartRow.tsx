@@ -1,9 +1,9 @@
 export interface PosCartRowProps {
   qty: string
   name: string
-  /** Cena řádku po slevě, naformátovaná. */
+  /** Částka řádku tak, jak ji chce konzument zobrazit (pokladna: po slevě na položku), naformátovaná. */
   price: string
-  /** Sleva na řádku („−8,90“); bez ní se druhý řádek nekreslí. */
+  /** Sleva zobrazená červeně pod částkou („−8,90“); bez ní se druhý řádek nekreslí. */
   discount?: string
   onIncrement: () => void
   onDecrement: () => void
