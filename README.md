@@ -91,13 +91,14 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 - `PosSearchInput` — vyhledávání / pole čtečky s klávesovou zkratkou
 - `PosCartRow` — řádek účtu s krokováním množství
 - `PosActionButton` — Zaplatit / Uložit / Storno se zkratkou
-- `PosCodeInput` — políčka kódu párování a PINu
-- `PosKeypad` — numerická klávesnice
+- `PosCodeInput` — políčka kódu párování a PINu; `fluid` — na šířku rodiče (telefon)
+- `PosKeypad` — numerická klávesnice; `fluid` — na šířku rodiče (telefon)
 - `PosCashPill` — rychlá bankovka pro dorovnání hotovosti
 - `PosStatTile` — statistická dlaždice uzávěrky (tržba, počet účtenek)
 - `PosKeyValueRow` — řádek popisek/hodnota v detailu účtenky
 - `PosPanel` — bílá karta se záhlavím (uzávěrka, detail účtenky, nastavení)
 - `PosTransactionRow` — řádek seznamu účtenek
+- `PosSheet` — spodní panel pro podobu na výšku (účet, detail položky)
 - `PosKbd` — klávesová zkratka (`Enter`, `Esc`, `F2`)
 - `readableTextClass(hex)` — vybere čitelnou barvu textu (bílá/tmavá) na barevné dlaždici
 
