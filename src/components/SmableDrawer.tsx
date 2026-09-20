@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode, type RefObject } from 'react'
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 import clsx from 'clsx'
@@ -33,6 +33,11 @@ export interface SmableDrawerProps {
    * tabulka, seznam s hover pruhy pres celou sirku, nahled obrazku.
    */
   bodyFlush?: boolean
+  /**
+   * Nadpis zacina velky v tele panelu a teprve pri odrolovani se slozi do hlavicky.
+   * Dokud je videt velky nadpis, hlavicka nese jen krizek — nazev by tam stal dvakrat.
+   */
+  largeTitle?: boolean
 }
 
 export function SmableDrawer({
@@ -47,7 +52,12 @@ export function SmableDrawer({
   widthClass = 'md:w-[40%] md:min-w-[520px] md:max-w-[760px]',
   bodyRef,
   bodyFlush = false,
+  largeTitle = false,
 }: SmableDrawerProps) {
+  // Hlidka hned pod velkym nadpisem: dokud je videt, hlavicka nazev neukazuje. IntersectionObserver
+  // misto posluchace posunu — nepocita se pri kazdem pixelu a nezalezi na vysce nadpisu.
+  const sentinel = useRef<HTMLDivElement>(null)
+  const [scrolledPastTitle, setScrolledPastTitle] = useState(false)
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -61,6 +71,21 @@ export function SmableDrawer({
       document.body.style.overflow = prev
     }
   }, [open, onClose])
+
+  useEffect(() => {
+    if (!open || !largeTitle || !title) {
+      setScrolledPastTitle(false)
+      return
+    }
+    const node = sentinel.current
+    if (!node || typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(([entry]) => setScrolledPastTitle(!entry.isIntersecting), {
+      root: node.closest('[data-drawer-body]'),
+      threshold: 0,
+    })
+    io.observe(node)
+    return () => io.disconnect()
+  }, [open, largeTitle, title])
 
   if (typeof document === 'undefined') return null
   return createPortal(
@@ -102,7 +127,7 @@ export function SmableDrawer({
             <div
               className={clsx(
                 'flex-1 min-w-0 transition-opacity duration-200',
-                titleHidden && 'opacity-0 pointer-events-none'
+                (titleHidden || (largeTitle && !scrolledPastTitle)) && 'opacity-0 pointer-events-none'
               )}
             >
               {title && (
@@ -124,6 +149,7 @@ export function SmableDrawer({
 
         <div
           ref={bodyRef}
+          data-drawer-body
           className={clsx(
             'flex-1 overflow-y-auto',
             // Hlavicka i paticka drzi px-4 sm:px-5; telo je do 0.12.0 nemelo,
@@ -132,6 +158,12 @@ export function SmableDrawer({
             !bodyFlush && 'px-4 sm:px-5 py-4',
           )}
         >
+          {largeTitle && title && (
+            <>
+              <h2 className="mb-4 text-[28px] font-bold leading-tight text-neutral-900 dark:text-white">{title}</h2>
+              <div ref={sentinel} aria-hidden className="h-px" />
+            </>
+          )}
           <FieldVariantProvider variant="floating">{children}</FieldVariantProvider>
         </div>
 

@@ -17,7 +17,7 @@ export function PosCartRow({ qty, name, price, discount, onIncrement, onDecremen
     <div className="flex items-center gap-2.5 border-b border-neutral-200 px-4 py-1.5">
       <div className="flex items-center">
         <button type="button" aria-label={`Ubrat ${name}`} onClick={onDecrement} className={`${step} text-neutral-600 hover:bg-neutral-100`}>−</button>
-        <span className="w-6 text-center text-[15px] font-semibold text-neutral-900">{qty}</span>
+        <span className="min-w-[24px] text-center text-[15px] font-semibold tabular-nums text-neutral-900">{qty}</span>
         <button type="button" aria-label={`Přidat ${name}`} onClick={onIncrement} className={`${step} text-brand-500 hover:bg-brand-50`}>+</button>
       </div>
       <button type="button" onClick={onClick} disabled={!onClick} className="min-w-0 flex-1 self-stretch truncate text-left text-[15px] font-semibold text-neutral-900 disabled:cursor-default">
