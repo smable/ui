@@ -18,7 +18,7 @@ export const PosSearchInput = forwardRef<HTMLInputElement, PosSearchInputProps>(
   ref,
 ) {
   return (
-    <label className="flex h-[42px] w-full items-center gap-2 rounded-[10px] bg-neutral-200 px-3.5 focus-within:ring-2 focus-within:ring-brand-500">
+    <label className="flex h-[42px] w-full min-w-0 items-center gap-2 rounded-[10px] bg-neutral-200 px-3.5 focus-within:ring-2 focus-within:ring-brand-500">
       <Search aria-hidden className="h-[18px] w-[18px] shrink-0 text-neutral-400" />
       <input
         ref={ref}
