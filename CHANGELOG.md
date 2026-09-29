@@ -2,6 +2,25 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.14.1 — 2026-09-29
+
+### ✨ `ListPageHeader` — akce na mobilu pod „⋯“
+
+Na úzkém displeji se v hlavičce seznamu tlačítka (Export, Import, Přidat) lámala na dva
+řádky a přetékala. Pod breakpointem `sm` teď hlavička ukáže vedle nadpisu jen kompaktní
+„+“ (`onAdd`, `aria-label` = `addLabel`) a tlačítko **„⋯“**, které rozbalí panel s obsahem
+`actions` pod sebou na plnou šířku. Na `sm+` beze změny.
+
+- Sbaluje se jen při **dvou a více** akcích (`actions` + `onAdd`, fragmenty se rozbalí);
+  jediná akce zůstává jako dřív.
+- `actions` se renderují jen jednou (panel je na mobilu jen jinak nastylovaný kontejner),
+  takže vnořené dropdowny (`DataTableExport`, `ExportMenu`) i skryté file inputy fungují.
+- Panel se zavře klikem mimo, Escape (fokus zpět na „⋯“) nebo klikem na akci; klik na
+  prvek s `aria-haspopup`/`aria-expanded` (vnořené menu) ho nezavře.
+- Nový volitelný prop `moreLabel` (výchozí „Další akce“) pro `aria-label` tlačítka „⋯“.
+- `DataTableExport`, `ExportMenu` a `SmableActionsMenu` mají na spouštěči
+  `aria-haspopup="menu"` a `aria-expanded`.
+
 ## 0.13.0 — 2026-08-26
 
 ### 🎉 New: `ConfirmDialog`
