@@ -2,6 +2,49 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.17.0 — 2026-10-06
+
+### ✨ `DataTable` — hromadný výběr, lepivá hlavička, hustota
+
+Převzato z `@praguebestcz/upsearch-ui` 0.6.0 (vzory PatternFly *bulk selection* a Pencil & Paper
+*enterprise data tables*), přepsáno na Smable tokeny a API nad TanStack `rowSelection`.
+Všechny nové propy jsou volitelné; bez nich se tabulka chová jako dřív (až na opravy níže).
+
+| Prop | K čemu |
+|---|---|
+| `getRowId` | klíč výběru podle id místo indexu řádku — **u `manualPagination` předávej vždy**, jinak výběr nepřežije přestránkování ani nové načtení |
+| `canSelectRow` | řádek, který nejde vybrat, má zaškrtávátko zakázané a tooltip s důvodem (`labels.rowNotSelectable`) |
+| `bulkSelectMenu` (default `true`) | šipka u zaškrtávátka v hlavičce: *Stránku (N)* / *Vše podle filtru (N)* / *Zrušit výběr* |
+| `selectionScope` (default `'filter'`) | co vybere klik do hlavičky — celý filtr napříč stránkami (dosavadní chování), nebo jen stránku |
+| `allFilteredCount` + `onSelectAllFiltered` | výběr napříč filtrem při `manualPagination`; bez nich se nabízí jen stránka |
+| `rangeSelect` (default `true`) | Shift + klik označí rozsah na stránce |
+| `stickyHeader` + `maxBodyHeight` | hlavička drží při svislém posunu |
+| `density` / `onDensityChange` / `densityToggle` | výška řádku `compact` / `normal` / `relaxed`; `normal` = dosavadní |
+| `hasFilters`, `emptyFilteredTitle`, `emptyFilteredDescription`, `onClearFilters` | prázdno kvůli filtru má vlastní text a tlačítko „Zrušit filtry" |
+| `announceSelection` (default `true`) | změna výběru jde čtečce do `aria-live` |
+| `labels` | všechny nové texty jdou přeložit (konzumenti v angličtině) |
+
+Nové exporty: `DataTableBulkSelect`, `DataTableDensityMenu`, `DATA_TABLE_DENSITY_CLASS`,
+typy `DataTableDensity`, `DataTableDensityLabels`, `DataTableLabels`.
+
+#### Opravy, které se projeví i bez nových propů
+
+- Zaškrtávátko v hlavičce má **mezistav**, když je vybraná jen část řádků. Dřív ukazovalo prázdno.
+- Prázdný stav se roztáhne přes **všechny viditelné sloupce** — `colSpan` počítal `columns.length`
+  bez sloupce výběru a se skrytými sloupci.
+- **Klikací řádek jde otevřít z klávesnice** (Tab + Enter / mezerník) a má viditelný fokus.
+- Hlavička řazeného sloupce nese `aria-sort`.
+- Klik na `label`, `select`, `textarea` nebo položku nabídky v řádku už nespustí `onRowClick`
+  (dřív se hlídalo jen `button`, `input`, `a`).
+- Zaškrtávátka výběru jsou `Checkbox` z balíčku místo nativního `<input>`, takže sedí i v tmavém režimu.
+
+### ✨ `Checkbox` — `disabled`, `aria-label`, role
+
+- `disabled` mění okraj i výplň, ne jen průhlednost, takže zakázané pole jde poznat i v tmavém režimu.
+- Nové propy `aria-label`, `title`, `className`; tlačítko má `role="checkbox"` a `aria-checked`
+  (`mixed` pro `indeterminate`) — dřív ho čtečka hlásila jako tlačítko bez stavu.
+- `onChange` dostává `MouseEvent` (zpětně kompatibilní) — kvůli Shift + klik.
+
 ## 0.13.0 — 2026-08-26
 
 ### 🎉 New: `ConfirmDialog`

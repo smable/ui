@@ -80,6 +80,10 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 - `SmableDatePicker` — date / datetime / range picker (requires `react-day-picker`, `date-fns`)
 - `SmableDrawer` — side drawer / modal
 - `SmableActionsMenu` — dropdown action menu
+- `DataTable` — TanStack tabulka: řazení, filtry, stránkování (i serverové), hromadný výběr podle id
+  (`getRowId`, `canSelectRow`, Shift + klik, menu Stránku / Vše podle filtru), lepivá hlavička, hustota, export
+- `DataTableBulkSelect`, `DataTableDensityMenu`, `DataTableColumnsMenu`, `DataTableExport` — díly DataTable pro vlastní TanStack instance
+- `Checkbox` — včetně `indeterminate` a `disabled`
 
 ### Pokladna (`pos/`)
 
