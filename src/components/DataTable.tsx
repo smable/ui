@@ -1,4 +1,4 @@
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -21,8 +21,19 @@ import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, Grip
 import clsx from 'clsx'
 import { DataTableExport, type ExportFormat, type DataTableExportExtraOption } from './DataTableExport'
 import { DataTableColumnsMenu } from './DataTableColumnsMenu'
+import { DataTableBulkSelect } from './DataTableBulkSelect'
+import { DataTableDensityMenu, DENSITY_CELL_CLASS, type DataTableDensity } from './DataTableDensityMenu'
+import { DataTableFilterChips } from './DataTableFilterChips'
 import { usePersistentTableState, type UsePersistentTableStateOptions } from '../lib/usePersistentTableState'
 import { normalize } from '../lib/search'
+
+/**
+ * Zaškrtávátko, nabídka ani odkaz nesmí klikem odnavigovat do detailu — `label`
+ * je v seznamu kvůli zaškrtávátkům zabaleným do labelu (větší klikací plocha).
+ */
+function isInteractiveTarget(el: HTMLElement): boolean {
+  return !!el.closest('button, input, a, label, select, textarea, [role="menu"]')
+}
 
 function DefaultColumnFilter({ column }: { column: any }) {
   const value = (column.getFilterValue() ?? '') as string
@@ -112,6 +123,25 @@ interface DataTableProps<T> {
   rowSelection?: RowSelectionState
   onRowSelectionChange?: OnChangeFn<RowSelectionState>
 
+  /**
+   * Šipka u zaškrtávátka v hlavičce: „Stránku (N)" / „Vše podle filtru (N)" /
+   * „Zrušit výběr". Klik přímo do zaškrtávátka bere dál celý filtr napříč
+   * stránkami — nabídka jen zpřístupňuje i tu stránku, u obojího s počtem.
+   */
+  bulkSelectMenu?: boolean
+  /**
+   * Kolik řádků odpovídá filtru na serveru. Při `manualPagination` zná tabulka
+   * jen načtenou stránku, takže bez tohohle by nabídka lhala.
+   */
+  allFilteredCount?: number
+  /**
+   * Výběr napříč filtrem při `manualPagination` — id zná jen stránka, tabulka
+   * jen zavolá tohle místo `toggleAllRowsSelected`.
+   */
+  onSelectAllFiltered?: () => void
+  /** Shift + klik označí rozsah řádků na stránce. Bez shiftu se nic nemění. */
+  rangeSelect?: boolean
+
   // Column reorder (drag & drop)
   draggableColumns?: boolean
   columnOrder?: ColumnOrderState
@@ -129,6 +159,10 @@ interface DataTableProps<T> {
   showColumnFilters?: boolean
   onShowColumnFiltersChange?: (show: boolean) => void
   renderColumnFilter?: (column: any, facetedValues: Map<any, number>) => ReactNode
+  /** Aktivní filtry jako odznaky pod nástroji, každý se křížkem. */
+  filterChips?: boolean
+  /** Bez tohohle se odznak pro hledání nezobrazí — hodnotu `globalFilter` drží stránka. */
+  onGlobalFilterClear?: () => void
 
   // Row behavior
   onRowClick?: (row: T) => void
@@ -136,6 +170,26 @@ interface DataTableProps<T> {
 
   // Fixed layout
   fixedLayout?: boolean
+
+  /**
+   * Hlavička drží při svislém posunu. Zapíná svislé scrollování těla tabulky,
+   * výšku omezuje `maxBodyHeight`. Řádek filtrů sloupců lepivý není.
+   */
+  stickyHeader?: boolean
+  /** Jen se `stickyHeader`. */
+  maxBodyHeight?: string
+  /** Výška řádku: `normal` je dnešní `py-4`. */
+  density?: DataTableDensity
+  onDensityChange?: (density: DataTableDensity) => void
+  /** Přepínač hustoty v nástrojové liště. */
+  densityToggle?: boolean
+
+  /** Kostra řádků ve stejných sloupcích jako data, místo dat. */
+  loading?: boolean
+  /** Kolik kostlivých řádků (default velikost stránky). */
+  skeletonRows?: number
+  /** Změna výběru a počtu řádků jde do `aria-live`. */
+  announceSelection?: boolean
 
   // Export
   exportable?: boolean
@@ -159,6 +213,15 @@ interface DataTableProps<T> {
   emptyIcon?: ReactNode
   emptyTitle?: string
   emptyDescription?: string
+  /**
+   * Prázdno podle filtru je jiná situace než prázdný dataset a chce jiný text —
+   * tady nabídni cestu ven, ne „založ první záznam". Bez těchto propů se použije
+   * `emptyTitle`/`emptyDescription` jako dosud.
+   */
+  emptyFilteredTitle?: string
+  emptyFilteredDescription?: string
+  /** Tlačítko „Zrušit filtry" v prázdném stavu podle filtru. */
+  onClearFilters?: () => void
 
   // Toolbar (extra content before table)
   toolbar?: ReactNode
@@ -189,6 +252,10 @@ export function DataTable<T>({
   selectable = false,
   rowSelection: externalRowSelection,
   onRowSelectionChange: externalOnRowSelectionChange,
+  bulkSelectMenu = false,
+  allFilteredCount,
+  onSelectAllFiltered,
+  rangeSelect = true,
   draggableColumns = false,
   columnOrder: externalColumnOrder,
   onColumnOrderChange,
@@ -198,9 +265,19 @@ export function DataTable<T>({
   onColumnFiltersChange,
   showColumnFilters = false,
   renderColumnFilter,
+  filterChips = false,
+  onGlobalFilterClear,
   onRowClick,
   rowClassName,
   fixedLayout = false,
+  stickyHeader = false,
+  maxBodyHeight = '60vh',
+  density: externalDensity,
+  onDensityChange,
+  densityToggle = false,
+  loading = false,
+  skeletonRows,
+  announceSelection = true,
   columnToggle = false,
   onShowColumnFiltersChange,
   exportable = false,
@@ -213,31 +290,81 @@ export function DataTable<T>({
   filterable = false,
   emptyTitle = 'Žádné záznamy',
   emptyDescription,
+  emptyFilteredTitle,
+  emptyFilteredDescription,
+  onClearFilters,
   toolbar,
   tableRef,
 }: DataTableProps<T>) {
+  // Shift + klik: `click` doběhne před `change`, takže se stav klávesy zapamatuje
+  // tady a rozsah se dopočítá až při změně, kdy je známá cílová hodnota.
+  const shiftHeldRef = useRef(false)
+  const lastToggledRowRef = useRef<string | null>(null)
+
   // Auto-prepend select column if selectable
   const allColumns = selectable
     ? [
         {
           id: 'select',
-          size: 50,
+          size: bulkSelectMenu ? 68 : 50,
           enableSorting: false,
-          header: ({ table: t }: any) => (
-            <input
-              type="checkbox"
-              checked={t.getIsAllRowsSelected()}
-              onChange={t.getToggleAllRowsSelectedHandler()}
-              className="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600 text-brand-600 focus:ring-brand-500 focus:ring-offset-0"
-            />
-          ),
-          cell: ({ row }: any) => (
+          header: ({ table: t }: any) =>
+            bulkSelectMenu ? (
+              <DataTableBulkSelect
+                table={t}
+                allFilteredCount={allFilteredCount}
+                onSelectAllFiltered={onSelectAllFiltered}
+              />
+            ) : (
+              <input
+                type="checkbox"
+                checked={t.getIsAllRowsSelected()}
+                aria-label="Vybrat vše podle filtru"
+                ref={(el: HTMLInputElement | null) => {
+                  if (el) el.indeterminate = !t.getIsAllRowsSelected() && t.getIsSomeRowsSelected()
+                }}
+                onChange={t.getToggleAllRowsSelectedHandler()}
+                className="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600 text-brand-600 focus:ring-brand-500 focus:ring-offset-0"
+              />
+            ),
+          cell: ({ row, table: t }: any) => (
             <input
               type="checkbox"
               checked={row.getIsSelected()}
-              onChange={row.getToggleSelectedHandler()}
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              className="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600 text-brand-600 focus:ring-brand-500 focus:ring-offset-0"
+              disabled={!row.getCanSelect()}
+              aria-label="Vybrat řádek"
+              onClick={(e: React.MouseEvent) => {
+                e.stopPropagation()
+                shiftHeldRef.current = e.shiftKey
+              }}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const checked = e.target.checked
+                const pageRows = t.getRowModel().rows
+                const from = lastToggledRowRef.current
+                const useRange = rangeSelect && shiftHeldRef.current && from && from !== row.id
+                shiftHeldRef.current = false
+                lastToggledRowRef.current = row.id
+
+                if (useRange) {
+                  const fromIndex = pageRows.findIndex((r: any) => r.id === from)
+                  const toIndex = pageRows.findIndex((r: any) => r.id === row.id)
+                  if (fromIndex !== -1 && toIndex !== -1) {
+                    const [start, end] = fromIndex < toIndex ? [fromIndex, toIndex] : [toIndex, fromIndex]
+                    const patch: RowSelectionState = {}
+                    pageRows.slice(start, end + 1).forEach((r: any) => {
+                      if (r.getCanSelect()) patch[r.id] = checked
+                    })
+                    setRowSelection(old => {
+                      const next = { ...old, ...patch }
+                      if (!checked) Object.keys(patch).forEach(key => delete next[key])
+                      return next
+                    })
+                    return
+                  }
+                }
+                row.toggleSelected(checked)
+              }}
+              className="w-4 h-4 rounded border-neutral-300 dark:border-neutral-600 text-brand-600 focus:ring-brand-500 focus:ring-offset-0 disabled:opacity-40 disabled:cursor-not-allowed"
             />
           ),
         } as ColumnDef<T, unknown>,
@@ -263,6 +390,10 @@ export function DataTable<T>({
     pageSize: persistent.pageSize,
   }))
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null)
+  const [internalDensity, setInternalDensity] = useState<DataTableDensity>('normal')
+  const density = externalDensity ?? internalDensity
+  const setDensity = onDensityChange ?? setInternalDensity
+  const cellPaddingClass = DENSITY_CELL_CLASS[density]
 
   const sortingState = externalSorting ?? persistent.sorting
   const handleSortingChange: OnChangeFn<SortingState> =
@@ -374,6 +505,14 @@ export function DataTable<T>({
     .getVisibleLeafColumns()
     .some(col => col.columnDef.footer != null)
 
+  const visibleColumnIds = table.getVisibleLeafColumns().map(col => col.id)
+  const visibleColumnCount = visibleColumnIds.length
+  const isFiltered = hasActiveFilters || !!globalFilter?.trim()
+  // Vybrané se počítají z pravdivých hodnot — konzument může nechat klíč s `false`.
+  const selectedCount = selectable
+    ? Object.values(rowSelectionState).filter(Boolean).length
+    : 0
+
   const tablePageCount = table.getPageCount()
   const currentPage = table.getState().pagination.pageIndex
   const currentPageSize = table.getState().pagination.pageSize
@@ -423,7 +562,7 @@ export function DataTable<T>({
   return (
     <>
       {/* Toolbar — above the table */}
-      {(toolbar || exportable || filterable || columnToggle) && (
+      {(toolbar || exportable || filterable || columnToggle || densityToggle) && (
         <div className="flex items-center gap-2 mb-4">
           {toolbar}
           {/* More filters toggle */}
@@ -468,6 +607,11 @@ export function DataTable<T>({
               </>
             )}
 
+            {/* Density */}
+            {densityToggle && (
+              <DataTableDensityMenu value={density} onChange={setDensity} className="hidden sm:block" />
+            )}
+
             {/* Export */}
             {exportable && (
               <>
@@ -487,8 +631,19 @@ export function DataTable<T>({
         </div>
       )}
 
+    {filterChips && (
+      <DataTableFilterChips
+        table={table}
+        globalFilter={globalFilter}
+        onGlobalFilterClear={onGlobalFilterClear}
+      />
+    )}
+
     <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
-      <div className="overflow-x-auto">
+      <div
+        className={stickyHeader ? 'overflow-auto' : 'overflow-x-auto'}
+        style={stickyHeader ? { maxHeight: maxBodyHeight } : undefined}
+      >
         <table className="w-full" style={fixedLayout ? { tableLayout: 'fixed' } : undefined}>
           {/* Header */}
           <thead>
@@ -499,8 +654,19 @@ export function DataTable<T>({
                   return (
                     <th
                       key={header.id}
+                      aria-sort={
+                        header.column.getIsSorted() === 'asc'
+                          ? 'ascending'
+                          : header.column.getIsSorted() === 'desc'
+                            ? 'descending'
+                            : undefined
+                      }
                       className={clsx(
-                        "px-4 py-3.5 text-left first:pl-6 last:pr-6 bg-neutral-50/80 dark:bg-neutral-800/40 transition-all group",
+                        "px-4 py-3.5 text-left first:pl-6 last:pr-6 transition-all group",
+                        // Lepivá hlavička musí být neprůhledná, jinak pod ní prosvítají řádky.
+                        stickyHeader
+                          ? "sticky top-0 z-10 bg-neutral-50 dark:bg-neutral-800 shadow-[inset_0_-1px_0_rgb(0_0_0/0.06)]"
+                          : "bg-neutral-50/80 dark:bg-neutral-800/40",
                         draggedColumn === header.column.id && "opacity-50 bg-brand-100 dark:bg-brand-900/30",
                         canDrag && draggedColumn && draggedColumn !== header.column.id && "border-l-2 border-transparent hover:border-brand-500"
                       )}
@@ -529,7 +695,9 @@ export function DataTable<T>({
                                   asc: <ChevronUp className="w-3.5 h-3.5 text-brand-500" />,
                                   desc: <ChevronDown className="w-3.5 h-3.5 text-brand-500" />,
                                 }[header.column.getIsSorted() as string] ?? (
-                                  <ChevronsUpDown className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                  // Vidět vždycky, jen zašedlá — skrytá šipka o možnosti řadit neřekne
+                                  // nic ani na dotyku, ani při prvním pohledu.
+                                  <ChevronsUpDown className="w-3.5 h-3.5 opacity-30 group-hover:opacity-100 transition-opacity" />
                                 )}
                               </span>
                             )}
@@ -564,18 +732,46 @@ export function DataTable<T>({
 
           {/* Body */}
           <tbody>
-            {table.getRowModel().rows.length === 0 ? (
+            {loading ? (
+              // Kostra ve stejných sloupcích jako data, aby stránka po doběhnutí neposkočila.
+              Array.from({ length: skeletonRows ?? currentPageSize }).map((_, rowIndex) => (
+                <tr key={`skeleton-${rowIndex}`} className="border-b border-neutral-100 dark:border-neutral-800/50">
+                  {visibleColumnIds.map((columnId, cellIndex) => (
+                    <td key={columnId} className={clsx('px-4 first:pl-6 last:pr-6', cellPaddingClass)}>
+                      <span
+                        className="block h-3 rounded bg-neutral-200 dark:bg-neutral-800 animate-pulse"
+                        style={{ width: cellIndex === 0 ? '1rem' : `${55 + ((rowIndex + cellIndex) % 3) * 12}%` }}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-16 text-center">
+                {/* Přes všechny viditelné sloupce — `columns.length` ignoruje select i skryté. */}
+                <td colSpan={visibleColumnCount} className="px-4 py-16 text-center">
                   <div className="flex flex-col items-center">
                     {emptyIcon && (
                       <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-400">
                         {emptyIcon}
                       </div>
                     )}
-                    <p className="text-neutral-900 dark:text-white font-medium mb-1">{emptyTitle}</p>
-                    {emptyDescription && (
-                      <p className="text-sm text-neutral-500">{emptyDescription}</p>
+                    <p className="text-neutral-900 dark:text-white font-medium mb-1">
+                      {isFiltered ? (emptyFilteredTitle ?? emptyTitle) : emptyTitle}
+                    </p>
+                    {(isFiltered ? (emptyFilteredDescription ?? emptyDescription) : emptyDescription) && (
+                      <p className="text-sm text-neutral-500">
+                        {isFiltered ? (emptyFilteredDescription ?? emptyDescription) : emptyDescription}
+                      </p>
+                    )}
+                    {isFiltered && onClearFilters && (
+                      <button
+                        type="button"
+                        onClick={onClearFilters}
+                        className="mt-4 inline-flex items-center h-9 px-4 text-sm font-medium text-brand-600 dark:text-brand-400 border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
+                      >
+                        Zrušit filtry
+                      </button>
                     )}
                   </div>
                 </td>
@@ -584,9 +780,12 @@ export function DataTable<T>({
               table.getRowModel().rows.map((row, index) => (
                 <tr
                   key={row.id}
+                  // Klikací řádek musí jít otevřít i bez myši — jinak je pro klávesnici neviditelný.
+                  tabIndex={onRowClick ? 0 : undefined}
+                  role={onRowClick ? 'button' : undefined}
                   className={clsx(
                     "group transition-all duration-200",
-                    onRowClick && "cursor-pointer",
+                    onRowClick && "cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500",
                     selectable && row.getIsSelected()
                       ? "bg-brand-50 dark:bg-brand-950/40"
                       : onRowClick && "hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40",
@@ -594,14 +793,20 @@ export function DataTable<T>({
                     rowClassName?.(row.original)
                   )}
                   onClick={(e) => {
-                    if ((e.target as HTMLElement).closest('button, input, a')) return
+                    if (isInteractiveTarget(e.target as HTMLElement)) return
                     onRowClick?.(row.original)
+                  }}
+                  onKeyDown={(e) => {
+                    if (!onRowClick || (e.key !== 'Enter' && e.key !== ' ')) return
+                    if (isInteractiveTarget(e.target as HTMLElement)) return
+                    e.preventDefault()
+                    onRowClick(row.original)
                   }}
                 >
                   {row.getVisibleCells().map(cell => (
                     <td
                       key={cell.id}
-                      className="px-4 py-4 first:pl-6 last:pr-6"
+                      className={clsx('px-4 first:pl-6 last:pr-6', cellPaddingClass)}
                       style={fixedLayout ? { width: cell.column.getSize(), minWidth: cell.column.getSize() } : undefined}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -737,6 +942,15 @@ export function DataTable<T>({
         </div>
       )}
     </div>
+
+    {/* Změnu výběru ani počtu řádků čtečka jinak nepozná — nic se nepřekreslí nahlas. */}
+    {announceSelection && (
+      <p className="sr-only" aria-live="polite">
+        {selectedCount > 0
+          ? `Vybráno ${selectedCount} z ${filteredCount} položek.`
+          : `${filteredCount} položek.`}
+      </p>
+    )}
     </>
   )
 }
