@@ -26,6 +26,8 @@ export function ExportMenu({ options = defaultOptions }: ExportMenuProps) {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
         className="inline-flex items-center gap-2 h-10 px-4 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
       >
         <Download className="w-4 h-4" />

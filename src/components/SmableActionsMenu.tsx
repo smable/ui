@@ -49,6 +49,8 @@ export function SmableActionsMenu({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        aria-haspopup="menu"
+        aria-expanded={open}
         className={clsx(
           'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors',
           'bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800',

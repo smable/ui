@@ -2,6 +2,15 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.17.1 — 2026-10-07
+
+### 🐛 Oprava: vrácena změna z 0.14.1, která chyběla v 0.15.0–0.17.0
+
+Verze 0.14.1 vyšla z větve `release/0.14` a do `main` se nikdy nespojila, takže 0.15.0,
+0.16.x i 0.17.0 v `ListPageHeader` nemají akce na mobilu pod „⋯“ a export menu nemají
+`aria-haspopup`/`aria-expanded`. Konzument, který z 0.14.1 přešel na 0.17.0, by o ně přišel.
+0.17.1 = 0.17.0 + změny z 0.14.1 (popis níže).
+
 ## 0.17.0 — 2026-10-06
 
 ### ✨ `DataTable` — hromadný výběr, lepivá hlavička, hustota
@@ -44,6 +53,24 @@ typy `DataTableDensity`, `DataTableDensityLabels`, `DataTableLabels`.
 - Nové propy `aria-label`, `title`, `className`; tlačítko má `role="checkbox"` a `aria-checked`
   (`mixed` pro `indeterminate`) — dřív ho čtečka hlásila jako tlačítko bez stavu.
 - `onChange` dostává `MouseEvent` (zpětně kompatibilní) — kvůli Shift + klik.
+## 0.14.1 — 2026-09-29
+
+### ✨ `ListPageHeader` — akce na mobilu pod „⋯“
+
+Na úzkém displeji se v hlavičce seznamu tlačítka (Export, Import, Přidat) lámala na dva
+řádky a přetékala. Pod breakpointem `sm` teď hlavička ukáže vedle nadpisu jen kompaktní
+„+“ (`onAdd`, `aria-label` = `addLabel`) a tlačítko **„⋯“**, které rozbalí panel s obsahem
+`actions` pod sebou na plnou šířku. Na `sm+` beze změny.
+
+- Sbaluje se jen při **dvou a více** akcích (`actions` + `onAdd`, fragmenty se rozbalí);
+  jediná akce zůstává jako dřív.
+- `actions` se renderují jen jednou (panel je na mobilu jen jinak nastylovaný kontejner),
+  takže vnořené dropdowny (`DataTableExport`, `ExportMenu`) i skryté file inputy fungují.
+- Panel se zavře klikem mimo, Escape (fokus zpět na „⋯“) nebo klikem na akci; klik na
+  prvek s `aria-haspopup`/`aria-expanded` (vnořené menu) ho nezavře.
+- Nový volitelný prop `moreLabel` (výchozí „Další akce“) pro `aria-label` tlačítka „⋯“.
+- `DataTableExport`, `ExportMenu` a `SmableActionsMenu` mají na spouštěči
+  `aria-haspopup="menu"` a `aria-expanded`.
 
 ## 0.13.0 — 2026-08-26
 
