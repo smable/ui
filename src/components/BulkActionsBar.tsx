@@ -22,7 +22,8 @@ export function BulkActionsBar({ count, label = defaultLabel, children, onClear 
       <span className="text-sm font-medium">{label(count)}</span>
       <div className="w-px h-5 bg-neutral-700 dark:bg-neutral-300" />
       {children}
-      <button
+      <button type="button"
+        aria-label="Zrušit výběr"
         onClick={onClear}
         className="p-1.5 hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-lg transition-colors"
       >

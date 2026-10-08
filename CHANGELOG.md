@@ -2,6 +2,35 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.17.2 — 2026-10-08
+
+### 🔒 Bezpečnostní a funkční hotfix (z auditu knihovny)
+
+Žádná změna API, jen opravy. Doporučeno nasadit u všech konzumentů s `DataTable` / `DataTableExport`.
+
+- **XSS v tisku tabulky** — `printTable` vkládal název, hlavičky i hodnoty buněk do HTML okna bez
+  escapování. Jméno zákazníka nebo položky s HTML značkami se v okně tisku spustilo jako kód
+  (stejný origin jako aplikace). Teď se vše escapuje.
+- **CSV formula injection** — buňky začínající `=`, `+`, `-`, `@`, TAB nebo CR dostanou prefix `'`,
+  aby je Excel nespustil jako vzorec. Čísla (`-120`, `+420 777 …`, `-1 250,50`) zůstávají beze změny.
+- **Input / Select / Textarea — porušené pravidlo hooků**: `useId()` se volal jen ve větvi
+  `floating`. Při změně varianty přes `FieldVariantProvider` mezi rendery React spadl.
+- **Input / Select / Textarea (varianta default)** — štítek je teď propojený s polem
+  (`htmlFor`/`id`, vlastní `id` z props se respektuje), chyba má `id` a pole `aria-invalid` +
+  `aria-describedby`. Čtečky obrazovky dřív pole bez názvu oznamovaly jako „editovatelný text“.
+- **DataTable „Více filtrů“** nefungovalo, pokud rodič neřídil `showColumnFilters` (výchozí `false`
+  přebilo vnitřní stav). Teď funguje neřízeně i řízeně; `onShowColumnFiltersChange` se volá vždy.
+- **DataTable stránkování** zmizelo, když si uživatel zvolil menší stránku než `pageSize` z propu
+  (např. 10 z 20 při 15 řádcích) — řádky 11–15 nešly zobrazit.
+- **`type="button"`** doplněn ke 27 tlačítkům (DataTable, Pagination, menu exportu a sloupců,
+  StatusTabs, ViewToggle, DateRangePicker, SearchBar, lišty výběru, AlertBanner, EmptyState,
+  app-shell). Uvnitř `<form>` dřív odesílaly formulář.
+- **Přístupné názvy ikonových tlačítek** — stránkování (nové `labels.previousPage` /
+  `labels.nextPage` v DataTable, aktivní stránka má `aria-current`), vymazání hledání, zrušení
+  výběru, zavření upozornění, ViewToggle (+ `aria-pressed`), filtry, Export / Sloupce / Hustota
+  na mobilu, aplikace v AppRail a mobilním přepínači, položky sbaleného sidebaru.
+  Vyhledávací pole má `aria-label` podle placeholderu.
+
 ## 0.17.1 — 2026-10-07
 
 ### 🐛 Oprava: vrácena změna z 0.14.1, která chyběla v 0.15.0–0.17.0

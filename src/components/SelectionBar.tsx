@@ -23,7 +23,8 @@ export function SelectionBar({ count, label = 'vybráno', children, onClear }: S
       </div>
       <div className="flex items-center gap-2">
         {children}
-        <button
+        <button type="button"
+          aria-label="Zrušit výběr"
           onClick={onClear}
           className="p-2 text-brand-500 hover:text-brand-700 hover:bg-brand-100 dark:hover:bg-brand-800 rounded-lg transition-colors"
         >
@@ -39,7 +40,7 @@ export function SelectionAction({ icon, label, onClick, danger }: {
   icon: ReactNode; label: string; onClick: () => void; danger?: boolean
 }) {
   return (
-    <button
+    <button type="button"
       onClick={onClick}
       className={`inline-flex items-center gap-1.5 h-8 px-3 text-sm font-medium bg-white dark:bg-brand-900 rounded-lg hover:bg-neutral-50 dark:hover:bg-brand-800 transition-colors shadow-sm ${
         danger ? 'text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30' : 'text-neutral-700 dark:text-brand-100'

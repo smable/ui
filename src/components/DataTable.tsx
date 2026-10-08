@@ -42,6 +42,8 @@ export interface DataTableLabels {
   itemCount: (n: number) => string
   selectionAnnouncement: (selected: number, total: number) => string
   clearFilters: string
+  previousPage: string
+  nextPage: string
   density: Partial<DataTableDensityLabels>
 }
 
@@ -61,6 +63,8 @@ const DEFAULT_LABELS: DataTableLabels = {
   itemCount: czItems,
   selectionAnnouncement: (selected, total) => `Vybráno ${selected} z ${czItems(total)}.`,
   clearFilters: 'Zrušit filtry',
+  previousPage: 'Předchozí stránka',
+  nextPage: 'Další stránka',
   density: {},
 }
 
@@ -301,7 +305,7 @@ export function DataTable<T>({
   onColumnVisibilityChange,
   columnFilters: externalColumnFilters,
   onColumnFiltersChange,
-  showColumnFilters = false,
+  showColumnFilters,
   renderColumnFilter,
   onRowClick,
   rowClassName,
@@ -486,11 +490,8 @@ export function DataTable<T>({
   }
   const isShowFilters = showColumnFilters !== undefined ? showColumnFilters : internalShowFilters
   const toggleShowFilters = () => {
-    if (onShowColumnFiltersChange) {
-      onShowColumnFiltersChange(!isShowFilters)
-    } else {
-      setInternalShowFilters(prev => !prev)
-    }
+    if (showColumnFilters === undefined) setInternalShowFilters(!isShowFilters)
+    onShowColumnFiltersChange?.(!isShowFilters)
   }
   const hasActiveFilters = columnFiltersState.length > 0
 
@@ -573,7 +574,7 @@ export function DataTable<T>({
   const totalRows = manualPagination ? totalCount : filteredCount
   const showPagination = manualPagination
     ? tablePageCount > 1 || tablePageCount === -1
-    : filteredCount > pageSize
+    : filteredCount > Math.min(pageSize, currentPageSize)
   const isFiltered = hasFilters ?? (data.length > 0 && (!!globalFilter || hasActiveFilters))
   const clearFilters = onClearFilters ?? (hasActiveFilters && !globalFilter ? () => setColumnFilters([]) : undefined)
   const shownEmptyTitle = isFiltered ? (emptyFilteredTitle ?? emptyTitle) : emptyTitle
@@ -629,8 +630,10 @@ export function DataTable<T>({
           {/* More filters toggle */}
           {filterable && (
               <>
-                <button
+                <button type="button"
                   onClick={() => toggleShowFilters()}
+                  aria-label="Více filtrů"
+                  aria-pressed={isShowFilters}
                   className={clsx(
                     "inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-xl border transition-all",
                     isShowFilters
@@ -647,10 +650,11 @@ export function DataTable<T>({
                   )}
                 </button>
                 {hasActiveFilters && (
-                  <button
+                  <button type="button"
                     onClick={() => setColumnFilters([])}
                     className="inline-flex items-center gap-1 h-9 px-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors"
-                    title="Zrušit filtry"
+                    title={labels.clearFilters}
+                    aria-label={labels.clearFilters}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -917,8 +921,9 @@ export function DataTable<T>({
           </div>
 
           <div className="flex items-center gap-1">
-            <button
+            <button type="button"
               onClick={() => table.previousPage()}
+              aria-label={labels.previousPage}
               disabled={!table.getCanPreviousPage()}
               className={clsx(
                 "inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all",
@@ -944,9 +949,10 @@ export function DataTable<T>({
                 }
 
                 return (
-                  <button
+                  <button type="button"
                     key={pageNum}
                     onClick={() => table.setPageIndex(pageNum)}
+                    aria-current={currentPage === pageNum ? 'page' : undefined}
                     className={clsx(
                       "w-9 h-9 text-sm font-medium rounded-xl transition-all",
                       currentPage === pageNum
@@ -960,8 +966,9 @@ export function DataTable<T>({
               })}
             </div>
 
-            <button
+            <button type="button"
               onClick={() => table.nextPage()}
+              aria-label={labels.nextPage}
               disabled={!table.getCanNextPage()}
               className={clsx(
                 "inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all",

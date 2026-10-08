@@ -47,7 +47,8 @@ export function Pagination({
         )}
       </div>
       <div className="flex items-center gap-1">
-        <button
+        <button type="button"
+          aria-label="Předchozí stránka"
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
           className={clsx(
@@ -62,7 +63,8 @@ export function Pagination({
         <span className="px-3 text-sm text-neutral-600 dark:text-neutral-400 tabular-nums">
           {page} / {totalPages}
         </span>
-        <button
+        <button type="button"
+          aria-label="Další stránka"
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
           className={clsx(

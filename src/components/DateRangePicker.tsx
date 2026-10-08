@@ -70,7 +70,7 @@ export function DateRangePicker({ preset, dateRange, onPresetChange, onCustomRan
       {/* Preset buttons */}
       <div className="flex items-center gap-1 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg w-fit">
         {PRESETS.map(p => (
-          <button
+          <button type="button"
             key={p.key}
             onClick={() => onPresetChange(p.key)}
             className={clsx(

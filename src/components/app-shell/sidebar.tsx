@@ -91,7 +91,7 @@ export function Sidebar({
         {/* Brand header */}
         <div className="h-16 flex items-center px-4 shrink-0">
           {brand}
-          <button onClick={closeMobile} className="ml-auto p-2 hover:bg-white/10 rounded-lg" aria-label="Close menu">
+          <button type="button" onClick={closeMobile} className="ml-auto p-2 hover:bg-white/10 rounded-lg" aria-label="Close menu">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -105,6 +105,7 @@ export function Sidebar({
                 <Link
                   key={app.id}
                   href={app.href}
+                  aria-label={app.label}
                   onClick={closeMobile}
                   className={clsx(
                     'flex-1 flex flex-col items-center gap-1 rounded-lg py-2 text-xs font-medium transition-colors',

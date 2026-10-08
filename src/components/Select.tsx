@@ -39,10 +39,10 @@ const errorMsgClass = "mt-1.5 text-xs text-red-600 dark:text-red-400"
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(props, ref) {
   const contextVariant = useFieldVariant()
   const resolvedVariant = props.variant ?? contextVariant
+  const autoId = useId()
   if (resolvedVariant === 'floating') {
     const floatingProps = props as FloatingSelectProps
     const { label, error, size = 'large', className, id, required, children, variant: _v, ...rest } = floatingProps
-    const autoId = useId()
     const selectId = id ?? `select-${autoId}`
     const hasError = Boolean(error)
     const sizeClasses = size === 'large' ? 'h-16 pt-6 pb-2 text-base' : 'h-12 pt-5 pb-1 text-sm'
@@ -93,21 +93,30 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   }
 
   const defaultProps = props as DefaultSelectProps
-  const { label, error, required, className, variant: _v, size: _size, children, ...rest } = defaultProps
+  const { label, error, required, className, id, variant: _v, size: _size, children, ...rest } = defaultProps
+  const selectId = id ?? `select-${autoId}`
   return (
     <div>
       {label && (
-        <label className={defaultLabel}>
+        <label htmlFor={selectId} className={defaultLabel}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
       <div className="relative">
-        <select ref={ref} required={required} className={clsx(defaultBase, className)} {...rest}>
+        <select
+          ref={ref}
+          id={selectId}
+          required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${selectId}-error` : undefined}
+          className={clsx(defaultBase, className)}
+          {...rest}
+        >
           {children}
         </select>
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
       </div>
-      {error && <p className={errorMsgClass}>{error}</p>}
+      {error && <p id={`${selectId}-error`} className={errorMsgClass}>{error}</p>}
     </div>
   )
 })

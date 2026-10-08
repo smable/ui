@@ -43,10 +43,10 @@ const errorMsgClass = "mt-1.5 text-xs text-red-600 dark:text-red-400"
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(props, ref) {
   const contextVariant = useFieldVariant()
   const resolvedVariant = props.variant ?? contextVariant
+  const autoId = useId()
   if (resolvedVariant === 'floating') {
     const floatingProps = props as FloatingTextareaProps
     const { label, error, size = 'large', className, id, required, rows, placeholder, variant: _v, ...rest } = floatingProps
-    const autoId = useId()
     const textareaId = id ?? `textarea-${autoId}`
     const hasError = Boolean(error)
     // Viz Input.tsx — se skutečným placeholderem platí `:placeholder-shown`
@@ -105,16 +105,25 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
   }
 
   const defaultProps = props as DefaultTextareaProps
-  const { label, error, required, className, variant: _v, size: _size, ...rest } = defaultProps
+  const { label, error, required, className, id, variant: _v, size: _size, ...rest } = defaultProps
+  const textareaId = id ?? `textarea-${autoId}`
   return (
     <div>
       {label && (
-        <label className={defaultLabel}>
+        <label htmlFor={textareaId} className={defaultLabel}>
           {label} {required && <span className="text-red-500">*</span>}
         </label>
       )}
-      <textarea ref={ref} required={required} className={clsx(defaultBase, className)} {...rest} />
-      {error && <p className={errorMsgClass}>{error}</p>}
+      <textarea
+        ref={ref}
+        id={textareaId}
+        required={required}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${textareaId}-error` : undefined}
+        className={clsx(defaultBase, className)}
+        {...rest}
+      />
+      {error && <p id={`${textareaId}-error`} className={errorMsgClass}>{error}</p>}
     </div>
   )
 })

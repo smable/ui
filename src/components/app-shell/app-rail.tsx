@@ -15,7 +15,7 @@ import { DefaultShellLink } from './link'
 export function SidebarPinToggle() {
   const { isCollapsed, toggleCollapsed } = useSidebar()
   return (
-    <button
+    <button type="button"
       onClick={toggleCollapsed}
       className="flex h-9 w-9 items-center justify-center rounded-lg text-white/40 hover:text-white/80 hover:bg-white/10 transition-colors"
       aria-label={isCollapsed ? 'Pin menu' : 'Collapse menu'}
@@ -71,6 +71,7 @@ export function AppRail({
                 <TooltipTrigger asChild>
                   <Link
                     href={app.href}
+                    aria-label={app.label}
                     className={clsx(
                       'relative flex h-11 w-11 items-center justify-center rounded-xl transition-colors',
                       app.isActive

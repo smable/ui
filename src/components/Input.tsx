@@ -54,10 +54,10 @@ const errorMsgClass = "mt-1.5 text-xs text-red-600 dark:text-red-400"
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
   const contextVariant = useFieldVariant()
   const resolvedVariant = props.variant ?? contextVariant
+  const autoId = useId()
   if (resolvedVariant === 'floating') {
     const floatingProps = props as FloatingInputProps
     const { label, error, trailing, size = 'large', className, id, required, placeholder, variant: _v, ...rest } = floatingProps
-    const autoId = useId()
     const inputId = id ?? `input-${autoId}`
     const hasError = Boolean(error)
     const sizeClasses = size === 'large' ? 'h-16 pt-6 pb-2 text-base' : 'h-12 pt-5 pb-1 text-sm'
@@ -138,14 +138,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   }
 
   const defaultProps = props as DefaultInputProps
-  const { label, labelAction, error, required, prefix, suffix, className, variant: _v, size: _size, trailing: _trailing, ...rest } = defaultProps
+  const { label, labelAction, error, required, prefix, suffix, className, id, variant: _v, size: _size, trailing: _trailing, ...rest } = defaultProps
+  const inputId = id ?? `input-${autoId}`
   const wrapped = prefix || suffix
   return (
     <div>
       {(label || labelAction) && (
         <div className="flex items-center justify-between mb-1.5">
           {label ? (
-            <label className={clsx(defaultLabel, 'mb-0')}>
+            <label htmlFor={inputId} className={clsx(defaultLabel, 'mb-0')}>
               {label} {required && <span className="text-red-500">*</span>}
             </label>
           ) : <span />}
@@ -160,7 +161,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
         )}
         <input
           ref={ref}
+          id={inputId}
           required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${inputId}-error` : undefined}
           className={clsx(
             defaultBase,
             error ? defaultError : defaultNormal,
@@ -176,7 +180,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
           </div>
         )}
       </div>
-      {error && <p className={errorMsgClass}>{error}</p>}
+      {error && <p id={`${inputId}-error`} className={errorMsgClass}>{error}</p>}
     </div>
   )
 })

@@ -37,8 +37,10 @@ export function DataTableColumnsMenu<T>({
 
   return (
     <div className={clsx('relative', className)}>
-      <button
+      <button type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={label}
+        aria-expanded={isOpen}
         className="inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
       >
         <Eye className="w-4 h-4" />

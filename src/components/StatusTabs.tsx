@@ -17,7 +17,7 @@ export function StatusTabs<T extends string>({ tabs, value, onChange }: StatusTa
   return (
     <div className="inline-flex items-center gap-1 p-1 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
       {tabs.map(tab => (
-        <button
+        <button type="button"
           key={tab.key}
           onClick={() => onChange(tab.key)}
           className={clsx(

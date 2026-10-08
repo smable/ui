@@ -197,8 +197,29 @@ function getExportData<T>(
 // CSV Export
 // ============================================================================
 
+/**
+ * Ochrana proti CSV/formula injection (OWASP): buňku začínající = + - @ TAB CR
+ * by Excel spustil jako vzorec. Prefix ' ji vynutí jako text. Čísla (-120, +5,50)
+ * zůstávají čísly.
+ */
+function neutralizeFormula(value: string): string {
+  if (!/^[=+\-@\t\r]/.test(value)) return value
+  if (/^[-+]?\d[\d\s.,]*$/.test(value)) return value
+  return `'${value}`
+}
+
 function csvCell(value: string): string {
-  return /[";\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
+  const safe = neutralizeFormula(value)
+  return /[";\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
+}
+
+function escapeHtml(value: string | null | undefined): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 }
 
 /** UTF-8 s BOM, st\u0159edn\u00EDk jako odd\u011Blova\u010D, CRLF \u2014 \u010Desk\u00E1 Excel konvence. */
@@ -312,7 +333,7 @@ export function printTable<T>(table: Table<T>, title?: string, allRows?: T[]) {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${title || 'Tisk'}</title>
+      <title>${escapeHtml(title || 'Tisk')}</title>
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 20px; color: #262626; }
         h1 { font-size: 18px; margin-bottom: 4px; }
@@ -325,11 +346,11 @@ export function printTable<T>(table: Table<T>, title?: string, allRows?: T[]) {
       </style>
     </head>
     <body>
-      ${title ? `<h1>${title}</h1>` : ''}
+      ${title ? `<h1>${escapeHtml(title)}</h1>` : ''}
       <div class="meta">${rows.length} záznamů · ${new Date().toLocaleDateString('cs-CZ')} ${new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}</div>
       <table>
-        <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+        <thead><tr>${headers.map(h => `<th>${escapeHtml(h)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody>
       </table>
     </body>
     </html>
@@ -415,8 +436,9 @@ export function DataTableExport<T>({
 
   return (
     <div className="relative">
-      <button
+      <button type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Export"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         className="inline-flex items-center gap-2 h-10 px-4 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
@@ -440,7 +462,7 @@ export function DataTableExport<T>({
                   {format === 'print' && i > 0 && (
                     <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
                   )}
-                  <button
+                  <button type="button"
                     onClick={() => handleExport(format)}
                     disabled={isRunning}
                     className={clsx(
@@ -466,7 +488,7 @@ export function DataTableExport<T>({
                 {extraOptions.map(option => {
                   const isRunning = runningKey === `extra:${option.key}`
                   return (
-                    <button
+                    <button type="button"
                       key={option.key}
                       onClick={() => handleExtraSelect(option)}
                       disabled={isRunning}

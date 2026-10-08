@@ -24,8 +24,9 @@ export function ExportMenu({ options = defaultOptions }: ExportMenuProps) {
 
   return (
     <div className="relative">
-      <button
+      <button type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-label="Export"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         className="inline-flex items-center gap-2 h-10 px-4 text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
@@ -44,7 +45,7 @@ export function ExportMenu({ options = defaultOptions }: ExportMenuProps) {
                 {i > 0 && i === options.length - 1 && options.length > 2 && (
                   <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
                 )}
-                <button
+                <button type="button"
                   onClick={() => { option.onClick(); setIsOpen(false) }}
                   className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-700 dark:text-neutral-300"
                 >

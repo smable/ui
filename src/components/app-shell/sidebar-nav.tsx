@@ -47,7 +47,8 @@ function NavItemRow({
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
+              <button type="button"
+                aria-label={item.label}
                 onClick={() => setIsOpen(!isOpen)}
                 className={clsx(
                   'w-full flex items-center justify-center p-3 rounded-lg transition-colors',
@@ -93,6 +94,7 @@ function NavItemRow({
           <TooltipTrigger asChild>
             <Link
               href={item.href}
+              aria-label={item.label}
               onClick={onNavigate}
               className={clsx(
                 'flex items-center justify-center p-3 rounded-lg transition-colors relative',
@@ -121,7 +123,7 @@ function NavItemRow({
   if (hasChildren) {
     return (
       <div>
-        <button
+        <button type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={clsx(
             'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',

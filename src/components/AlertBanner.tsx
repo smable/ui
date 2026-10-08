@@ -43,7 +43,8 @@ export function AlertBanner({
       <AlertTriangle className={`w-5 h-5 ${iconClasses[type]}`} />
       <p className="flex-1 text-sm font-medium">{message}</p>
       {dismissible && (
-        <button
+        <button type="button"
+          aria-label="Zavřít upozornění"
           onClick={handleDismiss}
           className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
         >
