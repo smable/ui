@@ -109,9 +109,11 @@ export function SmableDrawer({
         className={clsx(
           'relative ml-auto h-full w-full flex flex-col',
           widthClass,
-          'bg-white dark:bg-neutral-950 shadow-2xl',
+          'bg-white dark:bg-neutral-950',
           'transform transition-transform duration-300 ease-out',
-          open ? 'translate-x-0' : 'translate-x-full'
+          // Stín jen u otevřeného panelu — zavřený je odsunutý mimo obrazovku,
+          // ale shadow-2xl by na mobilu prosvítal u pravého okraje stránky.
+          open ? 'translate-x-0 shadow-2xl' : 'translate-x-full'
         )}
       >
         <div className="flex items-center gap-3 px-4 sm:px-5 h-16 flex-shrink-0">
