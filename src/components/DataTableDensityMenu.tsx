@@ -6,7 +6,8 @@
  *   <DataTableDensityMenu value={density} onChange={setDensity} />
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { useMenuAlign } from '../lib/useMenuAlign'
 import { Rows3, Check } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -45,11 +46,13 @@ export interface DataTableDensityMenuProps {
 
 export function DataTableDensityMenu({ value, onChange, labels, className }: DataTableDensityMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const menuAlign = useMenuAlign(isOpen, anchorRef, 192)
   const l = { ...DEFAULT_LABELS, ...labels }
   const options: DataTableDensity[] = ['compact', 'normal', 'relaxed']
 
   return (
-    <div className={clsx('relative', className)}>
+    <div ref={anchorRef} className={clsx('relative', className)}>
       <button
         type="button"
         aria-haspopup="menu"
@@ -64,7 +67,7 @@ export function DataTableDensityMenu({ value, onChange, labels, className }: Dat
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div role="menu" className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden">
+          <div role="menu" className={clsx('absolute top-full mt-2 w-48 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
             <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
               <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">{l.title}</p>
             </div>

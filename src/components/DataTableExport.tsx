@@ -9,7 +9,8 @@
  *   <DataTableExport table={table} formats={['csv', 'excel']} />
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { useMenuAlign } from '../lib/useMenuAlign'
 import { Download, ChevronDown, FileSpreadsheet, FileText, Printer, Loader2 } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
@@ -383,6 +384,8 @@ export function DataTableExport<T>({
   fetchAllRows,
 }: DataTableExportProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const menuAlign = useMenuAlign(isOpen, anchorRef, 224)
   // Klíč právě běžící položky menu — formát (`format:csv`) nebo extra option
   // (`extra:{key}`). Dokud běží, je položka disabled (spinner) a ostatní
   // položky jsou guardnuté proti souběhu.
@@ -435,7 +438,7 @@ export function DataTableExport<T>({
   const filteredCount = table.getFilteredRowModel().rows.length
 
   return (
-    <div className="relative">
+    <div ref={anchorRef} className="relative">
       <button type="button"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Export"
@@ -451,7 +454,7 @@ export function DataTableExport<T>({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50">
+          <div className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50 max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
             <div className="px-4 py-2 text-xs text-neutral-400 border-b border-neutral-100 dark:border-neutral-800">
               {filteredCount} záznamů
             </div>

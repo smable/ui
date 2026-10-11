@@ -9,7 +9,8 @@
  *   <DataTableColumnsMenu table={table} />
  */
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { useMenuAlign } from '../lib/useMenuAlign'
 import type { Table } from '@tanstack/react-table'
 import { Eye, Check } from 'lucide-react'
 import clsx from 'clsx'
@@ -34,9 +35,11 @@ export function DataTableColumnsMenu<T>({
   className,
 }: DataTableColumnsMenuProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const menuAlign = useMenuAlign(isOpen, anchorRef, 224)
 
   return (
-    <div className={clsx('relative', className)}>
+    <div ref={anchorRef} className={clsx('relative', className)}>
       <button type="button"
         onClick={() => setIsOpen(!isOpen)}
         aria-label={label}
@@ -49,7 +52,7 @@ export function DataTableColumnsMenu<T>({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden">
+          <div className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
             <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
               <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">{title}</p>
             </div>

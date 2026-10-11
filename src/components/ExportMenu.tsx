@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
+import { useMenuAlign } from '../lib/useMenuAlign'
 import { Download, ChevronDown, FileSpreadsheet, Printer } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -21,9 +22,11 @@ const defaultOptions: ExportOption[] = [
 
 export function ExportMenu({ options = defaultOptions }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const menuAlign = useMenuAlign(isOpen, anchorRef, 224)
 
   return (
-    <div className="relative">
+    <div ref={anchorRef} className="relative">
       <button type="button"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Export"
@@ -39,7 +42,7 @@ export function ExportMenu({ options = defaultOptions }: ExportMenuProps) {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50">
+          <div className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50 max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
             {options.map((option, i) => (
               <div key={option.key}>
                 {i > 0 && i === options.length - 1 && options.length > 2 && (
