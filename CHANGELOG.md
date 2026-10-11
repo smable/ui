@@ -2,6 +2,25 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.17.3 — 2026-10-11
+
+### 📱 Opravy na mobilu (z auditu app.smable.cz na 390 px)
+
+Žádná změna stávajícího API, jen opravy a jeden nový export.
+
+- **StatusTabs** — když se záložky nevejdou do šířky, přepnou se na `select` se stejnými názvy
+  a počty (šířku měří skrytá kopie záložek, takže se nepřepínají sem a tam). Nový nepovinný
+  prop `label` je přístupný název selectu, výchozí „Filtr“. Na širokém displeji beze změny.
+- **Rozbalovací menu Export, ExportMenu, Sloupce a Hustota** nevyjedou z okna: menu se zarovná
+  k té hraně tlačítka, kde je místo, a má `max-width: calc(100vw - 1rem)`. Dřív na telefonu
+  přetékalo doleva a stránka šla posouvat do strany.
+- **Nový export `useMenuAlign(open, anchorRef, menuWidth)`** — vrací `'left' | 'right'`, ke které
+  hraně spouštěcího prvku menu zarovnat. Pro vlastní rozbalovací menu v konzumentech.
+- **SmableDrawer** — stín má jen otevřený panel. Zavřený panel vysunutý mimo obrazovku vrhal
+  stín, který na mobilu prosvítal u pravého okraje.
+- **Pagination a stránkování DataTable** — „z“ v „Zobrazeno 1–10 z 10“ je svázané pevnou mezerou,
+  takže nezůstane samo na konci řádku.
+
 ## 0.17.2 — 2026-10-08
 
 ### 🔒 Bezpečnostní a funkční hotfix (z auditu knihovny)
