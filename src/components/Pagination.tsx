@@ -31,7 +31,7 @@ export function Pagination({
         <span className="text-sm text-neutral-500">
           Zobrazeno{' '}
           <span className="font-medium text-neutral-700 dark:text-neutral-300">{from}–{to}</span>
-          {' '}z{' '}
+          {' '}z{'\u00a0'}
           <span className="font-medium text-neutral-700 dark:text-neutral-300">{total}</span>
         </span>
         {onLimitChange && (

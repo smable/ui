@@ -896,7 +896,7 @@ export function DataTable<T>({
                 <span className="font-medium text-neutral-700 dark:text-neutral-300">
                   {rangeFrom}–{rangeTo}
                 </span>{' '}
-                z <span className="font-medium text-neutral-700 dark:text-neutral-300">{totalRows}</span>
+                z{'\u00a0'}<span className="font-medium text-neutral-700 dark:text-neutral-300">{totalRows}</span>
               </span>
             ) : (
               <span className="text-sm text-neutral-500">
