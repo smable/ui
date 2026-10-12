@@ -27,13 +27,13 @@ function NavItemRow({
   onNavigate?: () => void
 }) {
   const [isOpen, setIsOpen] = React.useState(false)
-  const isActive = isNavItemActive(pathname, item.href)
+  const isActive = isNavItemActive(pathname, item.href, item.exact)
   const isExactActive = pathname === item.href
   const hasChildren = !!item.children && item.children.length > 0
 
   // Auto-expand if a child is active
   React.useEffect(() => {
-    if (hasChildren && item.children?.some((child) => isNavItemActive(pathname, child.href))) {
+    if (hasChildren && item.children?.some((child) => isNavItemActive(pathname, child.href, child.exact))) {
       setIsOpen(true)
     }
   }, [pathname, hasChildren, item.children])

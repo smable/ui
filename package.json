@@ -1,6 +1,6 @@
 {
   "name": "@smable/ui",
-  "version": "0.17.3",
+  "version": "0.18.0",
   "description": "Shared UI components for Smable platform",
   "license": "UNLICENSED",
   "private": false,
@@ -27,6 +27,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.mjs\"",
     "clean": "rimraf dist"
   },
   "peerDependencies": {

@@ -2,6 +2,18 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.18.0 — 2026-10-12
+
+### 🧭 Společný rail interních aplikací
+
+- **Nový export `INTERNAL_APPS` + `internalRailApps(current, role)`** — seznam interních nástrojů
+  (Board, CRM, Helpdesk, Marketing, Mailbox, Workstation) s adresami a rolemi. Funkce vrací hotové
+  `AppRailApp[]` pro `AppShell`: jen živé aplikace, kam role smí, v jednotném pořadí; aktuální
+  aplikace je v seznamu vždy, s `href: '/'`. Rail se tím přestane lišit aplikace od aplikace.
+- **`NavItem.exact`** + třetí parametr `isNavItemActive(pathname, href, exact)` — položka svítí jen
+  při přesné shodě cesty. Výchozí chování beze změny.
+- **`npm test`** — testy v Node (`node:test`), zatím pro seznam aplikací a `isNavItemActive`.
+
 ## 0.17.3 — 2026-10-11
 
 ### 📱 Opravy na mobilu (z auditu app.smable.cz na 390 px)

@@ -7,6 +7,8 @@ export interface NavItem {
   /** Optional — sub-items are commonly text-only. */
   icon?: React.ElementType
   badge?: string | number
+  /** Active only on an exact path match (like react-router `end`). */
+  exact?: boolean
   children?: NavItem[]
 }
 
@@ -34,6 +36,7 @@ export type ShellLink = React.ComponentType<{
 }>
 
 /** Whether `href` should be highlighted as active for the current `pathname`. */
-export function isNavItemActive(pathname: string, href: string): boolean {
+export function isNavItemActive(pathname: string, href: string, exact = false): boolean {
+  if (exact) return pathname === href
   return pathname === href || (href !== '/' && pathname.startsWith(href + '/'))
 }
