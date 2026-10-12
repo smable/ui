@@ -64,8 +64,39 @@ test('jediné dítě pokračuje rovně (stejný střed)', () => {
   near(mid(band(l, 'won')), mid(band(l, 'crm')))
 })
 
+const ZERO_SESSIONS = { clicks: 30, unmeasured: 30, sessions: 0, noLead: 0, notEngaged: 0, browsed: 0, leads: 0 }
+
+test('popisky sousedních tenkých větví se nepřekrývají', () => {
+  const l = layoutFlowFunnel(ads(ZERO_SESSIONS), SIZE)
+  assert.ok(band(l, 'browsed').labelY - band(l, 'not-engaged').labelY >= 34, `${band(l, 'not-engaged').labelY} → ${band(l, 'browsed').labelY}`)
+
+  const many = Array.from({ length: 8 }, (_, i) => ({ id: `c${i}`, label: `Větev ${i}`, value: 1 }))
+  const m = layoutFlowFunnel({ root: { id: 'r', label: 'Kořen', value: 100, tone: 'primary', children: [
+    { id: 'n', label: 'Bez konverze', value: 92, children: many },
+    { id: 'p', label: 'Konverze', value: 8, tone: 'primary' },
+  ] } }, SIZE)
+  const ys = many.map((c) => band(m, c.id).labelY)
+  for (let i = 1; i < ys.length; i++) {
+    assert.ok(ys[i] - ys[i - 1] >= 34, `c${i - 1} ${ys[i - 1]} → c${i} ${ys[i]}`)
+  }
+  for (const b of m.bands) {
+    assert.ok(b.y >= 0 && b.y + b.h <= SIZE.height, `${b.id} y`)
+  }
+})
+
+test('popisek s poznámkou (hint) nezasahuje do popisku pod ním', () => {
+  const l = layoutFlowFunnel({ root: { id: 'r', label: 'Kořen', value: 100, tone: 'primary', children: [
+    { id: 'n', label: 'Bez konverze', value: 100, children: [
+      { id: 'a', label: 'První', value: 1, hint: 'poznámka' },
+      { id: 'b', label: 'Druhá', value: 1 },
+    ] },
+    { id: 'p', label: 'Konverze', value: 0, tone: 'primary' },
+  ] } }, SIZE)
+  assert.ok(band(l, 'b').labelY - band(l, 'a').labelY >= 34 + 15)
+})
+
 test('nic nevyčnívá z plátna a popisky mají místo', () => {
-  for (const c of [TYPICAL, WITH_CRM]) {
+  for (const c of [TYPICAL, WITH_CRM, ZERO_SESSIONS]) {
     const l = layoutFlowFunnel(ads(c), SIZE)
     for (const b of l.bands) {
       assert.ok(b.x >= 0 && b.x + b.w <= SIZE.width, `${b.id} x`)

@@ -2,6 +2,14 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.19.1 — 2026-10-12
+
+### 🌊 `FlowFunnel`: popisky tenkých větví se nepřekrývají
+
+- Sousední větve skládané pod sebe měly mezi sebou jen 16 px, takže u tenkých větví (např. samé
+  nuly nebo 8 drobných větví pod jedním uzlem) se jejich popisky překrývaly. Středy sousedů jsou
+  teď od sebe aspoň o výšku popisku (36 px, s poznámkou `hint` o 15 px víc).
+
 ## 0.19.0 — 2026-10-12
 
 ### 🌊 `FlowFunnel` — funnel ve stylu Sankey

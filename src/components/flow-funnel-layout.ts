@@ -77,6 +77,9 @@ const ROOT_SHARE = 0.4
 const STACK_GAP = 16
 const SIDE_ROW = 52
 const INSIDE_MIN = 40
+/** Výška bloku popisku (název + procento) a řádku s poznámkou — minimální rozestup středů sousedů. */
+const LABEL_H = 36
+const HINT_H = 15
 
 const r2 = (v: number): number => Math.round(v * 100) / 100
 const clamp = (v: number, lo: number, hi: number): number => Math.min(Math.max(v, lo), Math.max(lo, hi))
@@ -121,7 +124,7 @@ export function layoutFlowFunnel(input: FlowFunnelLayoutInput, size: FlowFunnelS
   const bands: FlowFunnelBand[] = []
   const ribbons: FlowFunnelRibbon[] = []
 
-  const childYs = (hs: number[], py: number, ph: number, d: number): number[] => {
+  const childYs = (nodes: FlowFunnelNode[], hs: number[], py: number, ph: number, d: number): number[] => {
     const sum = hs.reduce((s, h) => s + h, 0)
     if (hs.length === 1) {
       return [clamp(py + (ph - hs[0]) / 2, top, bottom - hs[0])]
@@ -135,11 +138,13 @@ export function layoutFlowFunnel(input: FlowFunnelLayoutInput, size: FlowFunnelS
         return y
       })
     }
-    const block = sum + STACK_GAP * (hs.length - 1)
+    // Tenké sousední větve: středy aspoň o výšku popisku od sebe, jinak se popisky překryjí.
+    const gaps = hs.slice(1).map((h, i) => Math.max(STACK_GAP, LABEL_H + (nodes[i].hint ? HINT_H : 0) - (hs[i] + h) / 2))
+    const block = sum + gaps.reduce((s, g) => s + g, 0)
     let cur = clamp(py + ph / 2 - block / 2, top, bottom - block)
-    return hs.map((h) => {
+    return hs.map((h, i) => {
       const y = cur
-      cur += h + STACK_GAP
+      cur += h + (gaps[i] ?? 0)
       return y
     })
   }
@@ -172,7 +177,7 @@ export function layoutFlowFunnel(input: FlowFunnelLayoutInput, size: FlowFunnelS
       return band
     }
     const hs = children.map((c) => thick(c.value))
-    const ys = childYs(hs, y, h, d)
+    const ys = childYs(children, hs, y, h, d)
     const total = Math.max(node.value, children.reduce((s, c) => s + c.value, 0))
     const x1 = x + seg
     const x2 = colX(d + 1)
