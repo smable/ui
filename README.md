@@ -84,6 +84,8 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
   (`getRowId`, `canSelectRow`, Shift + klik, menu Stránku / Vše podle filtru), lepivá hlavička, hustota, export
 - `DataTableBulkSelect`, `DataTableDensityMenu`, `DataTableColumnsMenu`, `DataTableExport` — díly DataTable pro vlastní TanStack instance
 - `Checkbox` — včetně `indeterminate` a `disabled`
+- `FlowFunnel` — tok ve stylu Sankey (funnel): hlavní pás, větve konverze / bez konverze, samostatné
+  uzly bez pásu (`side`), procenta vždy k nadřazenému uzlu; rozložení počítá čistá funkce `layoutFlowFunnel`
 
 ### Pokladna (`pos/`)
 

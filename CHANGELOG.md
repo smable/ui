@@ -2,6 +2,19 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.19.0 — 2026-10-12
+
+### 🌊 `FlowFunnel` — funnel ve stylu Sankey
+
+- **Nová komponenta `FlowFunnel`** — karta s nadpisem, popiskem vpravo, SVG tokem a poznámkou pod
+  grafem. Hlavní pás (`root`) se dělí na větve; neutrální větve jdou nahoru, primární (konverze)
+  dolů, jediné dítě pokračuje rovně. Samostatné uzly bez pásu (`side`) vlevo nahoře. Procenta:
+  root a side z `base`, ostatní z rodiče. Tloušťka pásu úměrná hodnotě, nejméně 3 px.
+- **Nový export `layoutFlowFunnel(input, size)`** — čistá funkce s geometrií (pásy, uzly, popisky),
+  použitelná i pro vlastní vykreslení.
+- Tmavý režim přes tokeny `brand` / `neutral`; skrytý seznam uzlů pro čtečky obrazovky; na úzkém
+  displeji se graf posouvá do strany (min. šířka 640 px).
+
 ## 0.18.1 — 2026-10-12
 
 ### 🧭 `NavItem.exact` platí i pro koncové položky
