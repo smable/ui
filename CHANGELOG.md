@@ -2,6 +2,17 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.18.1 — 2026-10-12
+
+### 🧭 `NavItem.exact` platí i pro koncové položky
+
+- V 0.18.0 `exact` ovlivňoval jen položky s podpoložkami — koncové položky sidebaru se vždy
+  zvýrazňovaly jen při přesné shodě cesty. Teď `exact` platí pro obě: výchozí hodnota je `true`
+  u koncové položky a `false` u položky s podpoložkami, takže bez nastavení se nic nemění.
+  `exact: false` na koncové položce ji nechá svítit i na podstránkách (`/leads` na `/leads/42`).
+- **Nový export `isNavItemSelected(pathname, item)`** — pravidlo zvýraznění položky včetně výchozí
+  hodnoty `exact`; `SidebarNav` ho používá pro obě úrovně.
+
 ## 0.18.0 — 2026-10-12
 
 ### 🧭 Společný rail interních aplikací

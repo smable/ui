@@ -8,7 +8,7 @@ import {
   TooltipTrigger,
 } from './tooltip'
 import type { NavItem, ShellLink } from './types'
-import { isNavItemActive } from './types'
+import { isNavItemActive, isNavItemSelected } from './types'
 import { DefaultShellLink } from './link'
 
 function NavItemRow({
@@ -27,8 +27,7 @@ function NavItemRow({
   onNavigate?: () => void
 }) {
   const [isOpen, setIsOpen] = React.useState(false)
-  const isActive = isNavItemActive(pathname, item.href, item.exact)
-  const isExactActive = pathname === item.href
+  const isActive = isNavItemSelected(pathname, item)
   const hasChildren = !!item.children && item.children.length > 0
 
   // Auto-expand if a child is active
@@ -98,7 +97,7 @@ function NavItemRow({
               onClick={onNavigate}
               className={clsx(
                 'flex items-center justify-center p-3 rounded-lg transition-colors relative',
-                isExactActive
+                isActive
                   ? 'bg-white/20 text-white'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               )}
@@ -164,7 +163,7 @@ function NavItemRow({
       onClick={onNavigate}
       className={clsx(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-        isExactActive
+        isActive
           ? 'bg-white/20 text-white'
           : 'text-white/70 hover:text-white hover:bg-white/10'
       )}
