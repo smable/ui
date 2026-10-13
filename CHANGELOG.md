@@ -2,6 +2,20 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.20.0 — 2026-10-13
+
+### 🧭 `PosCategoryItem`: ikona a popis stavu
+
+- Nová volitelná props `icon` (např. lucide 20 px, barva přes `currentColor`) a `description`
+  (druhý řádek, zkrácený na jeden řádek). Webová pokladna z nich skládá navigaci Nastavení
+  („Tiskárna · Epson · 192.168.1.50“).
+- Bez nových props se položka vykresluje beze změny.
+
+### 📱 `PosTabBar`: záložky přes celou šířku
+
+- Nová volba `fluid` — lišta zabere celou šířku rodiče a záložky jsou stejně široké (pokladna na výšku,
+  čtyři záložky na 390 px). Bez `fluid` beze změny.
+
 ## 0.19.1 — 2026-10-12
 
 ### 🌊 `FlowFunnel`: popisky tenkých větví se nepřekrývají
