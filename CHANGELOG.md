@@ -6,7 +6,7 @@ All notable changes to `@smable/ui`.
 
 ### 🧭 `PosCategoryItem`: ikona a popis stavu
 
-- Nová volitelná props `icon` (např. lucide 20 px, barva přes `currentColor`) a `description`
+- Nové volitelné props `icon` (např. lucide 20 px, barva přes `currentColor`) a `description`
   (druhý řádek, zkrácený na jeden řádek). Webová pokladna z nich skládá navigaci Nastavení
   („Tiskárna · Epson · 192.168.1.50“).
 - Bez nových props se položka vykresluje beze změny.
