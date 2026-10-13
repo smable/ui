@@ -13,7 +13,7 @@ export interface PosCategoryItemProps {
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
 
 export function PosCategoryItem({ label, selected, onClick, icon, description }: PosCategoryItemProps) {
-  if (icon === undefined && description === undefined) {
+  if (icon == null && description === undefined) {
     return (
       <button
         type="button"
@@ -36,8 +36,8 @@ export function PosCategoryItem({ label, selected, onClick, icon, description }:
         selected ? 'bg-brand-500 text-white' : 'text-neutral-900 hover:bg-neutral-100'
       }`}
     >
-      {icon !== undefined && (
-        <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center ${selected ? '' : 'text-neutral-600'}`}>
+      {icon != null && (
+        <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center${selected ? '' : ' text-neutral-600'}`}>
           {icon}
         </span>
       )}
