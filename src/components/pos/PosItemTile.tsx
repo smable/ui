@@ -12,7 +12,7 @@ export interface PosItemTileProps {
   disabled?: boolean
   /** Obrázek tlačítka (URL). Nenačte-li se, dlaždice je jako bez něj. */
   image?: string | null
-  /** `cover` = oříznout na výplň (výchozí), `contain` = celý obrázek (gitpos image_screen_type 1). */
+  /** `cover` = oříznout na výplň (výchozí), `contain` = celý obrázek nad pruhem s názvem (gitpos image_screen_type 1). */
   imageFit?: 'cover' | 'contain'
   /** Výchozí true. Gitpos u obrázků ukazuje cenu jen s volbou okruhu „cena na tlačítku“. */
   showPrice?: boolean
@@ -22,7 +22,7 @@ export interface PosItemTileProps {
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2'
 
-/** Dlaždice položky — rozměr a typografie podle Airu (120 px, název vlevo nahoře, cena vpravo dole). */
+/** Dlaždice položky — rozměr a typografie podle Airu (120 px, název vlevo nahoře, cena vpravo dole). S `image` je název s cenou a skladem v pruhu dole; `imageFit="contain"` dá obrázek celý nad pruh, `showPrice` a `stock` řídí spodní řádek. */
 export function PosItemTile({ name, price, color, onClick, disabled, image, imageFit = 'cover', showPrice = true, stock = null }: PosItemTileProps) {
   const [broken, setBroken] = useState<string | null>(null)
   const textClass = color ? readableTextClass(color) : 'text-white'
@@ -81,7 +81,7 @@ export function PosItemTile({ name, price, color, onClick, disabled, image, imag
         loading="lazy"
         decoding="async"
         onError={() => setBroken(image)}
-        className={`absolute inset-0 h-full w-full ${imageFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+        className={imageFit === 'contain' ? 'min-h-0 w-full flex-1 object-contain' : 'absolute inset-0 h-full w-full object-cover'}
       />
       <span
         style={color ? { backgroundColor: color } : undefined}
