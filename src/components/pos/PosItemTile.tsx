@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { readableTextClass } from './color'
-import { tileFooter } from './itemTile'
+import { type StockLevel, type TileSize, tileFooter } from './itemTile'
+import { ItemTileV2 } from './ItemTileV2'
 
 export interface PosItemTileProps {
   name: string
@@ -18,12 +19,15 @@ export interface PosItemTileProps {
   showPrice?: boolean
   /** Řádek skladu vlevo dole: null = vypnutý, '' = zapnutý bez hodnoty (položka bez suroviny). */
   stock?: string | null
+  /** Dlaždice v2 (Figma 4g) — výška a typografie podle velikosti okruhu. Bez ní se kreslí dlaždice 0.21 beze změny. */
+  size?: TileSize
+  /** Stav štítku skladu ve v2: běžný / málo / vyprodáno. */
+  stockLevel?: StockLevel
 }
 
 const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700 focus-visible:ring-offset-2'
 
-/** Dlaždice položky — rozměr a typografie podle Airu (120 px, název vlevo nahoře, cena vpravo dole). S `image` je název s cenou a skladem v pruhu dole; `imageFit="contain"` dá obrázek celý nad pruh, `showPrice` a `stock` řídí spodní řádek. */
-export function PosItemTile({ name, price, color, onClick, disabled, image, imageFit = 'cover', showPrice = true, stock = null }: PosItemTileProps) {
+function ItemTileLegacy({ name, price, color, onClick, disabled, image, imageFit = 'cover', showPrice = true, stock = null }: PosItemTileProps) {
   const [broken, setBroken] = useState<string | null>(null)
   const textClass = color ? readableTextClass(color) : 'text-white'
   const footer = tileFooter({ price, showPrice, stock })
@@ -97,4 +101,26 @@ export function PosItemTile({ name, price, color, onClick, disabled, image, imag
       </span>
     </button>
   )
+}
+
+/** Dlaždice položky — rozměr a typografie podle Airu (120 px, název vlevo nahoře, cena vpravo dole). S `image` je název s cenou a skladem v pruhu dole; `imageFit="contain"` dá obrázek celý nad pruh, `showPrice` a `stock` řídí spodní řádek. Se `size` kreslí dlaždici v2 (viz `size`). */
+export function PosItemTile(props: PosItemTileProps) {
+  if (props.size) {
+    return (
+      <ItemTileV2
+        name={props.name}
+        price={props.price}
+        color={props.color}
+        onClick={props.onClick}
+        disabled={props.disabled}
+        image={props.image}
+        imageFit={props.imageFit ?? 'cover'}
+        showPrice={props.showPrice ?? true}
+        stock={props.stock ?? null}
+        stockLevel={props.stockLevel ?? 'ok'}
+        size={props.size}
+      />
+    )
+  }
+  return <ItemTileLegacy {...props} />
 }

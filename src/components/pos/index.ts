@@ -4,6 +4,7 @@ export { PosStatusBadge, type PosStatusBadgeProps, type PosStatus } from './PosS
 export { PosTabBar, type PosTabBarProps } from './PosTabBar'
 export { PosSegmentedControl, type PosSegmentedControlProps } from './PosSegmentedControl'
 export { PosItemTile, type PosItemTileProps } from './PosItemTile'
+export type { TileSize, StockLevel } from './itemTile'
 export { PosCategoryItem, type PosCategoryItemProps } from './PosCategoryItem'
 export { PosSearchInput, type PosSearchInputProps } from './PosSearchInput'
 export { PosCartRow, type PosCartRowProps } from './PosCartRow'
