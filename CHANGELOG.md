@@ -2,6 +2,16 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.21.0 — 2026-10-14
+
+### 🖼️ `PosItemTile`: obrázek, sklad a skrytá cena
+
+- Nové volitelné props `image` + `imageFit` (`cover` / `contain`) — obrázek tlačítka přes dlaždici, název na pruhu
+  v barvě dlaždice (max 2 řádky). Když se obrázek nenačte, dlaždice vypadá jako bez něj.
+- `stock` — řádek skladu vlevo dole (`null` = vypnutý, `''` = prázdný řádek), `showPrice` — skrytí ceny.
+  Webová pokladna podle nich kreslí tlačítka podle nastavení okruhu (jako gitpos).
+- Bez nových props se dlaždice vykresluje beze změny.
+
 ## 0.20.0 — 2026-10-13
 
 ### 🧭 `PosCategoryItem`: ikona a popis stavu
