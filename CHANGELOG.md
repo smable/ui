@@ -2,6 +2,15 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.22.0 — 2026-10-14
+
+### 🧩 `PosItemTile` v2 (`size`)
+
+- Nová volba `size` (`xs` / `s` / `l`) kreslí dlaždici v2: výška 96 / 120 / 148 px, fotka přes celou dlaždici s gradientem pod
+  textem, celý obrázek na bílé kartě s proužkem barvy, tučná cena a štítek skladu (`stockLevel` `ok` / `low` / `out`).
+- Pevná mezera mezi číslem a jednotkou v názvu („0,33 l“).
+- Bez `size` se dlaždice kreslí beze změny jako v 0.21.
+
 ## 0.21.0 — 2026-10-14
 
 ### 🖼️ `PosItemTile`: obrázek, sklad a skrytá cena
