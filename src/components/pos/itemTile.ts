@@ -32,5 +32,5 @@ export function stockPillClass(level: StockLevel, surface: 'photo' | 'dark' | 'l
 
 /** „0,33 l“ se nesmí rozdělit na dva řádky — pevná mezera mezi číslem a jednotkou. */
 export function nbspUnits(name: string): string {
-  return name.replace(/(\d) (ml|cl|dl|l|kg|g|ks)(?=$|[\s,.;)])/g, '$1\u00a0$2')
+  return name.replace(/(\d) (ml|cl|dl|l|kg|g|ks)(?=$|[\s,.;)/!?-])/gi, '$1\u00a0$2')
 }

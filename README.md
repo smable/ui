@@ -93,7 +93,7 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 - `PosTabBar` — hlavní záložky Pokladna / Transakce / Uzávěrka; `fluid` — přes celou šířku, stejně široké záložky (telefon, na výšku)
 - `PosSegmentedControl` — přepínač Knihovna / Kalkulačka, 80/58 mm
 - `PosCategoryItem` — položka kategorie v levém sloupci prodejní plochy; volitelná `icon` a `description` — navigace Nastavení (ikona + stav)
-- `PosItemTile` — dlaždice položky, barva čitelná i na žluté (viz `readableTextClass`); volitelné `image` + `imageFit`, `showPrice`, `stock`
+- `PosItemTile` — dlaždice položky, barva čitelná i na žluté (viz `readableTextClass`); volitelné `image` + `imageFit`, `showPrice`, `stock`; `size` (`xs` / `s` / `l`) + `stockLevel` zapíná dlaždici v2
 - `PosSearchInput` — vyhledávání / pole čtečky s klávesovou zkratkou
 - `PosCartRow` — řádek účtu s krokováním množství
 - `PosActionButton` — Zaplatit / Uložit / Storno se zkratkou

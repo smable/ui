@@ -21,9 +21,9 @@ export interface ItemTileV2Props {
 
 function Pill({ text, level, surface, cls }: { text: string; level: StockLevel; surface: 'photo' | 'dark' | 'light'; cls: string }) {
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1 rounded-full py-0.5 font-semibold ${cls} ${stockPillClass(level, surface)}`}>
-      {level !== 'ok' && <span aria-hidden className="h-[5px] w-[5px] rounded-full bg-current" />}
-      {text}
+    <span className={`inline-flex min-w-0 items-center gap-1 rounded-full py-0.5 font-semibold ${cls} ${stockPillClass(level, surface)}`}>
+      {level !== 'ok' && <span aria-hidden className="h-[5px] w-[5px] shrink-0 rounded-full bg-current" />}
+      <span className="truncate">{text}</span>
     </span>
   )
 }
@@ -52,7 +52,7 @@ export function ItemTileV2({ name, price, color, onClick, disabled, image, image
         )}
         <span className={`relative flex flex-col gap-0.5 pt-[34px] ${m.padX} pb-2`} style={{ backgroundImage: SCRIM }}>
           <span className={`line-clamp-2 font-semibold ${m.name}`}>{label}</span>
-          {showP && <span className={`self-end font-bold ${m.price}`}>{price}</span>}
+          {showP && <span className={`self-end whitespace-nowrap font-bold ${m.price}`}>{price}</span>}
         </span>
       </button>
     )
@@ -68,7 +68,7 @@ export function ItemTileV2({ name, price, color, onClick, disabled, image, image
           {(hasStock || showP) && (
             <span className="flex items-center justify-between gap-1.5">
               {hasStock ? <Pill text={stock} level={stockLevel} surface="light" cls={m.pill} /> : <span />}
-              {showP && <span className={`font-bold ${m.price}`}>{price}</span>}
+              {showP && <span className={`shrink-0 whitespace-nowrap font-bold ${m.price}`}>{price}</span>}
             </span>
           )}
         </span>
@@ -90,7 +90,7 @@ export function ItemTileV2({ name, price, color, onClick, disabled, image, image
       {(hasStock || showP) && (
         <span className="flex items-center justify-between gap-1.5">
           {hasStock ? <Pill text={stock} level={stockLevel} surface={surface} cls={m.pill} /> : <span />}
-          {showP && <span className={`font-bold ${m.price}`}>{price}</span>}
+          {showP && <span className={`shrink-0 whitespace-nowrap font-bold ${m.price}`}>{price}</span>}
         </span>
       )}
     </button>
