@@ -26,6 +26,7 @@ import { DataTableColumnsMenu } from './DataTableColumnsMenu'
 import { DataTableBulkSelect } from './DataTableBulkSelect'
 import { DataTableDensityMenu, DATA_TABLE_DENSITY_CLASS, type DataTableDensity, type DataTableDensityLabels } from './DataTableDensityMenu'
 import { Checkbox } from './Checkbox'
+import { columnDropSide, moveColumn, type ColumnDropSide } from './column-reorder'
 import { usePersistentTableState, type UsePersistentTableStateOptions } from '../lib/usePersistentTableState'
 import { normalize } from '../lib/search'
 
@@ -458,6 +459,7 @@ export function DataTable<T>({
     pageSize: persistent.pageSize,
   }))
   const [draggedColumn, setDraggedColumn] = useState<string | null>(null)
+  const [dropTarget, setDropTarget] = useState<{ id: string; side: ColumnDropSide } | null>(null)
 
   const sortingState = externalSorting ?? persistent.sorting
   const handleSortingChange: OnChangeFn<SortingState> =
@@ -599,27 +601,37 @@ export function DataTable<T>({
     if (!draggedColumn || draggedColumn === columnId) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
+    const side = columnDropSide(table.getAllLeafColumns().map(col => col.id), draggedColumn, columnId)
+    if (dropTarget?.id !== columnId || dropTarget.side !== side) setDropTarget({ id: columnId, side })
+  }
+
+  const handleDragLeave = (columnId: string, e: React.DragEvent) => {
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
+    setDropTarget(current => (current?.id === columnId ? null : current))
   }
 
   const handleDrop = (columnId: string, e: React.DragEvent) => {
     if (!draggedColumn) return
     e.preventDefault()
-    const fromId = draggedColumn
-    const toId = columnId
-    if (fromId === toId) return
-
+    setDropTarget(null)
     const currentOrder = table.getAllLeafColumns().map(col => col.id)
-    const fromIndex = currentOrder.indexOf(fromId)
-    const toIndex = currentOrder.indexOf(toId)
-
-    if (fromIndex !== -1 && toIndex !== -1) {
-      const newOrder = [...currentOrder]
-      newOrder.splice(fromIndex, 1)
-      newOrder.splice(toIndex, 0, fromId)
-      setColumnOrder(newOrder)
-    }
+    const newOrder = moveColumn(currentOrder, draggedColumn, columnId)
+    if (newOrder !== currentOrder) setColumnOrder(newOrder)
     setDraggedColumn(null)
   }
+
+  const handleDragEnd = () => {
+    setDraggedColumn(null)
+    setDropTarget(null)
+  }
+
+  // Svislá čára na straně, kam přetahovaný sloupec dopadne. `:hover` se během
+  // HTML5 drag neaktualizuje, proto stav; inset stín tabulku neposune.
+  const dropIndicatorClass = (columnId: string) =>
+    dropTarget?.id === columnId &&
+    (dropTarget.side === 'before'
+      ? 'shadow-[inset_2px_0_0_0_theme(colors.brand.500)]'
+      : 'shadow-[inset_-2px_0_0_0_theme(colors.brand.500)]')
 
   return (
     <>
@@ -722,14 +734,15 @@ export function DataTable<T>({
                         "px-4 py-3.5 text-left first:pl-6 last:pr-6 transition-all group",
                         stickyHeader ? "bg-neutral-50 dark:bg-neutral-800" : "bg-neutral-50/80 dark:bg-neutral-800/40",
                         draggedColumn === header.column.id && "opacity-50 bg-brand-100 dark:bg-brand-900/30",
-                        canDrag && draggedColumn && draggedColumn !== header.column.id && "border-l-2 border-transparent hover:border-brand-500"
+                        dropIndicatorClass(header.column.id)
                       )}
                       style={fixedLayout ? { width: header.getSize(), minWidth: header.getSize() } : (header.getSize() !== 150 ? { width: header.getSize() } : undefined)}
                       draggable={canDrag}
                       onDragStart={canDrag ? (e) => handleDragStart(header.column.id, e) : undefined}
                       onDragOver={canDrag ? (e) => handleDragOver(header.column.id, e) : undefined}
+                      onDragLeave={canDrag ? (e) => handleDragLeave(header.column.id, e) : undefined}
                       onDrop={canDrag ? (e) => handleDrop(header.column.id, e) : undefined}
-                      onDragEnd={canDrag ? () => setDraggedColumn(null) : undefined}
+                      onDragEnd={canDrag ? handleDragEnd : undefined}
                     >
                       {header.isPlaceholder ? null : (
                         <div
@@ -838,7 +851,7 @@ export function DataTable<T>({
                   {row.getVisibleCells().map(cell => (
                     <td
                       key={cell.id}
-                      className={clsx("px-4 first:pl-6 last:pr-6", cellPadding)}
+                      className={clsx("px-4 first:pl-6 last:pr-6", cellPadding, dropIndicatorClass(cell.column.id))}
                       style={fixedLayout ? { width: cell.column.getSize(), minWidth: cell.column.getSize() } : undefined}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
