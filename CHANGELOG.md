@@ -14,8 +14,8 @@ All notable changes to `@smable/ui`.
   přetečení z okna.
 - **`DataTable` s `draggableColumns`** ukazuje při přetahování sloupce svislou čáru na straně cílového
   sloupce, kam sloupec dopadne (přes hlavičku i buňky). Dřív se spoléhalo na `:hover`, který se během
-  HTML5 drag neaktualizuje, takže nebylo vidět nic. Nové pomocné funkce `columnDropSide` a
-  `moveColumn` (`column-reorder.ts`) s testy.
+  HTML5 drag neaktualizuje, takže nebylo vidět nic. Logika je v interním
+  `column-reorder.ts` (`columnDropSide`, `moveColumn`) s testy, ven se neexportuje.
 - **`getDateRange`** počítá kalendářní dny — stejná oprava jako 0.17.4 (předvolby kolem změny času).
 
 ## 0.22.0 — 2026-10-14
