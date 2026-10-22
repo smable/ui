@@ -96,6 +96,17 @@ All notable changes to `@smable/ui`.
 - **`NavItem.exact`** + třetí parametr `isNavItemActive(pathname, href, exact)` — položka svítí jen
   při přesné shodě cesty. Výchozí chování beze změny.
 - **`npm test`** — testy v Node (`node:test`), zatím pro seznam aplikací a `isNavItemActive`.
+## 0.17.4 — 2026-10-22
+
+### 🕒 Předvolby období kolem změny času
+
+Žádná změna API.
+
+- **`getDateRange`** počítá kalendářní dny místo `± 86 400 000 ms`. Den změny času má 23 nebo
+  25 hodin, takže dřív „Dnes“ 25. 10. končilo ve 22:59:59, 29. 3. až v 0:59:59 dalšího dne
+  a „Včera“ a „Minulý týden“ na jaře začínaly ve 23:00 předchozího dne — u API, které bere jen
+  datum, o celý den dřív. Nově má i volitelný druhý parametr `now` (pro testy).
+- `getDateRange` a `DatePreset` žijí v `date-range.ts`; `DateRangePicker` je dál exportuje.
 
 ## 0.17.3 — 2026-10-11
 
