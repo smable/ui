@@ -18,7 +18,7 @@ export function BulkActionsBar({ count, label = defaultLabel, children, onClear 
   if (count === 0) return null
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-3 px-5 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl shadow-2xl">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-wrap justify-center items-center gap-3 max-w-[calc(100vw-2rem)] px-5 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl shadow-2xl">
       <span className="text-sm font-medium">{label(count)}</span>
       <div className="w-px h-5 bg-neutral-700 dark:bg-neutral-300" />
       {children}
