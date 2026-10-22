@@ -27,6 +27,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test \"src/**/*.test.mjs\"",
     "clean": "rimraf dist"
   },
   "peerDependencies": {
