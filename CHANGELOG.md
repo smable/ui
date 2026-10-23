@@ -2,6 +2,31 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.24.0 — 2026-10-23
+
+### ✨ Smable AI — chat a plovoucí widget (`smable-ai/`)
+
+- **Nové komponenty** `SmableAiChat`, `SmableAiMessage` + `SmableAiMessageList`, `SmableAiComposer`,
+  `SmableAiSuggestions`, `SmableAiEmptyState`, `SmableAiConversationList`, `SmableAiCapabilities`
+  a `SmableAiWidget` — stavební díly asistenta Smable AI pro app (stránka „Zeptat se“) i pro
+  plovoucí kartu nad libovolnou stránkou.
+- Komponenty jsou **jen prezentační**: texty přes `labels` (`SmableAiLabels`), obsah odpovědi přes
+  `renderContent` (markdown zůstává v konzumentovi), data a akce přes props a callbacky — bez i18n,
+  bez fetche, bez nových závislostí.
+- `SmableAiMessage`: bublina uživatele vpravo, odpověď s řádkem zdrojů (`sources`), odkazy do nápovědy
+  (`help`, jen `https://`), palce s `aria-pressed` (`onFeedback`), chybová bublina z `labels.errors[kind]`
+  s „Zkusit znovu“ jen u poslední zprávy a jen pro `unavailable` / `generic`.
+- `SmableAiComposer`: Enter odešle, Shift+Enter nový řádek, během skládání znaků (IME) neodesílá,
+  prázdný text neodesílá; počítadlo znaků se ukáže, když zbývá ≤ 200 z 2 000.
+- `SmableAiWidget`: od `lg` karta 400 × min(720 px, 100dvh − 92 px) vpravo dole, 72 px nad spodním
+  okrajem (nad spouštěčem a tlačítkem nápovědy), pod `lg` celá obrazovka; bez backdropu — stránka pod
+  kartou zůstává klikatelná; `role="dialog"`, Esc zavře nejdřív historii, potom widget; rozbalovací
+  historie konverzací jen s `conversations` + `groupLabels`, tlačítko rozbalení jen s `onExpand`.
+- **Nové exporty** `groupConversations(items, now)` (Dnes / Tento týden / Starší podle místního
+  kalendáře), `SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM` a typy `SmableAiMessageData`,
+  `SmableAiConversationData`, `SmableAiLabels`, `SmableAiSource`, `SmableAiHelpLink`,
+  `SmableAiErrorKind`, `SmableAiFeedback`, `SmableAiConversationGroup`, `SmableAiCapabilitySection`.
+
 ## 0.22.0 — 2026-10-14
 
 ### 🧩 `PosItemTile` v2 (`size`)

@@ -108,6 +108,22 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 - `PosKbd` — klávesová zkratka (`Enter`, `Esc`, `F2`)
 - `readableTextClass(hex)` — vybere čitelnou barvu textu (bílá/tmavá) na barevné dlaždici
 
+### Smable AI (`smable-ai/`)
+
+Prezentační díly asistenta Smable AI — texty přes `labels` (`SmableAiLabels`), obsah odpovědi přes
+`renderContent`, data a akce přes props a callbacky (žádný fetch ani i18n). Figma: stránka „Zeptat se“
+[`171-2559`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=171-2559),
+widget [`273-1833`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=273-1833).
+
+- `SmableAiChat` — celý chat: slot `header`, seznam zpráv (nebo `emptyState`), chipy `suggestions` dokud je konverzace prázdná, pole dotazu
+- `SmableAiMessage`, `SmableAiMessageList` — bublina uživatele / odpověď se zdroji, odkazy do nápovědy (`https://`), palce (`aria-pressed`), chybová bublina se „Zkusit znovu“; seznam roluje dolů a ukazuje běžící stav
+- `SmableAiComposer` — pole dotazu: Enter odešle, Shift+Enter nový řádek, IME neodesílá, počítadlo znaků (`SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM`)
+- `SmableAiSuggestions` — chipy navržených otázek
+- `SmableAiEmptyState` — prázdný stav; `rows` (stránka) / `chips` (widget)
+- `SmableAiConversationList` — historie konverzací ve skupinách Dnes / Tento týden / Starší (`groupConversations`), mazání na hover
+- `SmableAiCapabilities` — karta „Co asistent umí“ (sekce `read` / `write`, poznámka, patička)
+- `SmableAiWidget` — plovoucí karta: od `lg` 400 × 720 px vpravo dole 72 px nad okrajem, pod `lg` celá obrazovka, bez backdropu, Esc zavře; historie jen s `conversations` + `groupLabels`, rozbalení jen s `onExpand`
+
 ## Publishing a new version
 
 1. Bump version in `package.json`: `npm version patch|minor|major`
