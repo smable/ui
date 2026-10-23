@@ -29,13 +29,17 @@ All notable changes to `@smable/ui`.
   prvek, který ho měl před otevřením; rozbalovací historie konverzací jen s `conversations` +
   `groupLabels`, tlačítko rozbalení jen s `onExpand`.
 - **`SmableAiActionCard`** (Figma `115:1626`) — karta změny, kterou asistent připravil ke schválení:
-  titulek s tužkou, řádky položka · před → po (bez `before` jen nová hodnota; úzký widget řádek zalomí),
+  titulek s tužkou, řádky položka · před → po (bez `before` jen nová hodnota, prázdný `before` ukáže
+  „→ po“; úzký widget řádek zalomí),
   volitelné oranžové `warning` a `note`, tlačítka Potvrdit (primární, ikona ✓) / Zrušit (ghost) jen ve
-  stavu `pending` a jen s `onConfirm` / `onCancel`; `busy` točí kliknuté tlačítko a druhé vypne. Ostatní
+  stavu `pending` a jen s `onConfirm` / `onCancel`; `busy: 'confirm' | 'cancel'` točí jmenované tlačítko
+  a obě vypne (spinner sedí i po znovupřipojení karty, např. zavřený a otevřený widget); po kliknutí karta
+  další kliky ignoruje, dokud konzument nenastaví `busy` nebo se nezmění `status` (rychlý dvojklik). Ostatní
   stavy (`executed`, `cancelled`, `expired`, `stale`, `failed`) ukážou štítek `labels.statuses[status]`,
   `failed` navíc `error`. **`confirming` je oproti zadání bez tlačítek i bez spinneru** — akce, kterou
   server zamkl a nedokončil, by jinak točila navždy; ikonu stavu točí jen `busy`. Přechod z tlačítek na
-  štítek hlásí živá oblast a fokus kliknutého tlačítka přejde na štítek. Typy `SmableAiActionStatus`,
+  štítek hlásí živá oblast a fokus kliknutého tlačítka přejde na štítek; po nepovedeném pokusu (`busy`
+  zhasne, akce dál `pending`) pozdější refetch na `expired` / `stale` fokus nebere. Typy `SmableAiActionStatus`,
   `SmableAiActionRow`, `SmableAiActionLabels` (samostatné, `SmableAiLabels` se nemění).
 - `SmableAiChat` / `SmableAiMessageList` / `SmableAiMessage`: volitelný `renderMessageExtra(message)` —
   obsah pod odpovědí asistenta (nad palci); u otázky ani u chybové bubliny se nevolá.

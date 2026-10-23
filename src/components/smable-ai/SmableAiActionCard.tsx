@@ -33,8 +33,11 @@ export interface SmableAiActionCardProps {
   /** Bez callbacku se tlačítko nevykreslí; bez obou ukáže `pending` štítek `labels.statuses.pending`. */
   onConfirm?: () => void
   onCancel?: () => void
-  /** Běží požadavek: u `pending` točí kliknuté tlačítko a druhé vypne, u `confirming` točí ikonu stavu. */
-  busy?: boolean
+  /**
+   * Běží požadavek: u `pending` točí jmenované tlačítko a obě vypne, u `confirming` točí ikonu stavu.
+   * Konzument ho drží sám, takže spinner sedí i po znovupřipojení karty (zavřený a otevřený widget).
+   */
+  busy?: 'confirm' | 'cancel'
 }
 
 const MUTED = 'text-neutral-500 dark:text-neutral-400'
@@ -59,9 +62,9 @@ export function SmableAiActionCard({
   labels,
   onConfirm,
   onCancel,
-  busy = false,
+  busy,
 }: SmableAiActionCardProps) {
-  const [clicked, setClicked] = useState<'confirm' | 'cancel' | null>(null)
+  const [clicked, setClicked] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
   const statusRef = useRef<HTMLParagraphElement>(null)
   const buttons = actionButtonsVisible(status) && (!!onConfirm || !!onCancel)
@@ -69,7 +72,7 @@ export function SmableAiActionCard({
   // Po kliknutí tlačítko zmizí a fokus by spadl na <body> — přesune se na štítek stavu.
   const hadButtons = useRef(buttons)
   useEffect(() => {
-    const lost = hadButtons.current && !buttons && clicked !== null
+    const lost = hadButtons.current && !buttons && clicked
     hadButtons.current = buttons
     if (!lost) return
     const active = document.activeElement
@@ -78,17 +81,36 @@ export function SmableAiActionCard({
     }
   }, [buttons, clicked])
 
+  // Nepovedený pokus (busy zhasl, akce pořád čeká) — pozdější refetch na expired/stale nesmí brát fokus.
+  const prevBusy = useRef(busy)
+  useEffect(() => {
+    if (prevBusy.current && !busy && status === 'pending') setClicked(false)
+    prevBusy.current = busy
+  }, [busy, status])
+
+  // Zámek proti rychlému dvojkliku, než konzument nastaví `busy`; uvolní ho `busy` nebo změna stavu.
+  const lock = useRef(false)
+  useEffect(() => {
+    lock.current = false
+  }, [busy, status])
+
+  const press = (handler: () => void) => {
+    if (lock.current || busy) return
+    lock.current = true
+    setClicked(true)
+    handler()
+  }
+
   const live = status === 'pending' || status === 'confirming'
   const { icon: StatusIcon, className: statusIconClass } = STATUS_ICON[status]
-  const spinning = busy && status === 'confirming'
-  const confirmLoading = busy && clicked !== 'cancel'
+  const spinning = !!busy && status === 'confirming'
 
   return (
     <div
       ref={cardRef}
       role="group"
       aria-label={title}
-      aria-busy={busy || undefined}
+      aria-busy={busy ? true : undefined}
       className={clsx(
         'flex flex-col gap-3.5 rounded-lg border bg-white p-5 dark:bg-neutral-900',
         live ? 'border-brand-200 dark:border-brand-900' : 'border-neutral-200 dark:border-neutral-800'
@@ -112,7 +134,7 @@ export function SmableAiActionCard({
                 {row.label}
               </span>
               <span className="flex w-48 flex-none flex-wrap items-center gap-x-1.5">
-                {row.before && (
+                {row.before !== undefined && (
                   <>
                     <span className="min-w-0 break-words text-neutral-700 dark:text-neutral-300">{row.before}</span>
                     <ArrowRight className="h-3.5 w-3.5 shrink-0 text-neutral-600 dark:text-neutral-400" aria-hidden />
@@ -142,26 +164,20 @@ export function SmableAiActionCard({
             {onConfirm && (
               <SmableButton
                 variant="primary"
-                loading={confirmLoading}
-                disabled={busy}
-                onClick={() => {
-                  setClicked('confirm')
-                  onConfirm()
-                }}
+                loading={busy === 'confirm'}
+                disabled={!!busy}
+                onClick={() => press(onConfirm)}
               >
-                {!confirmLoading && <Check className="h-4 w-4" aria-hidden />}
+                {busy !== 'confirm' && <Check className="h-4 w-4" aria-hidden />}
                 {labels.confirm}
               </SmableButton>
             )}
             {onCancel && (
               <SmableButton
                 variant="ghost"
-                loading={busy && clicked === 'cancel'}
-                disabled={busy}
-                onClick={() => {
-                  setClicked('cancel')
-                  onCancel()
-                }}
+                loading={busy === 'cancel'}
+                disabled={!!busy}
+                onClick={() => press(onCancel)}
               >
                 {labels.cancel}
               </SmableButton>
