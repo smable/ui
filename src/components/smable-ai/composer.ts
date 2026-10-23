@@ -14,3 +14,10 @@ export function normalizeOutgoing(text: string): string {
 export function charsLeft(text: string, max: number): number {
   return max - text.length
 }
+
+/** S mikrofonem: prázdné pole ukáže mikrofon místo Odeslat, text ukáže Odeslat; nahrávání nechá stop vidět vždy. */
+export function composerButtons(o: { hasMic: boolean; recording: boolean; value: string }): { mic: boolean; send: boolean } {
+  if (!o.hasMic) return { mic: false, send: true }
+  const empty = normalizeOutgoing(o.value) === ''
+  return { mic: o.recording || empty, send: !empty }
+}

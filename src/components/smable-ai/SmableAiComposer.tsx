@@ -1,7 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { ArrowUp, Mic } from 'lucide-react'
 import clsx from 'clsx'
-import { SMABLE_AI_COUNTER_FROM, SMABLE_AI_MAX_CHARS, charsLeft, normalizeOutgoing, shouldSendOnKey } from './composer'
+import {
+  SMABLE_AI_COUNTER_FROM,
+  SMABLE_AI_MAX_CHARS,
+  charsLeft,
+  composerButtons,
+  normalizeOutgoing,
+  shouldSendOnKey,
+} from './composer'
 import type { SmableAiLabels } from './types'
 
 export interface SmableAiComposerProps {
@@ -26,7 +33,7 @@ export interface SmableAiComposerProps {
   minRows?: number
   /** Běží nahrávání — tlačítko mikrofonu ukáže stop, pole „Poslouchám…“. Do pole se nic nevkládá. */
   recording?: boolean
-  /** S callbackem se před Odeslat vykreslí mikrofon, klik přepne `recording`. */
+  /** S callbackem se u prázdného pole místo Odeslat vykreslí mikrofon (s textem Odeslat), klik přepne `recording`. */
   onRecordingChange?: (recording: boolean) => void
 }
 
@@ -96,6 +103,7 @@ export function SmableAiComposer({
     send()
   }
 
+  const buttons = composerButtons({ hasMic: Boolean(onRecordingChange), recording, value })
   const left = charsLeft(value, maxLength)
   const showCounter = !bare && left <= SMABLE_AI_COUNTER_FROM
   const button = bare ? 'h-8 w-8' : 'h-9 w-9'
@@ -128,12 +136,13 @@ export function SmableAiComposer({
           onKeyDown={onKeyDown}
           className={clsx(
             'min-w-0 flex-1 resize-none overflow-y-hidden bg-transparent p-0 text-[13px] leading-5 text-neutral-900',
-            'placeholder:text-neutral-400 focus:outline-none focus:ring-0 dark:text-neutral-50',
+            'focus:outline-none focus:ring-0 dark:text-neutral-50',
+            recording ? 'placeholder:text-red-600 dark:placeholder:text-red-400' : 'placeholder:text-neutral-400',
             minRows === 1 && (bare ? 'my-1.5' : 'my-2')
           )}
         />
         {trailing}
-        {onRecordingChange && (
+        {onRecordingChange && buttons.mic && (
           <button
             type="button"
             onClick={() => onRecordingChange(!recording)}
@@ -154,21 +163,23 @@ export function SmableAiComposer({
             )}
           </button>
         )}
-        <button
-          type="button"
-          onClick={send}
-          disabled={disabled}
-          aria-label={labels.send}
-          className={clsx(
-            'flex shrink-0 items-center justify-center rounded-full transition-colors',
-            'bg-brand-600 text-white hover:bg-brand-700',
-            'disabled:bg-neutral-300 disabled:text-neutral-300 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-700',
-            button,
-            focusRing
-          )}
-        >
-          <ArrowUp className="h-4 w-4" aria-hidden />
-        </button>
+        {buttons.send && (
+          <button
+            type="button"
+            onClick={send}
+            disabled={disabled}
+            aria-label={labels.send}
+            className={clsx(
+              'flex shrink-0 items-center justify-center rounded-full transition-colors',
+              'bg-brand-600 text-white hover:bg-brand-700',
+              'disabled:bg-neutral-300 disabled:text-neutral-300 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-700',
+              button,
+              focusRing
+            )}
+          >
+            <ArrowUp className="h-4 w-4" aria-hidden />
+          </button>
+        )}
       </div>
       {(hint || showCounter) && (
         <div className="flex items-start justify-between gap-3 text-2xs text-neutral-600 dark:text-neutral-400">

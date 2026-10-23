@@ -25,9 +25,10 @@ All notable changes to `@smable/ui`.
   středu tlačítka Odeslat, stránka tak zůstává jako dosud) až 6 řádků; posuvník se zapne až nad
   6 řádků (dřív se na Windows ukazovaly šipky posuvníku, když se placeholder zalomil); výška se
   přeměří i při změně šířky pole (`ResizeObserver`, např. karta → panel). `bare` vypne rámeček,
-  pozadí, ring a počítadlo (chrome dodá obal). S `onRecordingChange` mikrofon před Odeslat: klik
-  přepne `recording`, při nahrávání červený stop s pulzem (bez pulzu při `prefers-reduced-motion`)
-  a placeholder `labels.listening`; tlačítko má stálý název `labels.dictate` s `aria-pressed`
+  pozadí, ring a počítadlo (chrome dodá obal). S `onRecordingChange` u prázdného pole mikrofon místo Odeslat (s textem Odeslat, při
+  nahrávání stop zůstává vidět; bez `onRecordingChange` je Odeslat vždy): klik přepne `recording`,
+  při nahrávání červený stop s pulzem (bez pulzu při `prefers-reduced-motion`) a červený
+  placeholder `labels.listening`; tlačítko má stálý název `labels.dictate` s `aria-pressed`
   (při nahrávání `title` `labels.stopDictation`) — zatím jen nahrávání, do pole se nic nevkládá.
 - `SmableAiWidget` — **plovoucí lišta ve stylu Shopify Sidekick** (rozhodnutí PO 23. 10.; místo
   karty vpravo dole nad spouštěčem). API: `expanded` + `onExpandedChange`, `placement` (`'float'` |
