@@ -10,3 +10,6 @@ dist/
 # Env — glob, ne vycet: .env.bak / .env.old / .env.save nesou stejna
 # ziva tajemstvi jako .env a staremu vyctu propadly.
 .env*
+
+# npm pack output — tarball se nikdy necommituje
+*.tgz

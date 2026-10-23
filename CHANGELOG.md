@@ -15,15 +15,23 @@ All notable changes to `@smable/ui`.
   bez fetche, bez nových závislostí.
 - `SmableAiMessage`: bublina uživatele vpravo, odpověď s řádkem zdrojů (`sources`), odkazy do nápovědy
   (`help`, jen `https://`), palce s `aria-pressed` (`onFeedback`), chybová bublina z `labels.errors[kind]`
-  s „Zkusit znovu“ jen u poslední zprávy a jen pro `unavailable` / `generic`.
+  s „Zkusit znovu“ jen u poslední zprávy, jen pro `unavailable` / `generic` a ne během čekání na odpověď.
+- `SmableAiMessageList`: roluje dolů při nové zprávě, při čekání i při přepnutí konverzace; živá oblast
+  pro čtečky (`sr-only`, `aria-live="polite"`) hlásí `labels.pending` během čekání a `labels.answered`
+  (u chybové bubliny její text), jakmile odpověď dorazí — obsah odpovědi se nepředčítá.
 - `SmableAiComposer`: Enter odešle, Shift+Enter nový řádek, během skládání znaků (IME) neodesílá,
   prázdný text neodesílá; počítadlo znaků se ukáže, když zbývá ≤ 200 z 2 000.
 - `SmableAiWidget`: od `lg` karta 400 × min(720 px, 100dvh − 92 px) vpravo dole, 72 px nad spodním
-  okrajem (nad spouštěčem a tlačítkem nápovědy), pod `lg` celá obrazovka; bez backdropu — stránka pod
-  kartou zůstává klikatelná; `role="dialog"`, Esc zavře nejdřív historii, potom widget; rozbalovací
-  historie konverzací jen s `conversations` + `groupLabels`, tlačítko rozbalení jen s `onExpand`.
-- **Nové exporty** `groupConversations(items, now)` (Dnes / Tento týden / Starší podle místního
-  kalendáře), `SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM` a typy `SmableAiMessageData`,
+  okrajem (nad spouštěčem a tlačítkem nápovědy), pod `lg` celá obrazovka; renderuje se přes portál do
+  `document.body` jako `SmableDrawer`; bez backdropu — stránka pod kartou zůstává klikatelná;
+  `role="dialog"` s názvem `labels.assistant`; Esc s fokusem uvnitř karty zavře nejdřív historii, potom
+  widget (Esc jinde na stránce — Select, SmableDrawer — kartu nezavře); po zavření se fokus vrací na
+  prvek, který ho měl před otevřením; rozbalovací historie konverzací jen s `conversations` +
+  `groupLabels`, tlačítko rozbalení jen s `onExpand`.
+- `SmableAiLabels` má povinný klíč `answered` (oznámení čtečce, že odpověď dorazila) a `updatedAt`
+  konverzace je ISO 8601 s posunem (např. `2026-10-23T09:15:00+02:00`); jiný tvar spadne do „Starší“.
+- **Nové exporty** `groupConversations(items, now, weekStartsMonday = true)` (Dnes / Tento týden /
+  Starší podle místního kalendáře), `SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM` a typy `SmableAiMessageData`,
   `SmableAiConversationData`, `SmableAiLabels`, `SmableAiSource`, `SmableAiHelpLink`,
   `SmableAiErrorKind`, `SmableAiFeedback`, `SmableAiConversationGroup`, `SmableAiCapabilitySection`.
 

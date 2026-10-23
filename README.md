@@ -116,13 +116,13 @@ Prezentační díly asistenta Smable AI — texty přes `labels` (`SmableAiLabel
 widget [`273-1833`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=273-1833).
 
 - `SmableAiChat` — celý chat: slot `header`, seznam zpráv (nebo `emptyState`), chipy `suggestions` dokud je konverzace prázdná, pole dotazu
-- `SmableAiMessage`, `SmableAiMessageList` — bublina uživatele / odpověď se zdroji, odkazy do nápovědy (`https://`), palce (`aria-pressed`), chybová bublina se „Zkusit znovu“; seznam roluje dolů a ukazuje běžící stav
+- `SmableAiMessage`, `SmableAiMessageList` — bublina uživatele / odpověď se zdroji, odkazy do nápovědy (`https://`), palce (`aria-pressed`), chybová bublina se „Zkusit znovu“ (jen u poslední zprávy a ne během čekání); seznam roluje dolů při nové zprávě i při přepnutí konverzace, ukazuje běžící stav a čtečkám hlásí `labels.pending` / `labels.answered` (u chyby její text) v živé oblasti — obsah odpovědi se nikdy nepředčítá
 - `SmableAiComposer` — pole dotazu: Enter odešle, Shift+Enter nový řádek, IME neodesílá, počítadlo znaků (`SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM`)
 - `SmableAiSuggestions` — chipy navržených otázek
 - `SmableAiEmptyState` — prázdný stav; `rows` (stránka) / `chips` (widget)
 - `SmableAiConversationList` — historie konverzací ve skupinách Dnes / Tento týden / Starší (`groupConversations`), mazání na hover
-- `SmableAiCapabilities` — karta „Co asistent umí“ (sekce `read` / `write`, poznámka, patička)
-- `SmableAiWidget` — plovoucí karta: od `lg` 400 × 720 px vpravo dole 72 px nad okrajem, pod `lg` celá obrazovka, bez backdropu, Esc zavře; historie jen s `conversations` + `groupLabels`, rozbalení jen s `onExpand`
+- `SmableAiCapabilities` — karta „Co asistent smí“ (sekce `read` / `write`, poznámka, patička)
+- `SmableAiWidget` — plovoucí karta přes portál do `document.body`: od `lg` 400 × min(720 px, 100dvh − 92 px) vpravo dole 72 px nad okrajem, pod `lg` celá obrazovka, bez backdropu; `role="dialog"` s názvem `labels.assistant`; Esc s fokusem uvnitř karty zavře nejdřív historii, potom widget (Esc v Selectu nebo SmableDraweru na stránce kartu nezavře); po zavření se fokus vrací na spouštěč; historie jen s `conversations` + `groupLabels`, rozbalení jen s `onExpand`
 
 ## Publishing a new version
 
