@@ -9,7 +9,7 @@ All notable changes to `@smable/ui`.
 - **Nové komponenty** `SmableAiChat`, `SmableAiMessage` + `SmableAiMessageList`, `SmableAiComposer`,
   `SmableAiSuggestions`, `SmableAiEmptyState`, `SmableAiConversationList`, `SmableAiCapabilities`
   a `SmableAiWidget` — stavební díly asistenta Smable AI pro app (stránka „Zeptat se“) i pro
-  plovoucí kartu nad libovolnou stránkou.
+  plovoucí lištu a panel nad libovolnou stránkou.
 - Komponenty jsou **jen prezentační**: texty přes `labels` (`SmableAiLabels`), obsah odpovědi přes
   `renderContent` (markdown zůstává v konzumentovi), data a akce přes props a callbacky — bez i18n,
   bez fetche, bez nových závislostí.
@@ -20,14 +20,37 @@ All notable changes to `@smable/ui`.
   pro čtečky (`sr-only`, `aria-live="polite"`) hlásí `labels.pending` během čekání a `labels.answered`
   (u chybové bubliny její text), jakmile odpověď dorazí — obsah odpovědi se nepředčítá.
 - `SmableAiComposer`: Enter odešle, Shift+Enter nový řádek, během skládání znaků (IME) neodesílá,
-  prázdný text neodesílá; počítadlo znaků se ukáže, když zbývá ≤ 200 z 2 000.
-- `SmableAiWidget`: od `lg` karta 400 × min(720 px, 100dvh − 92 px) vpravo dole, 72 px nad spodním
-  okrajem (nad spouštěčem a tlačítkem nápovědy), pod `lg` celá obrazovka; renderuje se přes portál do
-  `document.body` jako `SmableDrawer`; bez backdropu — stránka pod kartou zůstává klikatelná;
-  `role="dialog"` s názvem `labels.assistant`; Esc s fokusem uvnitř karty zavře nejdřív historii, potom
-  widget (Esc jinde na stránce — Select, SmableDrawer — kartu nezavře); po zavření se fokus vrací na
-  prvek, který ho měl před otevřením; rozbalovací historie konverzací jen s `conversations` +
-  `groupLabels`, tlačítko rozbalení jen s `onExpand`.
+  prázdný text neodesílá; počítadlo znaků se ukáže, když zbývá ≤ 200 z 2 000. Písmo 13 px na řádku
+  20 px, `resize-none`, výška `minRows` (výchozí 2) až 6 řádků; posuvník se zapne až nad 6 řádků
+  (dřív se na Windows ukazovaly šipky posuvníku, když se placeholder zalomil). `bare` vypne rámeček,
+  pozadí a ring (chrome dodá obal). S `onRecordingChange` mikrofon před Odeslat: klik přepne
+  `recording`, při nahrávání červený stop s pulzem (bez pulzu při `prefers-reduced-motion`),
+  `aria-pressed` a placeholder `labels.listening` — zatím jen nahrávání, do pole se nic nevkládá.
+- `SmableAiWidget` — **plovoucí lišta ve stylu Shopify Sidekick** (rozhodnutí PO 23. 10.; místo
+  karty vpravo dole nad spouštěčem). API: `expanded` + `onExpandedChange`, `placement` (`'float'` |
+  `'panel'`, výchozí `float`) + `onPlacementChange`, `collapseOnOutsideClick` (výchozí `false`);
+  `open` a `onClose` zmizely.
+  - Sbaleno: od `lg` lišta ~44 px dole uprostřed obsahu (centruje se podle CSS proměnné
+    `--smable-ai-inset-left` na `:root`/`body`), píše se rovnou do ní a fokus ani psaní ji
+    nerozbalí; pod `lg` kulatá ikona 52 px vpravo dole.
+  - Odeslání z lišty, avatar i Připnout otevřou od `lg` konverzaci v **panelu vpravo**
+    (`onPlacementChange('panel')` + `onExpandedChange(true)`, rozhoduje `matchMedia` v okamžiku akce);
+    pod `lg` celá obrazovka, bez `onPlacementChange` karta 560 × 640 px rostoucí nahoru (záložní stav,
+    sbalí ji šipka, Esc nebo volitelně klik mimo).
+  - Panel `SMABLE_AI_PANEL_WIDTH` (420 px) je `fixed`, jen s 1px čárou vlevo, bez stínu a zaoblení;
+    host od `lg` zúží obsah (`padding-right`). Zavře ho jen křížek (`onPlacementChange('float')` +
+    `onExpandedChange(false)`), Esc v panelu jen zavře historii, klik mimo ho nezavře; panel je vždy
+    rozbalený i při `expanded=false`.
+  - Pole dotazu je ve všech stavech **stejný uzel `textarea`** (portál pořád v `body`, mění se jen
+    třídy, stabilní pozice dětí) — text, kurzor, fokus i IME přežijí rozbalení, sbalení i připnutí.
+  - Nemodální `role="region"` s názvem `labels.assistant`; Esc jen s fokusem uvnitř (Select ani
+    SmableDrawer jinde na stránce ho neberou); po sbalení je fokus v poli lišty, pod `lg` na ikoně;
+    klik mimo fokus neposouvá. Historie jen s `conversations` + `groupLabels`, Celá stránka jen
+    s `onExpand`.
+  - Kontext `SmableAiWidgetContext` (`{ collapsed, expand }`): `SmableAiChat` ve sbalené liště
+    vykreslí jen pole dotazu (bez rámečku, jeden řádek, bez hintu) a odeslání obalí voláním `expand()`.
+    Mimo widget se chat chová jako dosud. `composer` v `SmableAiChat` propouští i `leading`,
+    `trailing`, `recording` a `onRecordingChange`.
 - **`SmableAiActionCard`** (Figma `115:1626`) — karta změny, kterou asistent připravil ke schválení:
   titulek s tužkou, řádky položka · před → po (bez `before` jen nová hodnota, prázdný `before` ukáže
   „→ po“; úzký widget řádek zalomí),
@@ -45,10 +68,13 @@ All notable changes to `@smable/ui`.
   obsah pod odpovědí asistenta (nad palci); u otázky ani u chybové bubliny se nevolá.
 - `SmableAiLabels` má povinný klíč `answered` (oznámení čtečce, že odpověď dorazila) a `updatedAt`
   konverzace je ISO 8601 s posunem (např. `2026-10-23T09:15:00+02:00`); jiný tvar spadne do „Starší“.
+- `SmableAiLabels` má povinné klíče widgetu `collapse`, `dock`, `openConversation` a mikrofonu
+  `dictate`, `stopDictation`, `listening`.
 - **Nové exporty** `groupConversations(items, now, weekStartsMonday = true)` (Dnes / Tento týden /
   Starší podle místního kalendáře), `SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM` a typy `SmableAiMessageData`,
   `SmableAiConversationData`, `SmableAiLabels`, `SmableAiSource`, `SmableAiHelpLink`,
-  `SmableAiErrorKind`, `SmableAiFeedback`, `SmableAiConversationGroup`, `SmableAiCapabilitySection`.
+  `SmableAiErrorKind`, `SmableAiFeedback`, `SmableAiConversationGroup`, `SmableAiCapabilitySection`,
+  `SMABLE_AI_PANEL_WIDTH`, `SmableAiWidgetContext`, `SmableAiWidgetContextValue`, `SmableAiWidgetPlacement`.
 
 ## 0.22.0 — 2026-10-14
 

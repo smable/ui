@@ -68,5 +68,16 @@ export interface SmableAiLabels {
   deleteConversation: string
   expand: string
   close: string
+  /** Sbalit konverzaci zpět do lišty (widget). */
+  collapse: string
+  /** Připnout jako panel vpravo (widget). */
+  dock: string
+  /** Avatar ve sbalené liště rozbalí konverzaci (widget). */
+  openConversation: string
+  /** Mikrofon v poli dotazu. */
+  dictate: string
+  stopDictation: string
+  /** Placeholder pole během nahrávání. */
+  listening: string
   errors: Record<SmableAiErrorKind, string>
 }

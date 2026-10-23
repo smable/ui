@@ -14,4 +14,11 @@ export {
 } from './SmableAiCapabilities'
 export { SmableAiChat, type SmableAiChatProps } from './SmableAiChat'
 export { SmableAiActionCard, type SmableAiActionCardProps } from './SmableAiActionCard'
-export { SmableAiWidget, type SmableAiWidgetProps } from './SmableAiWidget'
+export {
+  SmableAiWidget,
+  SmableAiWidgetContext,
+  type SmableAiWidgetProps,
+  type SmableAiWidgetContextValue,
+  type SmableAiWidgetPlacement,
+} from './SmableAiWidget'
+export { SMABLE_AI_PANEL_WIDTH } from './widget'
