@@ -1,0 +1,63 @@
+import type { ReactNode } from 'react'
+import clsx from 'clsx'
+import { SmableAiComposer, type SmableAiComposerProps } from './SmableAiComposer'
+import { SmableAiMessageList, type SmableAiMessageListProps } from './SmableAiMessageList'
+import { SmableAiSuggestions } from './SmableAiSuggestions'
+import type { SmableAiLabels, SmableAiMessageData } from './types'
+
+export interface SmableAiChatProps {
+  messages: SmableAiMessageData[]
+  pending: boolean
+  labels: SmableAiLabels
+  renderContent: SmableAiMessageListProps['renderContent']
+  composer: Pick<SmableAiComposerProps, 'value' | 'onChange' | 'onSend' | 'disabled' | 'hint'>
+  /** Místo seznamu zpráv, dokud je konverzace prázdná. */
+  emptyState?: ReactNode
+  onFeedback?: SmableAiMessageListProps['onFeedback']
+  onRetry?: SmableAiMessageListProps['onRetry']
+  /** Slot nad seznamem zpráv — neroluje s konverzací. */
+  header?: ReactNode
+  /** Chipy nad polem dotazu, jen dokud je konverzace prázdná (widget). Bez `onPickSuggestion` se nevykreslí. */
+  suggestions?: string[]
+  onPickSuggestion?: (question: string) => void
+  className?: string
+}
+
+export function SmableAiChat({
+  messages,
+  pending,
+  labels,
+  renderContent,
+  composer,
+  emptyState,
+  onFeedback,
+  onRetry,
+  header,
+  suggestions,
+  onPickSuggestion,
+  className,
+}: SmableAiChatProps) {
+  const empty = messages.length === 0 && !pending
+
+  return (
+    <div className={clsx('flex h-full flex-col gap-4', className)}>
+      {header}
+      {empty && emptyState ? (
+        <div className="min-h-0 flex-1 overflow-y-auto">{emptyState}</div>
+      ) : (
+        <SmableAiMessageList
+          messages={messages}
+          pending={pending}
+          labels={labels}
+          renderContent={renderContent}
+          onFeedback={onFeedback}
+          onRetry={onRetry}
+        />
+      )}
+      {empty && suggestions && suggestions.length > 0 && onPickSuggestion && (
+        <SmableAiSuggestions items={suggestions} onPick={onPickSuggestion} />
+      )}
+      <SmableAiComposer {...composer} labels={labels} />
+    </div>
+  )
+}
