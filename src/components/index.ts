@@ -37,3 +37,4 @@ export * from './ViewToggle'
 
 export * from './app-shell'
 export * from './pos'
+export * from './smable-ai'
