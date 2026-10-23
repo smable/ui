@@ -33,6 +33,23 @@ export interface SmableAiConversationData {
   updatedAt: string
 }
 
+/** Stav akce, kterou asistent připravil ke schválení (zrcadlí serverový stav). */
+export type SmableAiActionStatus = 'pending' | 'confirming' | 'executed' | 'cancelled' | 'expired' | 'stale' | 'failed'
+
+/** Řádek náhledu změny: položka, původní hodnota (bez ní jen nová, např. nová položka) → nová. */
+export interface SmableAiActionRow {
+  label: string
+  before?: string
+  after: string
+}
+
+export interface SmableAiActionLabels {
+  confirm: string
+  cancel: string
+  /** Štítek stavu; `pending` se ukáže jen u karty bez `onConfirm` i `onCancel`. */
+  statuses: Record<SmableAiActionStatus, string>
+}
+
 export interface SmableAiLabels {
   assistant: string
   pending: string

@@ -15,12 +15,22 @@ export interface SmableAiMessageProps {
   onRetry?: () => void
   /** „Zkusit znovu“ se nabízí jen u poslední zprávy (seznam ho během čekání na odpověď vypne). */
   isLast: boolean
+  /** Obsah pod odpovědí asistenta (např. `SmableAiActionCard`); ne u otázky ani u chybové bubliny. */
+  renderMessageExtra?: (message: SmableAiMessageData) => ReactNode
 }
 
 const FOCUS =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950'
 
-export function SmableAiMessage({ message, labels, renderContent, onFeedback, onRetry, isLast }: SmableAiMessageProps) {
+export function SmableAiMessage({
+  message,
+  labels,
+  renderContent,
+  onFeedback,
+  onRetry,
+  isLast,
+  renderMessageExtra,
+}: SmableAiMessageProps) {
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
@@ -64,6 +74,7 @@ export function SmableAiMessage({ message, labels, renderContent, onFeedback, on
         </div>
       )}
       <div className="min-w-0 text-base text-neutral-900 dark:text-neutral-50">{renderContent(message.content)}</div>
+      {renderMessageExtra?.(message)}
       {help.length > 0 && (
         <div className="flex flex-col gap-2">
           {help.map((h) => (

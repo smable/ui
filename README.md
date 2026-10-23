@@ -113,9 +113,11 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 Prezentační díly asistenta Smable AI — texty přes `labels` (`SmableAiLabels`), obsah odpovědi přes
 `renderContent`, data a akce přes props a callbacky (žádný fetch ani i18n). Figma: stránka „Zeptat se“
 [`171-2559`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=171-2559),
-widget [`273-1833`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=273-1833).
+widget [`273-1833`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=273-1833),
+karta změny [`115-1626`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=115-1626).
 
-- `SmableAiChat` — celý chat: slot `header`, seznam zpráv (nebo `emptyState`), chipy `suggestions` dokud je konverzace prázdná, pole dotazu
+- `SmableAiChat` — celý chat: slot `header`, seznam zpráv (nebo `emptyState`), chipy `suggestions` dokud je konverzace prázdná, pole dotazu; `renderMessageExtra(message)` vykreslí obsah pod odpovědí asistenta (ne pod otázkou ani pod chybovou bublinou) — typicky karty `SmableAiActionCard`
+- `SmableAiActionCard` — karta změny, kterou asistent připravil ke schválení: titulek, řádky `rows` (položka, `before` → `after`; bez `before` jen nová hodnota), volitelné `warning` a `note`; texty přes `SmableAiActionLabels`. `pending` ukáže Potvrdit / Zrušit (každé jen s callbackem), `busy` točí kliknuté tlačítko a druhé vypne; ostatní stavy ukážou štítek `labels.statuses[status]` bez tlačítek, `failed` navíc `error`. `confirming` je záměrně bez tlačítek a bez spinneru (akce zaseknutá po pádu serveru by se točila navždy) — ikonu stavu točí jen `busy`. Přechod na štítek se hlásí čtečce a fokus z kliknutého tlačítka přejde na štítek; `role="group"` s názvem `title`
 - `SmableAiMessage`, `SmableAiMessageList` — bublina uživatele / odpověď se zdroji, odkazy do nápovědy (`https://`), palce (`aria-pressed`), chybová bublina se „Zkusit znovu“ (jen u poslední zprávy a ne během čekání); seznam roluje dolů při nové zprávě i při přepnutí konverzace, ukazuje běžící stav a čtečkám hlásí `labels.pending` / `labels.answered` (u chyby její text) v živé oblasti — obsah odpovědi se nikdy nepředčítá
 - `SmableAiComposer` — pole dotazu: Enter odešle, Shift+Enter nový řádek, IME neodesílá, počítadlo znaků (`SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM`)
 - `SmableAiSuggestions` — chipy navržených otázek

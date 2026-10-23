@@ -15,6 +15,8 @@ export interface SmableAiChatProps {
   emptyState?: ReactNode
   onFeedback?: SmableAiMessageListProps['onFeedback']
   onRetry?: SmableAiMessageListProps['onRetry']
+  /** Obsah pod odpovědí asistenta — např. karty `SmableAiActionCard` ke schválení. */
+  renderMessageExtra?: SmableAiMessageListProps['renderMessageExtra']
   /** Slot nad seznamem zpráv — neroluje s konverzací. */
   header?: ReactNode
   /** Chipy nad polem dotazu, jen dokud je konverzace prázdná (widget). Bez `onPickSuggestion` se nevykreslí. */
@@ -32,6 +34,7 @@ export function SmableAiChat({
   emptyState,
   onFeedback,
   onRetry,
+  renderMessageExtra,
   header,
   suggestions,
   onPickSuggestion,
@@ -52,6 +55,7 @@ export function SmableAiChat({
           renderContent={renderContent}
           onFeedback={onFeedback}
           onRetry={onRetry}
+          renderMessageExtra={renderMessageExtra}
         />
       )}
       {empty && suggestions && suggestions.length > 0 && onPickSuggestion && (

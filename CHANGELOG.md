@@ -28,6 +28,17 @@ All notable changes to `@smable/ui`.
   widget (Esc jinde na stránce — Select, SmableDrawer — kartu nezavře); po zavření se fokus vrací na
   prvek, který ho měl před otevřením; rozbalovací historie konverzací jen s `conversations` +
   `groupLabels`, tlačítko rozbalení jen s `onExpand`.
+- **`SmableAiActionCard`** (Figma `115:1626`) — karta změny, kterou asistent připravil ke schválení:
+  titulek s tužkou, řádky položka · před → po (bez `before` jen nová hodnota; úzký widget řádek zalomí),
+  volitelné oranžové `warning` a `note`, tlačítka Potvrdit (primární, ikona ✓) / Zrušit (ghost) jen ve
+  stavu `pending` a jen s `onConfirm` / `onCancel`; `busy` točí kliknuté tlačítko a druhé vypne. Ostatní
+  stavy (`executed`, `cancelled`, `expired`, `stale`, `failed`) ukážou štítek `labels.statuses[status]`,
+  `failed` navíc `error`. **`confirming` je oproti zadání bez tlačítek i bez spinneru** — akce, kterou
+  server zamkl a nedokončil, by jinak točila navždy; ikonu stavu točí jen `busy`. Přechod z tlačítek na
+  štítek hlásí živá oblast a fokus kliknutého tlačítka přejde na štítek. Typy `SmableAiActionStatus`,
+  `SmableAiActionRow`, `SmableAiActionLabels` (samostatné, `SmableAiLabels` se nemění).
+- `SmableAiChat` / `SmableAiMessageList` / `SmableAiMessage`: volitelný `renderMessageExtra(message)` —
+  obsah pod odpovědí asistenta (nad palci); u otázky ani u chybové bubliny se nevolá.
 - `SmableAiLabels` má povinný klíč `answered` (oznámení čtečce, že odpověď dorazila) a `updatedAt`
   konverzace je ISO 8601 s posunem (např. `2026-10-23T09:15:00+02:00`); jiný tvar spadne do „Starší“.
 - **Nové exporty** `groupConversations(items, now, weekStartsMonday = true)` (Dnes / Tento týden /

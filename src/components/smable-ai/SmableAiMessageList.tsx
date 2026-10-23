@@ -13,6 +13,7 @@ export interface SmableAiMessageListProps {
   renderContent: SmableAiMessageProps['renderContent']
   onFeedback?: SmableAiMessageProps['onFeedback']
   onRetry?: SmableAiMessageProps['onRetry']
+  renderMessageExtra?: SmableAiMessageProps['renderMessageExtra']
   /** Slot nahoře — „Nová konverzace“ nebo kontext stránky. */
   header?: ReactNode
   className?: string
@@ -25,6 +26,7 @@ export function SmableAiMessageList({
   renderContent,
   onFeedback,
   onRetry,
+  renderMessageExtra,
   header,
   className,
 }: SmableAiMessageListProps) {
@@ -58,6 +60,7 @@ export function SmableAiMessageList({
           renderContent={renderContent}
           onFeedback={onFeedback}
           onRetry={onRetry}
+          renderMessageExtra={renderMessageExtra}
           isLast={!pending && i === messages.length - 1}
         />
       ))}
