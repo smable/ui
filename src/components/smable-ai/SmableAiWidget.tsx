@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Maximize2, SquarePen, X } from 'lucide-react'
 import clsx from 'clsx'
 import { SmableAiConversationList, type SmableAiConversationListProps } from './SmableAiConversationList'
@@ -7,9 +8,12 @@ import type { SmableAiConversationData, SmableAiLabels } from './types'
 /**
  * Plovoucí karta Smable AI (Shopify Sidekick). Pod `lg` zabírá celou obrazovku, od `lg` je
  * karta 400 px vpravo dole nad spouštěčem a tlačítkem nápovědy. Bez backdropu a bez pasti na
- * fokus — stránka pod kartou zůstává klikatelná. Esc zavře nejdřív historii, potom widget.
+ * fokus — stránka pod kartou zůstává klikatelná. Esc s fokusem uvnitř karty zavře nejdřív
+ * historii, potom widget; Esc jinde na stránce (Select, SmableDrawer) karty se netýká.
+ * Po zavření se fokus vrací na prvek, který měl fokus před otevřením (typicky spouštěč).
  *
- * Nerenderuje se přes portál: konzument ji vkládá mimo transformované předky (fixed).
+ * Renderuje se přes portál do `document.body` jako SmableDrawer, takže `fixed` nerozbijí
+ * transformovaní předci ani `space-y-*` u konzumenta.
  */
 export interface SmableAiWidgetProps {
   open: boolean
@@ -24,7 +28,10 @@ export interface SmableAiWidgetProps {
   onNewConversation: () => void
   /** Rozbalit na stránku — bez callbacku se tlačítko nevykreslí. */
   onExpand?: () => void
-  labels: Pick<SmableAiLabels, 'newConversation' | 'conversations' | 'deleteConversation' | 'expand' | 'close'>
+  labels: Pick<
+    SmableAiLabels,
+    'assistant' | 'newConversation' | 'conversations' | 'deleteConversation' | 'expand' | 'close'
+  >
   groupLabels?: SmableAiConversationListProps['groupLabels']
   /** Tělo — typicky `SmableAiChat`. */
   children: ReactNode
@@ -55,8 +62,8 @@ function focusBody(body: HTMLElement | null): boolean {
 }
 
 export function SmableAiWidget(props: SmableAiWidgetProps) {
-  if (!props.open) return null
-  return <WidgetCard {...props} />
+  if (!props.open || typeof document === 'undefined') return null
+  return createPortal(<WidgetCard {...props} />, document.body)
 }
 
 function WidgetCard({
@@ -74,6 +81,7 @@ function WidgetCard({
   className,
 }: SmableAiWidgetProps) {
   const [historyOpen, setHistoryOpen] = useState(false)
+  const rootRef = useRef<HTMLDivElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   const toggleRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
@@ -86,12 +94,18 @@ function WidgetCard({
   }, [onClose])
 
   useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
     focusBody(bodyRef.current)
+    return () => {
+      if (previous && document.contains(previous)) previous.focus()
+    }
   }, [])
 
+  // Esc jen s fokusem v kartě; kořen má tabIndex -1, aby klik do textu odpovědi fokus neposlal na body.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
+      if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return
+      if (!rootRef.current?.contains(document.activeElement)) return
       if (historyOpen) {
         setHistoryOpen(false)
         toggleRef.current?.focus()
@@ -133,10 +147,12 @@ function WidgetCard({
 
   return (
     <div
+      ref={rootRef}
       role="dialog"
-      aria-label={labels.conversations}
+      aria-label={labels.assistant}
+      tabIndex={-1}
       className={clsx(
-        'fixed inset-0 z-40 flex flex-col overflow-hidden bg-white dark:bg-neutral-900',
+        'fixed inset-0 z-40 flex flex-col overflow-hidden bg-white outline-none dark:bg-neutral-900',
         'lg:inset-auto lg:bottom-[72px] lg:right-5 lg:h-[min(720px,calc(100dvh-92px))] lg:w-[400px]',
         'lg:rounded-3xl lg:border lg:border-neutral-200 lg:shadow-xl dark:lg:border-neutral-800',
         className

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { BookOpen, CheckCircle2, ChevronRight, Sparkles, ThumbsDown, ThumbsUp } from 'lucide-react'
 import clsx from 'clsx'
 import { SmableButton } from '../SmableButton'
+import { canRetry } from './messages'
 import type { SmableAiFeedback, SmableAiLabels, SmableAiMessageData } from './types'
 
 export interface SmableAiMessageProps {
@@ -12,14 +13,12 @@ export interface SmableAiMessageProps {
   /** Klik na aktivní palec posílá `null`. Bez callbacku se palce nevykreslí. */
   onFeedback?: (id: SmableAiMessageData['id'], feedback: SmableAiFeedback) => void
   onRetry?: () => void
-  /** „Zkusit znovu“ se nabízí jen u poslední zprávy. */
+  /** „Zkusit znovu“ se nabízí jen u poslední zprávy (seznam ho během čekání na odpověď vypne). */
   isLast: boolean
 }
 
 const FOCUS =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950'
-
-const NO_RETRY: ReadonlySet<string> = new Set(['forbidden', 'rateLimited'])
 
 export function SmableAiMessage({ message, labels, renderContent, onFeedback, onRetry, isLast }: SmableAiMessageProps) {
   if (message.role === 'user') {
@@ -33,13 +32,13 @@ export function SmableAiMessage({ message, labels, renderContent, onFeedback, on
   }
 
   if (message.error) {
-    const canRetry = isLast && !!onRetry && !NO_RETRY.has(message.error)
+    const retry = !!onRetry && canRetry(message.error, isLast)
     return (
       <div className="flex flex-col gap-2">
         <AssistantRow label={labels.assistant} />
         <div className="flex flex-col items-start gap-3 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-300">
           <p>{labels.errors[message.error]}</p>
-          {canRetry && (
+          {retry && (
             <SmableButton variant="secondary" size="sm" onClick={onRetry}>
               {labels.retry}
             </SmableButton>
@@ -81,7 +80,7 @@ export function SmableAiMessage({ message, labels, renderContent, onFeedback, on
             >
               <BookOpen className="h-5 w-5 shrink-0 text-brand-600" aria-hidden />
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="text-2xs text-neutral-500">{labels.helpLabel}</span>
+                <span className="text-2xs text-neutral-500 dark:text-neutral-400">{labels.helpLabel}</span>
                 <span className="text-sm font-medium text-neutral-900 dark:text-neutral-50">{h.title}</span>
               </span>
               <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400" aria-hidden />

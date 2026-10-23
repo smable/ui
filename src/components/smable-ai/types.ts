@@ -26,12 +26,18 @@ export interface SmableAiMessageData {
 export interface SmableAiConversationData {
   id: string | number
   title: string
+  /**
+   * ISO 8601 s posunem, např. `2026-10-23T09:15:00+02:00` — parsuje se přes `new Date()`.
+   * Jiný tvar nebo neplatné datum spadne v `groupConversations` do skupiny „Starší“.
+   */
   updatedAt: string
 }
 
 export interface SmableAiLabels {
   assistant: string
   pending: string
+  /** Oznámení čtečce obrazovky, že odpověď dorazila (živá oblast v `SmableAiMessageList`). */
+  answered: string
   sourcesPrefix: string
   helpLabel: string
   feedbackUp: string
