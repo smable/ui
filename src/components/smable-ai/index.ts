@@ -13,3 +13,4 @@ export {
   type SmableAiCapabilitySection,
 } from './SmableAiCapabilities'
 export { SmableAiChat, type SmableAiChatProps } from './SmableAiChat'
+export { SmableAiWidget, type SmableAiWidgetProps } from './SmableAiWidget'
