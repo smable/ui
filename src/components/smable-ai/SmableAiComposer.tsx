@@ -68,13 +68,19 @@ export function SmableAiComposer({
     const el = ref.current
     if (!el || typeof ResizeObserver === 'undefined') return
     let width = -1
+    let frame = 0
+    // Měření až v dalším snímku — změna výšky uvnitř callbacku by vyvolala „ResizeObserver loop…“.
     const observer = new ResizeObserver(([entry]) => {
       if (entry.contentRect.width === width) return
       width = entry.contentRect.width
-      autosize()
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(autosize)
     })
     observer.observe(el)
-    return () => observer.disconnect()
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+    }
   }, [minRows])
 
   const send = () => {
