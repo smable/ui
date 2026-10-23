@@ -32,7 +32,7 @@ export interface SmableAiChatProps {
 /**
  * Ve `SmableAiWidget` čte jeho kontext: ve sbalené liště vykreslí jen pole dotazu (bez rámečku, jeden
  * řádek) a odeslání lištu rozbalí. Děti mají ve všech stavech stejné pozice, takže pole dotazu
- * zůstává stejný uzel. Mimo widget kontext nečte a pole dotazu má plnou podobu.
+ * zůstává stejný uzel. Mimo widget (stránka) kontext nečte a pole dotazu má jeden řádek jako dosud.
  */
 export function SmableAiChat({
   messages,
@@ -85,7 +85,7 @@ export function SmableAiChat({
         onSend={onSend}
         hint={collapsed ? undefined : composer.hint}
         bare={collapsed}
-        minRows={collapsed ? 1 : 2}
+        minRows={widget ? (collapsed ? 1 : 2) : 1}
         labels={labels}
       />
     </div>

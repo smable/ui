@@ -85,23 +85,31 @@ export const SmableAiWidgetContext = createContext<SmableAiWidgetContextValue | 
 const FOCUS =
   'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950'
 
-const ICON_BUTTON = clsx(
-  'flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors',
+const ICON_BUTTON_BASE = clsx(
+  'h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 transition-colors',
   'hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
   FOCUS
 )
+
+const ICON_BUTTON = clsx('flex', ICON_BUTTON_BASE)
 
 const TITLE = 'min-w-0 truncate text-sm font-semibold text-neutral-900 dark:text-neutral-50'
 
 const FOCUSABLE =
   'textarea:not([disabled]), input:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
 
-/** Centrování na obsah: host nastaví `--smable-ai-inset-left` (šířku postranního panelu) na `:root`/`body`. */
+/**
+ * Centrování na obsah: host nastaví `--smable-ai-inset-left` (šířku postranního menu) na `:root`/`body`.
+ * `100%` místo `100vw`: u `fixed` je to šířka okna bez posuvníku. Levý okraj se počítá bez transformace,
+ * aby lišta nebyla containing block pro `fixed` potomky (nabídky hosta).
+ */
 const ROOT_STYLE = {
   '--smable-ai-panel-width': `${SMABLE_AI_PANEL_WIDTH}px`,
-  '--smable-ai-center': 'calc(var(--smable-ai-inset-left, 0px) + (100vw - var(--smable-ai-inset-left, 0px)) / 2)',
-  '--smable-ai-bar-width': 'min(480px, calc(100vw - var(--smable-ai-inset-left, 0px) - 2rem))',
-  '--smable-ai-card-width': 'min(560px, calc(100vw - var(--smable-ai-inset-left, 0px) - 2rem))',
+  '--smable-ai-center': 'calc(var(--smable-ai-inset-left, 0px) + (100% - var(--smable-ai-inset-left, 0px)) / 2)',
+  '--smable-ai-bar-width': 'min(480px, calc(100% - var(--smable-ai-inset-left, 0px) - 2rem))',
+  '--smable-ai-card-width': 'min(560px, calc(100% - var(--smable-ai-inset-left, 0px) - 2rem))',
+  '--smable-ai-bar-left': 'calc(var(--smable-ai-center) - var(--smable-ai-bar-width) / 2)',
+  '--smable-ai-card-left': 'calc(var(--smable-ai-center) - var(--smable-ai-card-width) / 2)',
 } as CSSProperties
 
 const ROOT = 'fixed z-40 flex bg-white outline-none dark:bg-neutral-900'
@@ -109,13 +117,13 @@ const ROOT = 'fixed z-40 flex bg-white outline-none dark:bg-neutral-900'
 const BAR = clsx(
   'bottom-4 right-4 items-end rounded-full shadow-lg',
   'has-[textarea:focus]:ring-2 has-[textarea:focus]:ring-brand-500',
-  'lg:right-auto lg:left-[var(--smable-ai-center)] lg:w-[var(--smable-ai-bar-width)] lg:-translate-x-1/2',
+  'lg:right-auto lg:left-[var(--smable-ai-bar-left)] lg:w-[var(--smable-ai-bar-width)]',
   'lg:gap-1 lg:rounded-[22px] lg:border lg:border-neutral-200 lg:px-1.5 lg:py-[5px] dark:lg:border-neutral-800'
 )
 
 const CARD = clsx(
   'inset-0 flex-col overflow-hidden',
-  'lg:inset-auto lg:bottom-4 lg:left-[var(--smable-ai-center)] lg:h-[min(640px,calc(100dvh-2rem))] lg:w-[var(--smable-ai-card-width)] lg:-translate-x-1/2',
+  'lg:inset-auto lg:bottom-4 lg:left-[var(--smable-ai-card-left)] lg:h-[min(640px,calc(100dvh-2rem))] lg:w-[var(--smable-ai-card-width)]',
   'lg:rounded-3xl lg:border lg:border-neutral-200 lg:shadow-xl dark:lg:border-neutral-800'
 )
 
@@ -123,6 +131,11 @@ const PANEL = clsx(
   'inset-0 flex-col overflow-hidden',
   'lg:left-auto lg:w-[var(--smable-ai-panel-width)] lg:border-l lg:border-neutral-200 dark:lg:border-neutral-800'
 )
+
+/** Od `lg` se konverzace otevírá v panelu; rozhoduje se v okamžiku akce. */
+function isDesktop(): boolean {
+  return typeof window !== 'undefined' && Boolean(window.matchMedia?.(SMABLE_AI_DESKTOP_QUERY).matches)
+}
 
 /** Fokus do těla: přednostně pole dotazu (v prázdném stavu mu v DOM předcházejí chipy). */
 function focusBody(body: HTMLElement | null): boolean {
@@ -184,7 +197,7 @@ function WidgetRoot({
     const action = widgetExpandAction({
       placement,
       expanded,
-      isDesktop: typeof window !== 'undefined' && Boolean(window.matchMedia?.(SMABLE_AI_DESKTOP_QUERY).matches),
+      isDesktop: isDesktop(),
       hasPlacementCallback: Boolean(onPlacementChange),
     })
     if (action === 'panel') onPlacementChange?.('panel')
@@ -229,10 +242,12 @@ function WidgetRoot({
       if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return
       if (!rootRef.current?.contains(document.activeElement)) return
       const action = widgetEscapeAction({ placement, expanded, historyOpen })
+      if (action === 'none') return
+      e.preventDefault()
       if (action === 'closeHistory') {
         setHistoryOpen(false)
         toggleRef.current?.focus()
-      } else if (action === 'collapse') {
+      } else {
         latest.current.onExpandedChange(false)
       }
     }
@@ -257,13 +272,18 @@ function WidgetRoot({
       if (rootRef.current?.contains(e.target as Node)) return
       focusOnCollapse.current = false
       latest.current.onExpandedChange(false)
+      // Host sbalení může odmítnout — příznak nesmí přežít do dalšího (šipka, Esc) sbalení.
+      // Sbalení od hosta se commitne v mikroúloze, takže timeout ho už najde spotřebovaný.
+      window.setTimeout(() => {
+        focusOnCollapse.current = true
+      }, 0)
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [collapseOnOutsideClick, panel, expanded])
 
   const dock = () => {
-    onPlacementChange?.('panel')
+    if (isDesktop()) onPlacementChange?.('panel')
     if (!expanded) onExpandedChange(true)
   }
 
@@ -338,9 +358,8 @@ function WidgetRoot({
                 <button
                   type="button"
                   onClick={dock}
-                  aria-pressed={false}
                   aria-label={labels.dock}
-                  className={ICON_BUTTON}
+                  className={clsx('hidden lg:flex', ICON_BUTTON_BASE)}
                 >
                   <PanelRight className="h-4.5 w-4.5" aria-hidden />
                 </button>
@@ -412,7 +431,6 @@ function WidgetRoot({
           <button
             type="button"
             onClick={dock}
-            aria-pressed={false}
             aria-label={labels.dock}
             className={clsx(
               'hidden h-8 w-8 shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors lg:flex',

@@ -21,11 +21,14 @@ All notable changes to `@smable/ui`.
   (u chybové bubliny její text), jakmile odpověď dorazí — obsah odpovědi se nepředčítá.
 - `SmableAiComposer`: Enter odešle, Shift+Enter nový řádek, během skládání znaků (IME) neodesílá,
   prázdný text neodesílá; počítadlo znaků se ukáže, když zbývá ≤ 200 z 2 000. Písmo 13 px na řádku
-  20 px, `resize-none`, výška `minRows` (výchozí 2) až 6 řádků; posuvník se zapne až nad 6 řádků
-  (dřív se na Windows ukazovaly šipky posuvníku, když se placeholder zalomil). `bare` vypne rámeček,
-  pozadí a ring (chrome dodá obal). S `onRecordingChange` mikrofon před Odeslat: klik přepne
-  `recording`, při nahrávání červený stop s pulzem (bez pulzu při `prefers-reduced-motion`),
-  `aria-pressed` a placeholder `labels.listening` — zatím jen nahrávání, do pole se nic nevkládá.
+  20 px (i na stránce `/ai/chat`), `resize-none`, výška `minRows` (výchozí 1 — jeden řádek svisle na
+  středu tlačítka Odeslat, stránka tak zůstává jako dosud) až 6 řádků; posuvník se zapne až nad
+  6 řádků (dřív se na Windows ukazovaly šipky posuvníku, když se placeholder zalomil); výška se
+  přeměří i při změně šířky pole (`ResizeObserver`, např. karta → panel). `bare` vypne rámeček,
+  pozadí, ring a počítadlo (chrome dodá obal). S `onRecordingChange` mikrofon před Odeslat: klik
+  přepne `recording`, při nahrávání červený stop s pulzem (bez pulzu při `prefers-reduced-motion`)
+  a placeholder `labels.listening`; tlačítko má stálý název `labels.dictate` s `aria-pressed`
+  (při nahrávání `title` `labels.stopDictation`) — zatím jen nahrávání, do pole se nic nevkládá.
 - `SmableAiWidget` — **plovoucí lišta ve stylu Shopify Sidekick** (rozhodnutí PO 23. 10.; místo
   karty vpravo dole nad spouštěčem). API: `expanded` + `onExpandedChange`, `placement` (`'float'` |
   `'panel'`, výchozí `float`) + `onPlacementChange`, `collapseOnOutsideClick` (výchozí `false`);
@@ -33,10 +36,15 @@ All notable changes to `@smable/ui`.
   - Sbaleno: od `lg` lišta ~44 px dole uprostřed obsahu (centruje se podle CSS proměnné
     `--smable-ai-inset-left` na `:root`/`body`), píše se rovnou do ní a fokus ani psaní ji
     nerozbalí; pod `lg` kulatá ikona 52 px vpravo dole.
+  - Centrování a šířky počítají se `100%`, ne se `100vw` ze zadání: u `fixed` je `100%` šířka okna
+    bez posuvníku, `100vw` posuvník započítá a lišta by na Windows ujížděla o půl jeho šířky doprava.
+    Levý okraj se počítá přímo (střed − polovina šířky), bez `translate` — lišta ani karta tak nejsou
+    containing block pro `fixed` nabídky hosta.
   - Odeslání z lišty, avatar i Připnout otevřou od `lg` konverzaci v **panelu vpravo**
     (`onPlacementChange('panel')` + `onExpandedChange(true)`, rozhoduje `matchMedia` v okamžiku akce);
     pod `lg` celá obrazovka, bez `onPlacementChange` karta 560 × 640 px rostoucí nahoru (záložní stav,
-    sbalí ji šipka, Esc nebo volitelně klik mimo).
+    sbalí ji šipka, Esc nebo volitelně klik mimo). Připnout v hlavičce karty je jen od `lg` a pod `lg`
+    panel nikdy nenastaví.
   - Panel `SMABLE_AI_PANEL_WIDTH` (420 px) je `fixed`, jen s 1px čárou vlevo, bez stínu a zaoblení;
     host od `lg` zúží obsah (`padding-right`). Zavře ho jen křížek (`onPlacementChange('float')` +
     `onExpandedChange(false)`), Esc v panelu jen zavře historii, klik mimo ho nezavře; panel je vždy
@@ -44,13 +52,18 @@ All notable changes to `@smable/ui`.
   - Pole dotazu je ve všech stavech **stejný uzel `textarea`** (portál pořád v `body`, mění se jen
     třídy, stabilní pozice dětí) — text, kurzor, fokus i IME přežijí rozbalení, sbalení i připnutí.
   - Nemodální `role="region"` s názvem `labels.assistant`; Esc jen s fokusem uvnitř (Select ani
-    SmableDrawer jinde na stránce ho neberou); po sbalení je fokus v poli lišty, pod `lg` na ikoně;
-    klik mimo fokus neposouvá. Historie jen s `conversations` + `groupLabels`, Celá stránka jen
-    s `onExpand`.
+    SmableDrawer jinde na stránce ho neberou), zpracovaný Esc označí `preventDefault()`; po sbalení je
+    fokus v poli lišty, pod `lg` na ikoně; klik mimo fokus neposouvá (ani když host sbalení odmítne,
+    příznak nepřežije do dalšího sbalení). Historie jen s `conversations` + `groupLabels`, Celá stránka
+    jen s `onExpand`.
   - Kontext `SmableAiWidgetContext` (`{ collapsed, expand }`): `SmableAiChat` ve sbalené liště
     vykreslí jen pole dotazu (bez rámečku, jeden řádek, bez hintu) a odeslání obalí voláním `expand()`.
-    Mimo widget se chat chová jako dosud. `composer` v `SmableAiChat` propouští i `leading`,
-    `trailing`, `recording` a `onRecordingChange`.
+    Mimo widget se chat chová jako dosud (jeden řádek). `composer` v `SmableAiChat` propouští i
+    `leading`, `trailing`, `recording` a `onRecordingChange`.
+- **`BulkActionsBar` nad lištou Smable AI**: `bottom: calc(1.5rem + var(--smable-ai-bar-reserve, 0px))`
+  a střed na obsahu `calc(var(--smable-ai-inset-left, 0px) + (100% − inset-left − inset-right) / 2)`
+  (s vlastním `-translate-x-1/2`). Bez proměnných vypadá přesně jako dřív (`bottom-6`, `left-1/2`).
+  Proměnné nastavuje host na `:root`/`body`, viz README.
 - **`SmableAiActionCard`** (Figma `115:1626`) — karta změny, kterou asistent připravil ke schválení:
   titulek s tužkou, řádky položka · před → po (bez `before` jen nová hodnota, prázdný `before` ukáže
   „→ po“; úzký widget řádek zalomí),
@@ -63,7 +76,8 @@ All notable changes to `@smable/ui`.
   server zamkl a nedokončil, by jinak točila navždy; ikonu stavu točí jen `busy`. Přechod z tlačítek na
   štítek hlásí živá oblast a fokus kliknutého tlačítka přejde na štítek; po nepovedeném pokusu (`busy`
   zhasne, akce dál `pending`) pozdější refetch na `expired` / `stale` fokus nebere. Typy `SmableAiActionStatus`,
-  `SmableAiActionRow`, `SmableAiActionLabels` (samostatné, `SmableAiLabels` se nemění).
+  `SmableAiActionRow`, `SmableAiActionLabels` (samostatné, `SmableAiLabels` se nemění). Kořen karty je
+  `relative`, takže skrytá šipka (`sr-only`) neuteče ze seznamu zpráv a nenatahuje stránku.
 - `SmableAiChat` / `SmableAiMessageList` / `SmableAiMessage`: volitelný `renderMessageExtra(message)` —
   obsah pod odpovědí asistenta (nad palci); u otázky ani u chybové bubliny se nevolá.
 - `SmableAiLabels` má povinný klíč `answered` (oznámení čtečce, že odpověď dorazila) a `updatedAt`
@@ -74,7 +88,8 @@ All notable changes to `@smable/ui`.
   Starší podle místního kalendáře), `SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM` a typy `SmableAiMessageData`,
   `SmableAiConversationData`, `SmableAiLabels`, `SmableAiSource`, `SmableAiHelpLink`,
   `SmableAiErrorKind`, `SmableAiFeedback`, `SmableAiConversationGroup`, `SmableAiCapabilitySection`,
-  `SMABLE_AI_PANEL_WIDTH`, `SmableAiWidgetContext`, `SmableAiWidgetContextValue`, `SmableAiWidgetPlacement`.
+  `SMABLE_AI_PANEL_WIDTH`, `SMABLE_AI_DESKTOP_QUERY`, `SmableAiWidgetContext`, `SmableAiWidgetContextValue`,
+  `SmableAiWidgetPlacement`.
 
 ## 0.22.0 — 2026-10-14
 

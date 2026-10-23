@@ -112,7 +112,7 @@ export function SmableAiActionCard({
       aria-label={title}
       aria-busy={busy ? true : undefined}
       className={clsx(
-        'flex flex-col gap-3.5 rounded-lg border bg-white p-5 dark:bg-neutral-900',
+        'relative flex flex-col gap-3.5 rounded-lg border bg-white p-5 dark:bg-neutral-900',
         live ? 'border-brand-200 dark:border-brand-900' : 'border-neutral-200 dark:border-neutral-800'
       )}
     >

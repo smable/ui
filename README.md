@@ -116,10 +116,10 @@ Prezentační díly asistenta Smable AI — texty přes `labels` (`SmableAiLabel
 widget [`273-1833`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=273-1833),
 karta změny [`115-1626`](https://www.figma.com/design/7QGTOfcL7RrYC5MfaMg7HT/Smable-UI?node-id=115-1626).
 
-- `SmableAiChat` — celý chat: slot `header`, seznam zpráv (nebo `emptyState`), chipy `suggestions` dokud je konverzace prázdná, pole dotazu (`composer` propouští i `leading`, `trailing`, `recording`, `onRecordingChange`); `renderMessageExtra(message)` vykreslí obsah pod odpovědí asistenta (ne pod otázkou ani pod chybovou bublinou) — typicky karty `SmableAiActionCard`. Uvnitř `SmableAiWidget` čte jeho kontext: ve sbalené liště vykreslí jen pole dotazu (bez rámečku, jeden řádek, bez hintu) a odeslání lištu rozbalí
+- `SmableAiChat` — celý chat: slot `header`, seznam zpráv (nebo `emptyState`), chipy `suggestions` dokud je konverzace prázdná, pole dotazu (`composer` propouští i `leading`, `trailing`, `recording`, `onRecordingChange`; na stránce jeden řádek jako dosud); `renderMessageExtra(message)` vykreslí obsah pod odpovědí asistenta (ne pod otázkou ani pod chybovou bublinou) — typicky karty `SmableAiActionCard`. Uvnitř `SmableAiWidget` čte jeho kontext: ve sbalené liště vykreslí jen pole dotazu (bez rámečku, jeden řádek, bez hintu) a odeslání lištu rozbalí
 - `SmableAiActionCard` — karta změny, kterou asistent připravil ke schválení: titulek, řádky `rows` (položka, `before` → `after`; bez `before` jen nová hodnota, prázdný `before` ukáže „→ after“), volitelné `warning` a `note`; texty přes `SmableAiActionLabels`. `pending` ukáže Potvrdit / Zrušit (každé jen s callbackem), `busy: 'confirm' | 'cancel'` točí jmenované tlačítko a obě vypne (spinner sedí i po znovupřipojení karty); po kliknutí karta další kliky ignoruje, dokud konzument nenastaví `busy` nebo se nezmění `status`; ostatní stavy ukážou štítek `labels.statuses[status]` bez tlačítek, `failed` navíc `error`. `confirming` je záměrně bez tlačítek a bez spinneru (akce zaseknutá po pádu serveru by se točila navždy) — ikonu stavu točí jen `busy`. Přechod na štítek se hlásí čtečce a fokus z kliknutého tlačítka přejde na štítek (po nepovedeném pokusu — `busy` zhasne a akce dál čeká — pozdější změna stavu fokus nebere); `role="group"` s názvem `title`
 - `SmableAiMessage`, `SmableAiMessageList` — bublina uživatele / odpověď se zdroji, odkazy do nápovědy (`https://`), palce (`aria-pressed`), chybová bublina se „Zkusit znovu“ (jen u poslední zprávy a ne během čekání); seznam roluje dolů při nové zprávě i při přepnutí konverzace, ukazuje běžící stav a čtečkám hlásí `labels.pending` / `labels.answered` (u chyby její text) v živé oblasti — obsah odpovědi se nikdy nepředčítá
-- `SmableAiComposer` — pole dotazu: Enter odešle, Shift+Enter nový řádek, IME neodesílá, počítadlo znaků (`SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM`); písmo 13 px na řádku 20 px, výška `minRows` (výchozí 2) až 6 řádků, posuvník až nad 6 řádků; `bare` bez rámečku, pozadí a ringu (chrome dodá obal); s `onRecordingChange` mikrofon před Odeslat — `recording` ukáže červený stop s pulzem (bez pulzu při `prefers-reduced-motion`), `aria-pressed` a placeholder `labels.listening`; do pole se nic nevkládá (přepis řeči zatím není)
+- `SmableAiComposer` — pole dotazu: Enter odešle, Shift+Enter nový řádek, IME neodesílá, počítadlo znaků (`SMABLE_AI_MAX_CHARS`, `SMABLE_AI_COUNTER_FROM`); písmo 13 px na řádku 20 px, výška `minRows` (výchozí 1, jeden řádek svisle na středu tlačítka) až 6 řádků, posuvník až nad 6 řádků, výška se přeměří i při změně šířky pole; `bare` bez rámečku, pozadí, ringu a počítadla (chrome dodá obal); s `onRecordingChange` mikrofon před Odeslat — `recording` ukáže červený stop s pulzem (bez pulzu při `prefers-reduced-motion`) a placeholder `labels.listening`, tlačítko má stálý název `labels.dictate` s `aria-pressed` (při nahrávání `title` `labels.stopDictation`); do pole se nic nevkládá (přepis řeči zatím není)
 - `SmableAiSuggestions` — chipy navržených otázek
 - `SmableAiEmptyState` — prázdný stav; `rows` (stránka) / `chips` (widget)
 - `SmableAiConversationList` — historie konverzací ve skupinách Dnes / Tento týden / Starší (`groupConversations`), mazání na hover
@@ -135,14 +135,14 @@ a bez pasti na fokus.
 
 | Stav | Od `lg` | Pod `lg` |
 |---|---|---|
-| sbaleno (`float`, `expanded=false`) | lišta dole uprostřed obsahu, šířka min(480 px, 100vw − inset − 2rem), ~44 px vysoká: avatar · `leading` · pole (1 řádek) · `trailing` · mikrofon · Odeslat · oddělovač · Připnout (poslední dva jen s `onPlacementChange`) | kulatá ikona 52 px vpravo dole (`right-4 bottom-4`), pole dotazu je skryté jen přes CSS |
+| sbaleno (`float`, `expanded=false`) | lišta dole uprostřed obsahu, šířka min(480 px, 100 % − inset − 2rem), ~44 px vysoká: avatar · `leading` · pole (1 řádek) · `trailing` · mikrofon · Odeslat · oddělovač · Připnout (poslední dva jen s `onPlacementChange`) | kulatá ikona 52 px vpravo dole (`right-4 bottom-4`), pole dotazu je skryté jen přes CSS |
 | panel (`placement='panel'`) | pevný panel vpravo, šířka `SMABLE_AI_PANEL_WIDTH` (420 px), jen 1px čára vlevo, bez stínu a zaoblení | celá obrazovka |
 | karta (`float`, `expanded=true`) | záložní stav: karta min(560 px, …) × min(640 px, 100dvh − 2rem) roste nahoru ze stejného spodního okraje | celá obrazovka |
 
 - **Píše se rovnou do lišty** — fokus ani psaní ji nerozbalí, mikrofon taky ne.
 - **Rozbalení** spouští odeslání z lišty, klik na avatar a Připnout. Od `lg` (`matchMedia('(min-width: 1024px)')` v okamžiku akce) s `onPlacementChange` se konverzace otevře **v panelu** (`onPlacementChange('panel')` + `onExpandedChange(true)`), jinak jen `onExpandedChange(true)` — pod `lg` celá obrazovka, bez `onPlacementChange` karta. Kartu otevře i host přes `expanded=true`.
-- **Hlavička** (rozbalený stav): přepínač historie s názvem (jen s `conversations` + `groupLabels`), Nová konverzace, Připnout (jen karta a jen s `onPlacementChange`), Celá stránka (jen s `onExpand`), vpravo Sbalit (`labels.collapse`, karta) nebo křížek (`labels.close`, panel). Panel přepínač připnutí nemá.
-- **Sbalení karty**: šipka, Esc (jen s fokusem uvnitř, ne při `defaultPrevented`/`isComposing`; nejdřív zavře historii) nebo klik mimo kartu s `collapseOnOutsideClick` (výchozí `false`). Po sbalení je fokus v poli lišty; pod `lg`, kde je pole skryté, na ikoně (rozhoduje viditelnost pole, ne šířka okna). Klik mimo fokus neposouvá.
+- **Hlavička** (rozbalený stav): přepínač historie s názvem (jen s `conversations` + `groupLabels`), Nová konverzace, Připnout (jen karta, jen od `lg` a jen s `onPlacementChange`; pod `lg` panel nikdy nenastaví), Celá stránka (jen s `onExpand`), vpravo Sbalit (`labels.collapse`, karta) nebo křížek (`labels.close`, panel). Panel přepínač připnutí nemá.
+- **Sbalení karty**: šipka, Esc (jen s fokusem uvnitř, ne při `defaultPrevented`/`isComposing`; nejdřív zavře historii; zpracovaný Esc označí `preventDefault()`) nebo klik mimo kartu s `collapseOnOutsideClick` (výchozí `false`). Po sbalení je fokus v poli lišty; pod `lg`, kde je pole skryté, na ikoně (rozhoduje viditelnost pole, ne šířka okna). Klik mimo fokus neposouvá (a když host sbalení odmítne, další sbalení fokus vrací normálně).
 - **Panel** zavře jen křížek: `onPlacementChange('float')` + `onExpandedChange(false)` a zpět je sbalená lišta. Esc v panelu jen zavře historii, klik mimo panel ho nezavře. Panel je vždy rozbalený, i když host pošle `expanded=false`.
 - Esc v Selectu nebo `SmableDraweru` jinde na stránce widgetu nevadí; ohlášení odpovědí (`aria-live` v `SmableAiMessageList`) zůstává.
 - Kontext `SmableAiWidgetContext` (`{ collapsed, expand }`) čte `SmableAiChat`; vlastní tělo widgetu ho může číst stejně.
@@ -150,10 +150,18 @@ a bez pasti na fokus.
 **Co musí udělat host:**
 
 - Vykreslit **jednu** instanci widgetu a měnit jen props — žádný `key` měněný podle umístění nebo konverzace a žádné podmíněné vykreslení podle stavu, jinak se pole dotazu připojí znovu.
-- Nastavit CSS proměnnou `--smable-ai-inset-left` (šířka postranního menu, výchozí `0px`) na `:root` nebo `body` — widget je v portálu v `body`, z obalu layoutu by ji nezdědil. Lišta a karta se centrují na obsah: `left: calc(inset + (100vw − inset) / 2)`.
+- Nastavit CSS proměnné na `:root` nebo `body` — widget je v portálu v `body`, z obalu layoutu by je nezdědil. Všechny mají výchozí `0px`:
+
+  | Proměnná | Co znamená | Kdo ji čte |
+  |---|---|---|
+  | `--smable-ai-inset-left` | šířka postranního menu vlevo | `SmableAiWidget` (lišta a karta se centrují na obsah: levý střed `inset + (100 % − inset) / 2`, bez transformace), `BulkActionsBar` |
+  | `--smable-ai-inset-right` | šířka připnutého panelu vpravo — od `lg`, dokud je `placement === 'panel'`, `SMABLE_AI_PANEL_WIDTH` px | `BulkActionsBar` (centruje se mezi menu a panel) |
+  | `--smable-ai-bar-reserve` | místo pro sbalenou lištu Smable AI dole — od `lg`, dokud je lišta vidět, např. `3rem` | `BulkActionsBar` (`bottom: calc(1.5rem + rezerva)`, stojí nad lištou) |
+
+  Bez proměnných vypadá `BulkActionsBar` přesně jako dřív (`bottom: 1.5rem`, `left: 50%`).
 - Od `lg`, dokud je `placement === 'panel'`, **zúžit obsah** o `SMABLE_AI_PANEL_WIDTH` — typicky `padding-right` na hlavním obalu obsahu. Panel je `fixed` a stránku sám neposouvá.
 - Host s vlastním vstupem na mobilu může ikonu schovat přes `className` (např. `max-lg:hidden`, jen když je widget sbalený).
-- Na stránce celé konverzace (`onExpand`) má tlačítko zmenšení od `lg` volat `onPlacementChange('panel')`.
+- Na stránce celé konverzace (`onExpand`) má tlačítko zmenšení od `lg` volat `onPlacementChange('panel')` — breakpoint je exportovaný jako `SMABLE_AI_DESKTOP_QUERY` (`(min-width: 1024px)`).
 
 ```tsx
 <SmableAiWidget

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
 import { ArrowUp, Mic } from 'lucide-react'
 import clsx from 'clsx'
 import { SMABLE_AI_COUNTER_FROM, SMABLE_AI_MAX_CHARS, charsLeft, normalizeOutgoing, shouldSendOnKey } from './composer'
@@ -20,9 +20,9 @@ export interface SmableAiComposerProps {
   trailing?: ReactNode
   /** Poznámka pod polem (disclaimer). */
   hint?: ReactNode
-  /** Bez rámečku, pozadí a ringu, menší tlačítka — chrome dodá obal (sbalená lišta widgetu). */
+  /** Bez rámečku, pozadí, ringu a počítadla, menší tlačítka — chrome dodá obal (sbalená lišta widgetu). */
   bare?: boolean
-  /** Výška pole v řádcích, než začne růst s textem (max 6). */
+  /** Výška pole v řádcích, než začne růst s textem (max 6). Jeden řádek je svisle na středu tlačítek. */
   minRows?: number
   /** Běží nahrávání — tlačítko mikrofonu ukáže stop, pole „Poslouchám…“. Do pole se nic nevkládá. */
   recording?: boolean
@@ -45,13 +45,13 @@ export function SmableAiComposer({
   trailing,
   hint,
   bare = false,
-  minRows = 2,
+  minRows = 1,
   recording = false,
   onRecordingChange,
 }: SmableAiComposerProps) {
   const ref = useRef<HTMLTextAreaElement>(null)
 
-  useLayoutEffect(() => {
+  const autosize = () => {
     const el = ref.current
     if (!el) return
     const max = LINE_HEIGHT * MAX_ROWS
@@ -59,7 +59,23 @@ export function SmableAiComposer({
     const content = el.scrollHeight
     el.style.height = `${Math.max(LINE_HEIGHT * minRows, Math.min(content, max))}px`
     el.style.overflowY = content > max ? 'auto' : 'hidden'
-  }, [value, minRows])
+  }
+
+  useLayoutEffect(autosize, [value, minRows])
+
+  // Jiná šířka (karta → panel, okno, skryté pole na telefonu) zalomí text jinak — změřit znovu.
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return
+    let width = -1
+    const observer = new ResizeObserver(([entry]) => {
+      if (entry.contentRect.width === width) return
+      width = entry.contentRect.width
+      autosize()
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [minRows])
 
   const send = () => {
     if (disabled) return
@@ -75,7 +91,7 @@ export function SmableAiComposer({
   }
 
   const left = charsLeft(value, maxLength)
-  const showCounter = left <= SMABLE_AI_COUNTER_FROM
+  const showCounter = !bare && left <= SMABLE_AI_COUNTER_FROM
   const button = bare ? 'h-8 w-8' : 'h-9 w-9'
   const focusRing =
     'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-neutral-950'
@@ -107,7 +123,7 @@ export function SmableAiComposer({
           className={clsx(
             'min-w-0 flex-1 resize-none overflow-y-hidden bg-transparent p-0 text-[13px] leading-5 text-neutral-900',
             'placeholder:text-neutral-400 focus:outline-none focus:ring-0 dark:text-neutral-50',
-            bare && 'my-1.5'
+            minRows === 1 && (bare ? 'my-1.5' : 'my-2')
           )}
         />
         {trailing}
@@ -116,7 +132,8 @@ export function SmableAiComposer({
             type="button"
             onClick={() => onRecordingChange(!recording)}
             aria-pressed={recording}
-            aria-label={recording ? labels.stopDictation : labels.dictate}
+            aria-label={labels.dictate}
+            title={recording ? labels.stopDictation : labels.dictate}
             className={clsx(
               'flex shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors',
               'hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
