@@ -42,7 +42,17 @@ const ICON_BUTTON = clsx(
 
 const TITLE = 'min-w-0 truncate text-sm font-semibold text-neutral-900 dark:text-neutral-50'
 
-const FOCUSABLE = 'textarea, input, button, a[href], [tabindex]:not([tabindex="-1"])'
+const FOCUSABLE =
+  'textarea:not([disabled]), input:not([disabled]), button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+
+/** Fokus do těla: přednostně pole dotazu (v prázdném stavu mu v DOM předcházejí chipy). */
+function focusBody(body: HTMLElement | null): boolean {
+  if (!body) return false
+  const target =
+    body.querySelector<HTMLElement>('textarea:not([disabled])') ?? body.querySelector<HTMLElement>(FOCUSABLE)
+  target?.focus()
+  return target != null
+}
 
 export function SmableAiWidget(props: SmableAiWidgetProps) {
   if (!props.open) return null
@@ -70,22 +80,28 @@ function WidgetCard({
   const panelId = useId()
   const hasHistory = Boolean(conversations && groupLabels)
 
+  const onCloseRef = useRef(onClose)
   useEffect(() => {
-    const body = bodyRef.current
-    if (!body) return
-    const target = body.querySelector<HTMLElement>('textarea') ?? body.querySelector<HTMLElement>(FOCUSABLE)
-    target?.focus()
+    onCloseRef.current = onClose
+  }, [onClose])
+
+  useEffect(() => {
+    focusBody(bodyRef.current)
   }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (historyOpen) setHistoryOpen(false)
-      else onClose()
+      if (historyOpen) {
+        setHistoryOpen(false)
+        toggleRef.current?.focus()
+      } else {
+        onCloseRef.current()
+      }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [historyOpen, onClose])
+  }, [historyOpen])
 
   useEffect(() => {
     if (!historyOpen) return
@@ -98,9 +114,21 @@ function WidgetCard({
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [historyOpen])
 
-  const newConversation = () => {
+  const newConversationFromHeader = () => {
     setHistoryOpen(false)
     onNewConversation()
+  }
+
+  const newConversationFromPanel = () => {
+    setHistoryOpen(false)
+    onNewConversation()
+    if (!focusBody(bodyRef.current)) toggleRef.current?.focus()
+  }
+
+  const selectConversation = (id: SmableAiConversationData['id']) => {
+    setHistoryOpen(false)
+    toggleRef.current?.focus()
+    onSelectConversation?.(id)
   }
 
   return (
@@ -138,7 +166,12 @@ function WidgetCard({
           <h2 className={clsx(TITLE, 'py-1.5 pl-2')}>{title}</h2>
         )}
         <div className="ml-auto flex shrink-0 items-center gap-0.5">
-          <button type="button" onClick={newConversation} aria-label={labels.newConversation} className={ICON_BUTTON}>
+          <button
+            type="button"
+            onClick={newConversationFromHeader}
+            aria-label={labels.newConversation}
+            className={ICON_BUTTON}
+          >
             <SquarePen className="h-4.5 w-4.5" aria-hidden />
           </button>
           {onExpand && (
@@ -152,11 +185,7 @@ function WidgetCard({
         </div>
       </div>
 
-      <div ref={bodyRef} className="min-h-0 flex-1 p-4">
-        {children}
-      </div>
-
-      {hasHistory && historyOpen && conversations && groupLabels && (
+      {historyOpen && conversations && groupLabels && (
         <div
           ref={panelRef}
           id={panelId}
@@ -168,17 +197,18 @@ function WidgetCard({
           <SmableAiConversationList
             conversations={conversations}
             activeId={activeConversationId}
-            onSelect={(id) => {
-              setHistoryOpen(false)
-              onSelectConversation?.(id)
-            }}
+            onSelect={selectConversation}
             onDelete={onDeleteConversation}
-            onNew={newConversation}
+            onNew={newConversationFromPanel}
             labels={labels}
             groupLabels={groupLabels}
           />
         </div>
       )}
+
+      <div ref={bodyRef} className="min-h-0 flex-1 p-4">
+        {children}
+      </div>
     </div>
   )
 }
