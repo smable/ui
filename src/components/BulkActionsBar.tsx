@@ -17,11 +17,13 @@ function defaultLabel(count: number): string {
 /**
  * Nad lištou Smable AI a uprostřed obsahu: host nastaví `--smable-ai-bar-reserve` (místo pro lištu),
  * `--smable-ai-inset-left` / `--smable-ai-inset-right` (postranní menu / připnutý panel). Bez nich
- * `bottom: 1.5rem` a `left: 50%` jako dřív. Šířka nepřeteče obsah, mezi okraji drží 1rem.
+ * `bottom: 1.5rem` a `left: 50%` jako dřív. Šířka podle obsahu (bez `max-content` by ji `left` na středu
+ * omezil na polovinu obrazovky), nepřeteče obsah a mezi okraji drží 1rem.
  */
 const POSITION = {
   bottom: 'calc(1.5rem + var(--smable-ai-bar-reserve, 0px))',
   left: 'calc(var(--smable-ai-inset-left, 0px) + (100% - var(--smable-ai-inset-left, 0px) - var(--smable-ai-inset-right, 0px)) / 2)',
+  width: 'max-content',
   maxWidth: 'calc(100% - var(--smable-ai-inset-left, 0px) - var(--smable-ai-inset-right, 0px) - 2rem)',
 } satisfies CSSProperties
 
