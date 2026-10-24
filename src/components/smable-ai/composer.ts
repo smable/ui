@@ -33,8 +33,14 @@ export function nextEnabledIndex(items: readonly { disabled?: boolean }[], from:
 export function clipText(text: string, max: number): string {
   const flat = text.replace(/\s+/g, ' ').trim()
   if (flat.length <= max) return flat
-  if (max <= 1) return flat.slice(0, max)
-  return `${flat.slice(0, max - 1).trimEnd()}…`
+  // Po celých znacích (emoji jsou dvě UTF-16 jednotky), délka v jednotkách jako `maxLength` pole.
+  const budget = max <= 1 ? max : max - 1
+  let out = ''
+  for (const ch of flat) {
+    if (out.length + ch.length > budget) break
+    out += ch
+  }
+  return max <= 1 ? out : `${out.trimEnd()}…`
 }
 
 /**

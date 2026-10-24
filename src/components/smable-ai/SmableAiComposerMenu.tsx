@@ -60,14 +60,21 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
   const popRef = useRef<HTMLDivElement>(null)
   const rowRefs = useRef<(HTMLButtonElement | null)[]>([])
   const searchRef = useRef<HTMLInputElement>(null)
+  // Podnabídka, ze které se uživatel vrátil — fokus pak jde zpátky na její položku.
+  const returnTo = useRef<string | null>(null)
   const listId = useId()
 
   const parent = subId === null ? null : items.find((i) => i.id === subId) ?? null
   const submenu = parent?.submenu ?? null
   const rows = submenu ? submenu.items : items
   const searching = Boolean(submenu?.search)
-  const latest = useRef({ rows, onClose, searching, parentIndex: -1 })
-  latest.current = { rows, onClose, searching, parentIndex: subId === null ? -1 : items.findIndex((i) => i.id === subId) }
+  const latest = useRef({ rows, onClose, searching })
+  latest.current = { rows, onClose, searching }
+
+  const goBack = () => {
+    returnTo.current = subId
+    setSubId(null)
+  }
 
   useEffect(() => {
     const place = () => setPos(placeAbove(anchor))
@@ -83,11 +90,18 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
       return
     }
     const first = nextEnabledIndex(rows.map((r) => ({ disabled: isDisabled(r) })), -1, 1)
-    const back = subId === null ? latest.current.parentIndex : -1
-    setActive(first)
-    rowRefs.current[back >= 0 ? back : first]?.focus()
+    const back = subId === null && returnTo.current !== null ? items.findIndex((i) => i.id === returnTo.current) : -1
+    returnTo.current = null
+    const target = back >= 0 ? back : first
+    setActive(target)
+    rowRefs.current[target]?.focus()
     // Jen při změně úrovně — ne s každou novou sadou položek od hosta.
   }, [subId])
+
+  // Šipky v hledání posouvají jen `aria-activedescendant` — vybraný řádek musí zůstat vidět.
+  useEffect(() => {
+    if (searching && active >= 0) document.getElementById(`${listId}-${active}`)?.scrollIntoView({ block: 'nearest' })
+  }, [searching, active, listId])
 
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
@@ -99,7 +113,7 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
-        if (subId !== null) setSubId(null)
+        if (subId !== null) goBack()
         else latest.current.onClose('trigger')
         return
       }
@@ -128,7 +142,7 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
         setSubId(list[focused].id)
       } else if (e.key === 'ArrowLeft' && subId !== null) {
         e.preventDefault()
-        setSubId(null)
+        goBack()
       }
     }
     document.addEventListener('pointerdown', onPointerDown)
@@ -156,8 +170,10 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
       e.preventDefault()
       setActive((a) => nextEnabledIndex(flags, a, e.key === 'ArrowDown' ? 1 : -1))
     } else if (e.key === 'Enter') {
+      // Bez šipky Enter vezme první výsledek — napsat „rajče“ a Enter stačí.
       e.preventDefault()
-      if (active >= 0 && rows[active]) choose(rows[active])
+      const target = active >= 0 ? active : nextEnabledIndex(flags, -1, 1)
+      if (target >= 0 && rows[target]) choose(rows[target])
     }
   }
 
@@ -188,7 +204,7 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
       {parent && (
         <button
           type="button"
-          onClick={() => setSubId(null)}
+          onClick={goBack}
           aria-label={`${backLabel}: ${parent.label}`}
           className={clsx(ROW, ROW_ACTIVE, 'font-medium')}
         >

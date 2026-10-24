@@ -85,3 +85,11 @@ test('clipText srovná bílé znaky a zkrátí s výpustkou', () => {
   assert.equal(clipText('abcdefgh', 5), 'abcd…')
   assert.equal(clipText('abcdefgh', 1), 'a')
 })
+
+test('clipText nerozdělí emoji (dvě UTF-16 jednotky) a vejde se do max', () => {
+  const clipped = clipText('ab😀cd', 4)
+  assert.equal(clipped, 'ab…')
+  assert.ok(clipped.length <= 4)
+  assert.equal(clipText('😀😀😀', 5), '😀😀…')
+  assert.equal(appendToken('', '😀'.repeat(10), 8), '😀😀😀… ')
+})
