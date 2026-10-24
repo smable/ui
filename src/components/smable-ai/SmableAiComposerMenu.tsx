@@ -40,6 +40,13 @@ const META = 'ml-auto shrink-0 pl-2 text-2xs text-neutral-500 dark:text-neutral-
 
 const isDisabled = (item: SmableAiMenuItem) => item.disabledHint !== undefined
 
+function placeAbove(anchor: HTMLElement) {
+  const r = anchor.getBoundingClientRect()
+  const width = Math.min(WIDTH, window.innerWidth - 2 * EDGE)
+  const left = Math.max(EDGE, Math.min(r.left, window.innerWidth - width - EDGE))
+  return { left, bottom: window.innerHeight - r.top + GAP, width }
+}
+
 /**
  * Nabídka „+“ pole dotazu. Kreslí se portálem do `body` s pevnou pozicí — lišta, karta i panel widgetu
  * ořezávají přetečení. `data-smable-ai-popover` říká widgetu, že klik sem není klik mimo něj.
@@ -48,7 +55,8 @@ const isDisabled = (item: SmableAiMenuItem) => item.disabledHint !== undefined
 export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel, onClose }: SmableAiComposerMenuProps) {
   const [subId, setSubId] = useState<string | null>(null)
   const [active, setActive] = useState(-1)
-  const [pos, setPos] = useState<{ left: number; bottom: number; width: number } | null>(null)
+  // Pozice hned v prvním renderu — položky musí existovat, než na ně layout effect pošle fokus.
+  const [pos, setPos] = useState(() => placeAbove(anchor))
   const popRef = useRef<HTMLDivElement>(null)
   const rowRefs = useRef<(HTMLButtonElement | null)[]>([])
   const searchRef = useRef<HTMLInputElement>(null)
@@ -61,14 +69,8 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
   const latest = useRef({ rows, onClose, searching, parentIndex: -1 })
   latest.current = { rows, onClose, searching, parentIndex: subId === null ? -1 : items.findIndex((i) => i.id === subId) }
 
-  useLayoutEffect(() => {
-    const place = () => {
-      const r = anchor.getBoundingClientRect()
-      const width = Math.min(WIDTH, window.innerWidth - 2 * EDGE)
-      const left = Math.max(EDGE, Math.min(r.left, window.innerWidth - width - EDGE))
-      setPos({ left, bottom: window.innerHeight - r.top + GAP, width })
-    }
-    place()
+  useEffect(() => {
+    const place = () => setPos(placeAbove(anchor))
     window.addEventListener('resize', place)
     return () => window.removeEventListener('resize', place)
   }, [anchor])
@@ -158,8 +160,6 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
       if (active >= 0 && rows[active]) choose(rows[active])
     }
   }
-
-  if (!pos) return null
 
   const content = (item: SmableAiMenuItem, sub: boolean) => (
     <>
