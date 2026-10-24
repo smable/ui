@@ -112,4 +112,6 @@ export interface SmableAiSubmenu {
   loading?: boolean
   /** Text místo prázdného seznamu. */
   emptyLabel?: string
+  /** Podnabídka se otevřela — host může začít načítat data. */
+  onOpen?: () => void
 }

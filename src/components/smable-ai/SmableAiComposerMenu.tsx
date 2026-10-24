@@ -122,6 +122,7 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
       else if (e.key === 'End') move(nextEnabledIndex(flags, -1, -1))
       else if (e.key === 'ArrowRight' && subId === null && focused >= 0 && list[focused].submenu && !isDisabled(list[focused])) {
         e.preventDefault()
+        list[focused].submenu?.onOpen?.()
         setSubId(list[focused].id)
       } else if (e.key === 'ArrowLeft' && subId !== null) {
         e.preventDefault()
@@ -139,6 +140,7 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
   const choose = (item: SmableAiMenuItem) => {
     if (isDisabled(item)) return
     if (item.submenu && subId === null) {
+      item.submenu.onOpen?.()
       setSubId(item.id)
       return
     }

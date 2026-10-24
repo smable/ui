@@ -34,7 +34,7 @@ All notable changes to `@smable/ui`.
   mikrofonem / Odeslat otevře nabídku nad polem (portál s pevnou pozicí — lišta, karta ani panel ji
   neořízne; `data-smable-ai-popover`, takže klik do ní widget nesbalí). Položka má `icon`, `meta`,
   `disabledHint` (neaktivní s poznámkou), `separatorBefore` a buď `onSelect`, nebo `submenu`
-  (`SmableAiSubmenu`: `items`, volitelně `search` s hodnotou u hosta, `loading`, `emptyLabel`).
+  (`SmableAiSubmenu`: `items`, volitelně `search` s hodnotou u hosta, `loading`, `emptyLabel`, `onOpen`).
   Klávesnice: šipky, Home/End, Enter, → / ← do a z podnabídky, Esc o úroveň zpět (před Esc widgetu),
   Tab zavře. Hlavní nabídka je `menu`, podnabídka s hledáním `combobox` + `listbox`. Po výběru jde
   fokus na konec pole. Nové `labels.menu` a `labels.back`; pomocníci `appendToken` (vloží token
