@@ -22,3 +22,8 @@ export {
   type SmableAiWidgetPlacement,
 } from './SmableAiWidget'
 export { SMABLE_AI_DESKTOP_QUERY, SMABLE_AI_PANEL_WIDTH } from './widget'
+export {
+  SmableAiMemoryNotice,
+  type SmableAiMemoryNoticeProps,
+  type SmableAiMemoryNoticeState,
+} from './SmableAiMemoryNotice'

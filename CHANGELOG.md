@@ -88,6 +88,11 @@ All notable changes to `@smable/ui`.
   zhasne, akce dál `pending`) pozdější refetch na `expired` / `stale` fokus nebere. Typy `SmableAiActionStatus`,
   `SmableAiActionRow`, `SmableAiActionLabels` (samostatné, `SmableAiLabels` se nemění). Kořen karty je
   `relative`, takže skrytá šipka (`sr-only`) neuteče ze seznamu zpráv a nenatahuje stránku.
+- **`SmableAiMemoryNotice`** — řádek pod odpovědí, když si Smable AI něco uložila do paměti (nebo to
+  upravila či zapomněla): ikona mozku, `text` (13 px, nejvýš dva řádky) a vpravo malé ghost tlačítko
+  `labels.undo`. Stav drží konzument: `undoing` točí tlačítko a vypne ho, `undone` ho nahradí šedým
+  `labels.undone`, `failed` ukáže červené `labels.failed` a tlačítko je znovu aktivní. `role="status"`.
+  Typy `SmableAiMemoryNoticeProps`, `SmableAiMemoryNoticeState`. Patří do `renderMessageExtra`.
 - `SmableAiChat` / `SmableAiMessageList` / `SmableAiMessage`: volitelný `renderMessageExtra(message)` —
   obsah pod odpovědí asistenta (nad palci); u otázky ani u chybové bubliny se nevolá.
 - `SmableAiLabels` má povinný klíč `answered` (oznámení čtečce, že odpověď dorazila) a `updatedAt`
