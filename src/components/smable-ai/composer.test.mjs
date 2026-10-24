@@ -1,6 +1,16 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { SMABLE_AI_COUNTER_FROM, SMABLE_AI_MAX_CHARS, charsLeft, composerButtons, normalizeOutgoing, shouldSendOnKey } from './composer.ts'
+import {
+  SMABLE_AI_COUNTER_FROM,
+  SMABLE_AI_MAX_CHARS,
+  appendToken,
+  charsLeft,
+  clipText,
+  composerButtons,
+  nextEnabledIndex,
+  normalizeOutgoing,
+  shouldSendOnKey,
+} from './composer.ts'
 
 test('enter bez shiftu odešle', () => {
   assert.equal(shouldSendOnKey({ key: 'Enter', shiftKey: false, isComposing: false }), true)
@@ -44,4 +54,34 @@ test('při nahrávání zůstává stop vidět i s textem', () => {
 test('bez mikrofonu je Odeslat vždy', () => {
   assert.deepEqual(composerButtons({ hasMic: false, recording: false, value: '' }), { mic: false, send: true })
   assert.deepEqual(composerButtons({ hasMic: false, recording: false, value: 'Ahoj' }), { mic: false, send: true })
+})
+
+test('nextEnabledIndex přeskočí neaktivní položky a jde dokola', () => {
+  const items = [{ disabled: true }, {}, { disabled: true }, {}]
+  assert.equal(nextEnabledIndex(items, -1, 1), 1)
+  assert.equal(nextEnabledIndex(items, 1, 1), 3)
+  assert.equal(nextEnabledIndex(items, 3, 1), 1)
+  assert.equal(nextEnabledIndex(items, 1, -1), 3)
+  assert.equal(nextEnabledIndex(items, -1, -1), 3)
+  assert.equal(nextEnabledIndex([{ disabled: true }], -1, 1), -1)
+  assert.equal(nextEnabledIndex([], -1, 1), -1)
+})
+
+test('appendToken přidá token s jednou mezerou a mezerou na konec', () => {
+  assert.equal(appendToken('', '@Rajče'), '@Rajče ')
+  assert.equal(appendToken('Recept pro', '@BBQ Burger'), 'Recept pro @BBQ Burger ')
+  assert.equal(appendToken('Recept pro  \n', '@BBQ Burger'), 'Recept pro @BBQ Burger ')
+})
+
+test('appendToken se vejde do maxLength, jinak token zkrátí nebo pole nechá', () => {
+  assert.equal(appendToken('abc', 'defghij', 10), 'abc defg… ')
+  assert.equal(appendToken('abc', 'de', 10), 'abc de ')
+  assert.equal(appendToken('abcdefghi', 'x', 10), 'abcdefghi')
+  assert.ok(appendToken('a'.repeat(1990), 'b'.repeat(50)).length <= SMABLE_AI_MAX_CHARS)
+})
+
+test('clipText srovná bílé znaky a zkrátí s výpustkou', () => {
+  assert.equal(clipText('  Rajče \n 30 g ', 20), 'Rajče 30 g')
+  assert.equal(clipText('abcdefgh', 5), 'abcd…')
+  assert.equal(clipText('abcdefgh', 1), 'a')
 })

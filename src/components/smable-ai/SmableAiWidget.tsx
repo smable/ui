@@ -270,6 +270,8 @@ function WidgetRoot({
     if (!collapseOnOutsideClick || panel || !expanded) return
     const onPointerDown = (e: PointerEvent) => {
       if (rootRef.current?.contains(e.target as Node)) return
+      // Nabídka „+“ pole dotazu je portál mimo widget, ale patří k němu.
+      if (e.target instanceof Element && e.target.closest('[data-smable-ai-popover]')) return
       focusOnCollapse.current = false
       latest.current.onExpandedChange(false)
       // Host sbalení může odmítnout — příznak nesmí přežít do dalšího (šipka, Esc) sbalení.

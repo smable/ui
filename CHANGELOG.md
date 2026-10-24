@@ -30,6 +30,15 @@ All notable changes to `@smable/ui`.
   při nahrávání červený stop s pulzem (bez pulzu při `prefers-reduced-motion`) a červený
   placeholder `labels.listening`; tlačítko má stálý název `labels.dictate` s `aria-pressed`
   (při nahrávání `title` `labels.stopDictation`) — zatím jen nahrávání, do pole se nic nevkládá.
+- `SmableAiComposer` `menu` (`SmableAiMenuItem[]`, rozhodnutí PO 24. 10.): tlačítko **„+“** před
+  mikrofonem / Odeslat otevře nabídku nad polem (portál s pevnou pozicí — lišta, karta ani panel ji
+  neořízne; `data-smable-ai-popover`, takže klik do ní widget nesbalí). Položka má `icon`, `meta`,
+  `disabledHint` (neaktivní s poznámkou), `separatorBefore` a buď `onSelect`, nebo `submenu`
+  (`SmableAiSubmenu`: `items`, volitelně `search` s hodnotou u hosta, `loading`, `emptyLabel`).
+  Klávesnice: šipky, Home/End, Enter, → / ← do a z podnabídky, Esc o úroveň zpět (před Esc widgetu),
+  Tab zavře. Hlavní nabídka je `menu`, podnabídka s hledáním `combobox` + `listbox`. Po výběru jde
+  fokus na konec pole. Nové `labels.menu` a `labels.back`; pomocníci `appendToken` (vloží token
+  s mezerami do `maxLength`) a `clipText`.
 - `SmableAiWidget` — **plovoucí lišta ve stylu Shopify Sidekick** (rozhodnutí PO 23. 10.; místo
   karty vpravo dole nad spouštěčem). API: `expanded` + `onExpandedChange`, `placement` (`'float'` |
   `'panel'`, výchozí `float`) + `onPlacementChange`, `collapseOnOutsideClick` (výchozí `false`);

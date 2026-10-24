@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 export type SmableAiRole = 'user' | 'assistant'
 export type SmableAiFeedback = 'up' | 'down' | null
 export type SmableAiErrorKind = 'forbidden' | 'rateLimited' | 'unavailable' | 'generic'
@@ -79,5 +81,35 @@ export interface SmableAiLabels {
   stopDictation: string
   /** Placeholder pole během nahrávání. */
   listening: string
+  /** Tlačítko „+“ s nabídkou v poli dotazu. */
+  menu: string
+  /** Návrat z podnabídky. */
+  back: string
   errors: Record<SmableAiErrorKind, string>
+}
+
+/** Položka nabídky „+“ v poli dotazu (`SmableAiComposer` prop `menu`). */
+export interface SmableAiMenuItem {
+  id: string
+  label: string
+  icon?: ReactNode
+  /** Šedý popisek vpravo (např. „65 Kč · položka“). */
+  meta?: string
+  /** Neaktivní položka s poznámkou vpravo (např. „Připravujeme“). */
+  disabledHint?: string
+  /** Akce položky; nabídka se pak zavře a fokus se vrátí do pole. */
+  onSelect?: () => void
+  /** Místo akce otevře podnabídku (jen v hlavní nabídce). */
+  submenu?: SmableAiSubmenu
+  /** Oddělovač nad položkou. */
+  separatorBefore?: boolean
+}
+
+export interface SmableAiSubmenu {
+  items: SmableAiMenuItem[]
+  /** Pole hledání nad položkami — hodnotu drží host a podle ní posílá `items`. */
+  search?: { value: string; onChange: (value: string) => void; placeholder: string }
+  loading?: boolean
+  /** Text místo prázdného seznamu. */
+  emptyLabel?: string
 }

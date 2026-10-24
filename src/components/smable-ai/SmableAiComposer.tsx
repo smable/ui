@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, type KeyboardEvent, type ReactNode } from 'react'
-import { ArrowUp, Mic } from 'lucide-react'
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { ArrowUp, Mic, Plus } from 'lucide-react'
 import clsx from 'clsx'
+import { SmableAiComposerMenu, type SmableAiMenuCloseFocus } from './SmableAiComposerMenu'
 import {
   SMABLE_AI_COUNTER_FROM,
   SMABLE_AI_MAX_CHARS,
@@ -9,7 +10,7 @@ import {
   normalizeOutgoing,
   shouldSendOnKey,
 } from './composer'
-import type { SmableAiLabels } from './types'
+import type { SmableAiLabels, SmableAiMenuItem } from './types'
 
 export interface SmableAiComposerProps {
   value: string
@@ -19,7 +20,7 @@ export interface SmableAiComposerProps {
   /** Blokuje odeslání (tlačítko i Enter), psát lze dál — typicky během čekání na odpověď. */
   disabled?: boolean
   maxLength?: number
-  labels: Pick<SmableAiLabels, 'placeholder' | 'send' | 'charsLeft' | 'dictate' | 'stopDictation' | 'listening'>
+  labels: Pick<SmableAiLabels, 'placeholder' | 'send' | 'charsLeft' | 'dictate' | 'stopDictation' | 'listening' | 'menu' | 'back'>
   autoFocus?: boolean
   /** Slot před polem (budoucí příloha). */
   leading?: ReactNode
@@ -35,6 +36,8 @@ export interface SmableAiComposerProps {
   recording?: boolean
   /** S callbackem se u prázdného pole místo Odeslat vykreslí mikrofon (s textem Odeslat), klik přepne `recording`. */
   onRecordingChange?: (recording: boolean) => void
+  /** Položky nabídky „+“ před mikrofonem / Odeslat; bez nich (nebo prázdné) se „+“ nevykreslí. */
+  menu?: SmableAiMenuItem[]
 }
 
 const LINE_HEIGHT = 20
@@ -55,8 +58,28 @@ export function SmableAiComposer({
   minRows = 1,
   recording = false,
   onRecordingChange,
+  menu,
 }: SmableAiComposerProps) {
   const ref = useRef<HTMLTextAreaElement>(null)
+  const rowRef = useRef<HTMLDivElement>(null)
+  const plusRef = useRef<HTMLButtonElement>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
+  // Po výběru z nabídky host mění `value` v témže tahu — fokus a kurzor na konec až po commitu.
+  const [focusEnd, setFocusEnd] = useState(0)
+  const hasMenu = Boolean(menu && menu.length > 0)
+
+  useEffect(() => {
+    const el = ref.current
+    if (focusEnd === 0 || !el) return
+    el.focus()
+    el.setSelectionRange(el.value.length, el.value.length)
+  }, [focusEnd])
+
+  const closeMenu = (focus: SmableAiMenuCloseFocus) => {
+    setMenuOpen(false)
+    if (focus === 'field') setFocusEnd((n) => n + 1)
+    else if (focus === 'trigger') plusRef.current?.focus()
+  }
 
   const autosize = () => {
     const el = ref.current
@@ -113,6 +136,7 @@ export function SmableAiComposer({
   return (
     <div className="flex flex-col gap-1.5">
       <div
+        ref={rowRef}
         className={clsx(
           'flex w-full items-end gap-2',
           bare
@@ -142,6 +166,36 @@ export function SmableAiComposer({
           )}
         />
         {trailing}
+        {hasMenu && (
+          <button
+            ref={plusRef}
+            type="button"
+            onClick={() => setMenuOpen((open) => !open)}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            aria-label={labels.menu}
+            title={labels.menu}
+            className={clsx(
+              'flex shrink-0 items-center justify-center rounded-full text-neutral-500 transition-colors',
+              'hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100',
+              menuOpen && 'bg-neutral-100 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100',
+              button,
+              focusRing
+            )}
+          >
+            <Plus className={clsx('h-4 w-4 transition-transform', menuOpen && 'rotate-45')} aria-hidden />
+          </button>
+        )}
+        {menuOpen && menu && rowRef.current && (
+          <SmableAiComposerMenu
+            anchor={rowRef.current}
+            trigger={plusRef}
+            items={menu}
+            label={labels.menu}
+            backLabel={labels.back}
+            onClose={closeMenu}
+          />
+        )}
         {onRecordingChange && buttons.mic && (
           <button
             type="button"
