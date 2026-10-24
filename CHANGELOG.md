@@ -92,6 +92,22 @@ All notable changes to `@smable/ui`.
   `SMABLE_AI_PANEL_WIDTH`, `SMABLE_AI_DESKTOP_QUERY`, `SmableAiWidgetContext`, `SmableAiWidgetContextValue`,
   `SmableAiWidgetPlacement`.
 
+## 0.23.0 — 2026-10-22
+
+### 🧲 Hromadné akce jen v plovoucí liště, čára při přetahování sloupců
+
+- **`SelectionBar`** se vykresluje jako plovoucí lišta dole (stejná jako `BulkActionsBar`), ne jako
+  pruh nad tabulkou — ten odsouval tabulku a při rolování nebyl vidět. API beze změny; `label` je
+  text za počtem („5 vybráno“). Stránka s vybranými řádky si má přidat rezervu dole (`pb-24`).
+- **`SelectionAction`** má vzhled pro tmavou lištu (dřív bílé tlačítko pro světlý pruh).
+- **`BulkActionsBar`** se na úzkém displeji zalomí (`max-width: calc(100vw - 2rem)`) místo
+  přetečení z okna.
+- **`DataTable` s `draggableColumns`** ukazuje při přetahování sloupce svislou čáru na straně cílového
+  sloupce, kam sloupec dopadne (přes hlavičku i buňky). Dřív se spoléhalo na `:hover`, který se během
+  HTML5 drag neaktualizuje, takže nebylo vidět nic. Logika je v interním
+  `column-reorder.ts` (`columnDropSide`, `moveColumn`) s testy, ven se neexportuje.
+- **`getDateRange`** počítá kalendářní dny — stejná oprava jako 0.17.4 (předvolby kolem změny času).
+
 ## 0.22.0 — 2026-10-14
 
 ### 🧩 `PosItemTile` v2 (`size`)
@@ -170,6 +186,17 @@ All notable changes to `@smable/ui`.
 - **`NavItem.exact`** + třetí parametr `isNavItemActive(pathname, href, exact)` — položka svítí jen
   při přesné shodě cesty. Výchozí chování beze změny.
 - **`npm test`** — testy v Node (`node:test`), zatím pro seznam aplikací a `isNavItemActive`.
+## 0.17.4 — 2026-10-22
+
+### 🕒 Předvolby období kolem změny času
+
+Žádná změna API.
+
+- **`getDateRange`** počítá kalendářní dny místo `± 86 400 000 ms`. Den změny času má 23 nebo
+  25 hodin, takže dřív „Dnes“ 25. 10. končilo ve 22:59:59, 29. 3. až v 0:59:59 dalšího dne
+  a „Včera“ a „Minulý týden“ na jaře začínaly ve 23:00 předchozího dne — u API, které bere jen
+  datum, o celý den dřív. Nově má i volitelný druhý parametr `now` (pro testy).
+- `getDateRange` a `DatePreset` žijí v `date-range.ts`; `DateRangePicker` je dál exportuje.
 
 ## 0.17.3 — 2026-10-11
 

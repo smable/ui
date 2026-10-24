@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import Datepicker from 'react-tailwindcss-datepicker'
 import clsx from 'clsx'
+import type { DatePreset } from './date-range'
 
-export type DatePreset = 'today' | 'yesterday' | 'this_week' | 'last_week' | 'this_month' | 'custom'
+export { getDateRange, type DatePreset } from './date-range'
 
 const PRESETS: { key: DatePreset; label: string }[] = [
   { key: 'today', label: 'Dnes' },
@@ -11,35 +12,6 @@ const PRESETS: { key: DatePreset; label: string }[] = [
   { key: 'last_week', label: 'Minulý týden' },
   { key: 'this_month', label: 'Tento měsíc' },
 ]
-
-export function getDateRange(preset: DatePreset): { start: Date; end: Date } {
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-
-  switch (preset) {
-    case 'today':
-      return { start: today, end: new Date(today.getTime() + 86400000 - 1) }
-    case 'yesterday': {
-      const yesterday = new Date(today.getTime() - 86400000)
-      return { start: yesterday, end: new Date(today.getTime() - 1) }
-    }
-    case 'this_week': {
-      const day = today.getDay()
-      const monday = new Date(today.getTime() - ((day === 0 ? 6 : day - 1) * 86400000))
-      return { start: monday, end: new Date(today.getTime() + 86400000 - 1) }
-    }
-    case 'last_week': {
-      const day = today.getDay()
-      const thisMonday = new Date(today.getTime() - ((day === 0 ? 6 : day - 1) * 86400000))
-      const lastMonday = new Date(thisMonday.getTime() - 7 * 86400000)
-      return { start: lastMonday, end: new Date(thisMonday.getTime() - 1) }
-    }
-    case 'this_month':
-      return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(today.getTime() + 86400000 - 1) }
-    default:
-      return { start: today, end: new Date(today.getTime() + 86400000 - 1) }
-  }
-}
 
 interface DateRangePickerProps {
   preset: DatePreset

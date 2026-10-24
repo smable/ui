@@ -17,18 +17,19 @@ function defaultLabel(count: number): string {
 /**
  * Nad lištou Smable AI a uprostřed obsahu: host nastaví `--smable-ai-bar-reserve` (místo pro lištu),
  * `--smable-ai-inset-left` / `--smable-ai-inset-right` (postranní menu / připnutý panel). Bez nich
- * `bottom: 1.5rem` a `left: 50%` jako dřív.
+ * `bottom: 1.5rem` a `left: 50%` jako dřív. Šířka nepřeteče obsah, mezi okraji drží 1rem.
  */
 const POSITION = {
   bottom: 'calc(1.5rem + var(--smable-ai-bar-reserve, 0px))',
   left: 'calc(var(--smable-ai-inset-left, 0px) + (100% - var(--smable-ai-inset-left, 0px) - var(--smable-ai-inset-right, 0px)) / 2)',
+  maxWidth: 'calc(100% - var(--smable-ai-inset-left, 0px) - var(--smable-ai-inset-right, 0px) - 2rem)',
 } satisfies CSSProperties
 
 export function BulkActionsBar({ count, label = defaultLabel, children, onClear }: BulkActionsBarProps) {
   if (count === 0) return null
 
   return (
-    <div style={POSITION} className="fixed -translate-x-1/2 z-30 flex items-center gap-3 px-5 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl shadow-2xl">
+    <div style={POSITION} className="fixed -translate-x-1/2 z-30 flex flex-wrap justify-center items-center gap-3 px-5 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-2xl shadow-2xl">
       <span className="text-sm font-medium">{label(count)}</span>
       <div className="w-px h-5 bg-neutral-700 dark:bg-neutral-300" />
       {children}
