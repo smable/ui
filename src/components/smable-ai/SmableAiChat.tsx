@@ -13,7 +13,7 @@ export interface SmableAiChatProps {
   renderContent: SmableAiMessageListProps['renderContent']
   composer: Pick<
     SmableAiComposerProps,
-    'value' | 'onChange' | 'onSend' | 'disabled' | 'hint' | 'leading' | 'trailing' | 'recording' | 'onRecordingChange' | 'menu'
+    'value' | 'onChange' | 'onSend' | 'disabled' | 'hint' | 'leading' | 'trailing' | 'recording' | 'onRecordingChange' | 'menu' | 'slash'
   >
   /** Místo seznamu zpráv, dokud je konverzace prázdná. */
   emptyState?: ReactNode

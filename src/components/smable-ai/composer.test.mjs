@@ -7,9 +7,11 @@ import {
   charsLeft,
   clipText,
   composerButtons,
+  filterSlashCommands,
   nextEnabledIndex,
   normalizeOutgoing,
   shouldSendOnKey,
+  slashQuery,
 } from './composer.ts'
 
 test('enter bez shiftu odešle', () => {
@@ -92,4 +94,35 @@ test('clipText nerozdělí emoji (dvě UTF-16 jednotky) a vejde se do max', () =
   assert.ok(clipped.length <= 4)
   assert.equal(clipText('😀😀😀', 5), '😀😀…')
   assert.equal(appendToken('', '😀'.repeat(10), 8), '😀😀😀… ')
+})
+
+test('slashQuery: „/“ jen na začátku zprávy, bez mezery a nového řádku', () => {
+  assert.equal(slashQuery('/'), '')
+  assert.equal(slashQuery('/rec'), 'rec')
+  assert.equal(slashQuery('/Změna'), 'Změna')
+  assert.equal(slashQuery(''), null)
+  assert.equal(slashQuery('rec'), null)
+  assert.equal(slashQuery(' /rec'), null)
+  assert.equal(slashQuery('a /rec'), null)
+  assert.equal(slashQuery('/rec '), null)
+  assert.equal(slashQuery('/rec\n'), null)
+  assert.equal(slashQuery('/rec k'), null)
+})
+
+const SKILLS = [
+  { id: 'item-recipe', label: 'Položka s recepturou', text: 'Založ položku s recepturou:' },
+  { id: 'recipe', label: 'Receptura k položce', text: 'Nastav recepturu položce' },
+  { id: 'price', label: 'Změna ceny', text: 'Změň cenu položky' },
+]
+
+test('filterSlashCommands: prázdný dotaz vrátí vše v pořadí hosta', () => {
+  assert.deepEqual(filterSlashCommands(SKILLS, '').map((s) => s.id), ['item-recipe', 'recipe', 'price'])
+})
+
+test('filterSlashCommands: hledá v názvu kdekoli, bez diakritiky a velikosti písmen', () => {
+  assert.deepEqual(filterSlashCommands(SKILLS, 'rec').map((s) => s.id), ['item-recipe', 'recipe'])
+  assert.deepEqual(filterSlashCommands(SKILLS, 'ZMENA').map((s) => s.id), ['price'])
+  assert.deepEqual(filterSlashCommands(SKILLS, 'položc').map((s) => s.id), ['recipe'])
+  assert.deepEqual(filterSlashCommands(SKILLS, 'POLO').map((s) => s.id), ['item-recipe', 'recipe'])
+  assert.deepEqual(filterSlashCommands(SKILLS, 'xyz'), [])
 })

@@ -105,6 +105,22 @@ export interface SmableAiMenuItem {
   separatorBefore?: boolean
 }
 
+/** Dovednost nabízená po napsání „/“ na začátek zprávy (`SmableAiComposer` prop `slash`). */
+export interface SmableAiSlashCommand {
+  id: string
+  label: string
+  /** Text, který v poli nahradí „/…“ — kurzor zůstane za ním. */
+  text: string
+}
+
+export interface SmableAiSlash {
+  commands: SmableAiSlashCommand[]
+  /** Název seznamu pro čtečky (např. „Dovednosti“). */
+  label: string
+  /** Text místo prázdného seznamu, když napsanému nic neodpovídá. */
+  emptyLabel: string
+}
+
 export interface SmableAiSubmenu {
   items: SmableAiMenuItem[]
   /** Pole hledání nad položkami — hodnotu drží host a podle ní posílá `items`. */

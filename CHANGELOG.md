@@ -2,6 +2,20 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.25.0 — 2026-10-25
+
+### ⚡ Smable AI — dovednosti po „/“
+
+- **`SmableAiComposer` prop `slash`** (`SmableAiSlash`: `commands`, `label`, `emptyLabel`): „/“ jako první
+  znak zprávy otevře nad polem seznam dovedností (`SmableAiSlashCommand`: `id`, `label`, `text`). Psaní za
+  „/“ seznam zužuje podle názvu, bez diakritiky a velikosti písmen; mezera nebo nový řádek ho zavře.
+- Fokus zůstává v poli: šipky posouvají výběr (`aria-activedescendant`, pole má `aria-autocomplete="list"`),
+  Enter nebo Tab vloží `text` dovednosti místo „/…“ s kurzorem na konci, klik také. Dokud je seznam otevřený,
+  Enter neodešle; bez shody ukáže `emptyLabel`. Esc zavře jen seznam (lištu widgetu ne) a text nechá —
+  znovu se otevře až po smazání „/“.
+- `SmableAiChat` `composer` propouští i `slash`. Nové pomocné funkce `slashQuery` a `filterSlashCommands`
+  (interní, s testy). Bez propu `slash` se pole chová beze změny.
+
 ## 0.24.0 — 2026-10-23
 
 ### ✨ Smable AI — chat a plovoucí widget (`smable-ai/`)

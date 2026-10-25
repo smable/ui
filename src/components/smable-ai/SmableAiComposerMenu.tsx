@@ -32,15 +32,17 @@ const WIDTH = 288
 const GAP = 8
 const EDGE = 8
 
-const ROW =
+export const ROW =
   'flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-left text-[13px] leading-5 text-neutral-800 outline-none dark:text-neutral-100'
 const ROW_ACTIVE = 'hover:bg-neutral-100 focus-visible:bg-neutral-100 dark:hover:bg-neutral-800 dark:focus-visible:bg-neutral-800'
 const ICON = 'flex h-5 w-5 shrink-0 items-center justify-center text-neutral-500 dark:text-neutral-400 [&>svg]:h-4 [&>svg]:w-4'
 const META = 'ml-auto shrink-0 pl-2 text-2xs text-neutral-500 dark:text-neutral-400'
+export const POPOVER =
+  'fixed z-50 flex max-h-[min(360px,60vh)] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white p-1.5 shadow-xl dark:border-neutral-800 dark:bg-neutral-900'
 
 const isDisabled = (item: SmableAiMenuItem) => item.disabledHint !== undefined
 
-function placeAbove(anchor: HTMLElement) {
+export function placeAbove(anchor: HTMLElement) {
   const r = anchor.getBoundingClientRect()
   const width = Math.min(WIDTH, window.innerWidth - 2 * EDGE)
   const left = Math.max(EDGE, Math.min(r.left, window.innerWidth - width - EDGE))
@@ -199,7 +201,7 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
       ref={popRef}
       data-smable-ai-popover=""
       style={{ left: pos.left, bottom: pos.bottom, width: pos.width }}
-      className="fixed z-50 flex max-h-[min(360px,60vh)] flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white p-1.5 shadow-xl dark:border-neutral-800 dark:bg-neutral-900"
+      className={POPOVER}
     >
       {parent && (
         <button

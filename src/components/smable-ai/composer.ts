@@ -55,6 +55,27 @@ export function appendToken(value: string, token: string, maxLength: number = SM
   return `${base}${sep}${clipText(token, room)} `
 }
 
+/**
+ * Dovednost psaná lomítkem: „/“ jako první znak zprávy, za ním hledaný text bez mezery a nového řádku.
+ * Vrátí hledaný text (i prázdný hned po „/“), jinak `null` — seznam dovedností se nemá ukázat.
+ */
+export function slashQuery(value: string): string | null {
+  const match = /^\/(\S*)$/.exec(value)
+  return match ? match[1] : null
+}
+
+const fold = (text: string) =>
+  text
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+
+/** Dovednosti, jejichž název obsahuje hledaný text (bez diakritiky a velikosti písmen), v pořadí hosta. */
+export function filterSlashCommands<T extends { label: string }>(commands: readonly T[], query: string): T[] {
+  const needle = fold(query)
+  return commands.filter((c) => fold(c.label).includes(needle))
+}
+
 /** S mikrofonem: prázdné pole ukáže mikrofon místo Odeslat, text ukáže Odeslat; nahrávání nechá stop vidět vždy. */
 export function composerButtons(o: { hasMic: boolean; recording: boolean; value: string }): { mic: boolean; send: boolean } {
   if (!o.hasMic) return { mic: false, send: true }

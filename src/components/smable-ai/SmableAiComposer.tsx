@@ -1,16 +1,20 @@
-import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { ArrowUp, Mic, Plus } from 'lucide-react'
 import clsx from 'clsx'
 import { SmableAiComposerMenu, type SmableAiMenuCloseFocus } from './SmableAiComposerMenu'
+import { SmableAiSlashMenu } from './SmableAiSlashMenu'
 import {
   SMABLE_AI_COUNTER_FROM,
   SMABLE_AI_MAX_CHARS,
+  appendToken,
   charsLeft,
   composerButtons,
+  filterSlashCommands,
   normalizeOutgoing,
   shouldSendOnKey,
+  slashQuery,
 } from './composer'
-import type { SmableAiLabels, SmableAiMenuItem } from './types'
+import type { SmableAiLabels, SmableAiMenuItem, SmableAiSlash, SmableAiSlashCommand } from './types'
 
 export interface SmableAiComposerProps {
   value: string
@@ -38,6 +42,12 @@ export interface SmableAiComposerProps {
   onRecordingChange?: (recording: boolean) => void
   /** Položky nabídky „+“ před mikrofonem / Odeslat; bez nich (nebo prázdné) se „+“ nevykreslí. */
   menu?: SmableAiMenuItem[]
+  /**
+   * Dovednosti po „/“ na začátku zprávy: seznam nad polem se zužuje psaním, šipky vybírají, Enter
+   * nebo Tab vloží `text` místo „/…“, Esc seznam zavře a text nechá. Dokud je seznam otevřený,
+   * Enter neodešle. Bez propu se „/“ chová jako obyčejný znak.
+   */
+  slash?: SmableAiSlash
 }
 
 const LINE_HEIGHT = 20
@@ -59,6 +69,7 @@ export function SmableAiComposer({
   recording = false,
   onRecordingChange,
   menu,
+  slash,
 }: SmableAiComposerProps) {
   const ref = useRef<HTMLTextAreaElement>(null)
   const rowRef = useRef<HTMLDivElement>(null)
@@ -67,6 +78,20 @@ export function SmableAiComposer({
   // Po výběru z nabídky host mění `value` v témže tahu — fokus a kurzor na konec až po commitu.
   const [focusEnd, setFocusEnd] = useState(0)
   const hasMenu = Boolean(menu && menu.length > 0)
+  const [focused, setFocused] = useState(false)
+  const [slashDismissed, setSlashDismissed] = useState(false)
+  const [slashActive, setSlashActive] = useState(0)
+  const slashId = useId()
+  const query = slash ? slashQuery(value) : null
+  const matches = slash && query !== null ? filterSlashCommands(slash.commands, query) : []
+  const slashOpen = query !== null && focused && !slashDismissed && !menuOpen
+  const activeMatch = matches.length === 0 ? -1 : Math.min(slashActive, matches.length - 1)
+
+  // Nový hledaný text vybere první dovednost; po smazání „/“ se Esc zapomene.
+  useEffect(() => {
+    setSlashActive(0)
+    if (query === null) setSlashDismissed(false)
+  }, [query])
 
   useEffect(() => {
     const el = ref.current
@@ -120,7 +145,35 @@ export function SmableAiComposer({
     onSend(text)
   }
 
+  const pickSlash = (command: SmableAiSlashCommand) => {
+    onChange(appendToken('', command.text, maxLength))
+    setFocusEnd((n) => n + 1)
+  }
+
+  // Vrátí true, když klávesu spotřeboval seznam dovedností.
+  const onSlashKey = (e: KeyboardEvent<HTMLTextAreaElement>): boolean => {
+    if (!slashOpen || e.nativeEvent.isComposing) return false
+    const n = matches.length
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && n > 0) {
+      e.preventDefault()
+      setSlashActive((activeMatch + (e.key === 'ArrowDown' ? 1 : -1) + n) % n)
+      return true
+    }
+    if (e.key === 'Escape') {
+      // Widget Esc s `defaultPrevented` ignoruje — zavře se jen seznam, ne lišta.
+      e.preventDefault()
+      setSlashDismissed(true)
+      return true
+    }
+    const pick = (e.key === 'Enter' && !e.shiftKey) || (e.key === 'Tab' && !e.shiftKey && n > 0)
+    if (!pick) return false
+    e.preventDefault()
+    if (activeMatch >= 0) pickSlash(matches[activeMatch])
+    return true
+  }
+
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (onSlashKey(e)) return
     if (!shouldSendOnKey({ key: e.key, shiftKey: e.shiftKey, isComposing: e.nativeEvent.isComposing })) return
     e.preventDefault()
     send()
@@ -158,6 +211,11 @@ export function SmableAiComposer({
           placeholder={recording ? labels.listening : labels.placeholder}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onKeyDown}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          aria-autocomplete={slash ? 'list' : undefined}
+          aria-controls={slashOpen ? slashId : undefined}
+          aria-activedescendant={slashOpen && activeMatch >= 0 ? `${slashId}-${activeMatch}` : undefined}
           className={clsx(
             'min-w-0 flex-1 resize-none overflow-y-hidden bg-transparent p-0 text-[13px] leading-5 text-neutral-900',
             'focus:outline-none focus:ring-0 dark:text-neutral-50',
@@ -194,6 +252,18 @@ export function SmableAiComposer({
             label={labels.menu}
             backLabel={labels.back}
             onClose={closeMenu}
+          />
+        )}
+        {slash && slashOpen && rowRef.current && (
+          <SmableAiSlashMenu
+            anchor={rowRef.current}
+            id={slashId}
+            commands={matches}
+            active={activeMatch}
+            label={slash.label}
+            emptyLabel={slash.emptyLabel}
+            onPick={pickSlash}
+            onHover={setSlashActive}
           />
         )}
         {onRecordingChange && buttons.mic && (
