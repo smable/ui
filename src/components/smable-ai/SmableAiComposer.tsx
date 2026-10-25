@@ -80,18 +80,21 @@ export function SmableAiComposer({
   const hasMenu = Boolean(menu && menu.length > 0)
   const [focused, setFocused] = useState(false)
   const [slashDismissed, setSlashDismissed] = useState(false)
-  const [slashActive, setSlashActive] = useState(0)
   const slashId = useId()
   const query = slash ? slashQuery(value) : null
+  // Výběr patří k hledanému textu, se kterým vznikl — jiný text (i po zavření a novém „/“) začíná první dovedností.
+  const [slashPick, setSlashPick] = useState<{ query: string | null; index: number }>({ query: null, index: 0 })
+  const setSlashActive = (index: number) => setSlashPick({ query, index })
   const matches = slash && query !== null ? filterSlashCommands(slash.commands, query) : []
   const slashOpen = query !== null && focused && !slashDismissed && !menuOpen
-  const activeMatch = matches.length === 0 ? -1 : Math.min(slashActive, matches.length - 1)
+  const activeMatch =
+    matches.length === 0 ? -1 : slashPick.query === query ? Math.min(slashPick.index, matches.length - 1) : 0
 
-  // Nový hledaný text vybere první dovednost; po smazání „/“ se Esc zapomene.
-  useEffect(() => {
-    setSlashActive(0)
-    if (query === null) setSlashDismissed(false)
-  }, [query])
+  // Bez „/“ se výběr i Esc zapomenou hned v tomto vykreslení — nové „/“ začne první dovedností.
+  if (query === null && (slashDismissed || slashPick.query !== null)) {
+    setSlashDismissed(false)
+    setSlashPick({ query: null, index: 0 })
+  }
 
   useEffect(() => {
     const el = ref.current

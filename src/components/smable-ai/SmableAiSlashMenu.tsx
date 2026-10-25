@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import { POPOVER, ROW, placeAbove } from './SmableAiComposerMenu'
@@ -25,6 +25,7 @@ export interface SmableAiSlashMenuProps {
  */
 export function SmableAiSlashMenu({ anchor, id, commands, active, label, emptyLabel, onPick, onHover }: SmableAiSlashMenuProps) {
   const [, relayout] = useReducer((n: number) => n + 1, 0)
+  const pointer = useRef<{ x: number; y: number } | null>(null)
   const pos = placeAbove(anchor)
 
   useEffect(() => {
@@ -46,7 +47,13 @@ export function SmableAiSlashMenu({ anchor, id, commands, active, label, emptyLa
             role="option"
             aria-selected={i === active}
             onMouseDown={(e) => e.preventDefault()}
-            onMouseEnter={() => onHover(i)}
+            onMouseMove={(e) => {
+              // Seznam otevřený pod stojícím kurzorem dostane mousemove se stejnými souřadnicemi —
+              // výběr první dovednosti přebije až skutečný pohyb myši.
+              const last = pointer.current
+              pointer.current = { x: e.clientX, y: e.clientY }
+              if (last && (last.x !== e.clientX || last.y !== e.clientY) && i !== active) onHover(i)
+            }}
             onClick={() => onPick(command)}
             className={clsx(ROW, 'cursor-pointer', i === active && 'bg-neutral-100 dark:bg-neutral-800')}
           >
