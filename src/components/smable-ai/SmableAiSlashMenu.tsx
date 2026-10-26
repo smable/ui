@@ -62,7 +62,12 @@ export function SmableAiSlashMenu({ anchor, id, commands, active, label, emptyLa
             onClick={() => onPick(command)}
             className={clsx(ROW, 'cursor-pointer', i === active && 'bg-neutral-100 dark:bg-neutral-800')}
           >
-            <span className="min-w-0 flex-1 truncate">{command.label}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">{command.label}</span>
+              {command.description && (
+                <span className="block truncate text-xs leading-4 text-neutral-500 dark:text-neutral-400">{command.description}</span>
+              )}
+            </span>
           </li>
         ))}
         {commands.length === 0 && (

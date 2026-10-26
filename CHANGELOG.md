@@ -2,6 +2,13 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.27.0 — 2026-10-26
+
+### ⚡ Smable AI — popis dovednosti v seznamu po „/“
+
+- **`SmableAiSlashCommand.description`** (volitelné): krátký popis pod názvem dovednosti, jeden řádek,
+  delší se zkrátí. Bez popisu vypadá řádek jako dřív. Hledání po „/“ dál filtruje jen podle názvu.
+
 ## 0.26.0 — 2026-10-26
 
 ### ⚡ Smable AI — odolné vůči Shadow DOM

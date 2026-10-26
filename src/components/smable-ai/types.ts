@@ -109,6 +109,8 @@ export interface SmableAiMenuItem {
 export interface SmableAiSlashCommand {
   id: string
   label: string
+  /** Krátký popis pod názvem (jeden řádek, delší se zkrátí) — co dovednost udělá. */
+  description?: string
   /** Text, který v poli nahradí „/…“ — kurzor zůstane za ním. */
   text: string
 }
