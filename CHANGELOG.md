@@ -2,6 +2,19 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.26.0 — 2026-10-26
+
+### ⚡ Smable AI — odolné vůči Shadow DOM
+
+- **`SmableAiPortalProvider` (`container`) a `useSmableAiPortalContainer()`**: kam Smable AI vykresluje
+  portály (lišta, nabídka „+“, seznam dovedností po „/“). Bez provideru zůstává `document.body`, takže
+  stávající použití v light DOM se nemění. V Shadow DOMu předej prvek uvnitř shadow rootu.
+- Fokus se čte přes `shadowRoot.activeElement` (ne `document.activeElement`, který v shadow rootu vrací
+  hostitele), klik mimo a Esc se vyhodnocují přes `composedPath()` (listenery na `document` vidí `target`
+  přesměrovaný na hostitele) a `getElementById` hledá v kořeni prvku. Díky tomu uvnitř shadow rootu
+  nabídka „+“ nezavře klik na položku a Esc zavře správnou vrstvu.
+- Interní pomůcky `deepActiveElement`, `isEventInside`, `isEventInPopover`, `rootOf` (s testy), ven se neexportují.
+
 ## 0.25.0 — 2026-10-25
 
 ### ⚡ Smable AI — dovednosti po „/“

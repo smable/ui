@@ -2,6 +2,8 @@ import { useEffect, useReducer, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import { POPOVER, ROW, placeAbove } from './SmableAiComposerMenu'
+import { rootOf } from './dom'
+import { useSmableAiPortalContainer } from './SmableAiPortal'
 import type { SmableAiSlashCommand } from './types'
 
 export interface SmableAiSlashMenuProps {
@@ -26,6 +28,7 @@ export interface SmableAiSlashMenuProps {
 export function SmableAiSlashMenu({ anchor, id, commands, active, label, emptyLabel, onPick, onHover }: SmableAiSlashMenuProps) {
   const [, relayout] = useReducer((n: number) => n + 1, 0)
   const pointer = useRef<{ x: number; y: number } | null>(null)
+  const container = useSmableAiPortalContainer()
   const pos = placeAbove(anchor)
 
   useEffect(() => {
@@ -34,8 +37,8 @@ export function SmableAiSlashMenu({ anchor, id, commands, active, label, emptyLa
   }, [])
 
   useEffect(() => {
-    if (active >= 0) document.getElementById(`${id}-${active}`)?.scrollIntoView({ block: 'nearest' })
-  }, [id, active])
+    if (active >= 0) rootOf(anchor).getElementById(`${id}-${active}`)?.scrollIntoView({ block: 'nearest' })
+  }, [id, active, anchor])
 
   return createPortal(
     <div data-smable-ai-popover="" style={{ left: pos.left, bottom: pos.bottom, width: pos.width }} className={POPOVER}>
@@ -67,6 +70,6 @@ export function SmableAiSlashMenu({ anchor, id, commands, active, label, emptyLa
         )}
       </ul>
     </div>,
-    document.body
+    container
   )
 }

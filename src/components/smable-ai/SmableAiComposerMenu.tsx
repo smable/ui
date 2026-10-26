@@ -12,6 +12,8 @@ import { createPortal } from 'react-dom'
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
 import { nextEnabledIndex } from './composer'
+import { deepActiveElement, isEventInside, rootOf } from './dom'
+import { useSmableAiPortalContainer } from './SmableAiPortal'
 import type { SmableAiMenuItem } from './types'
 
 /** Kam po zavření nabídky: do pole (po výběru), na „+“ (Esc, Tab) nebo nikam (klik jinam). */
@@ -65,6 +67,7 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
   // Podnabídka, ze které se uživatel vrátil — fokus pak jde zpátky na její položku.
   const returnTo = useRef<string | null>(null)
   const listId = useId()
+  const container = useSmableAiPortalContainer()
 
   const parent = subId === null ? null : items.find((i) => i.id === subId) ?? null
   const submenu = parent?.submenu ?? null
@@ -102,13 +105,12 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
 
   // Šipky v hledání posouvají jen `aria-activedescendant` — vybraný řádek musí zůstat vidět.
   useEffect(() => {
-    if (searching && active >= 0) document.getElementById(`${listId}-${active}`)?.scrollIntoView({ block: 'nearest' })
+    if (searching && active >= 0) rootOf(popRef.current).getElementById(`${listId}-${active}`)?.scrollIntoView({ block: 'nearest' })
   }, [searching, active, listId])
 
   useEffect(() => {
     const onPointerDown = (e: PointerEvent) => {
-      const t = e.target as Node
-      if (popRef.current?.contains(t) || trigger.current?.contains(t)) return
+      if (isEventInside(e, popRef.current) || isEventInside(e, trigger.current)) return
       latest.current.onClose('none')
     }
     // Capture: Esc nabídky má přednost před Esc widgetu (ten se `defaultPrevented` nechá zastavit).
@@ -133,7 +135,7 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
         setActive(to)
         rowRefs.current[to]?.focus()
       }
-      const focused = rowRefs.current.findIndex((el) => el === document.activeElement)
+      const focused = rowRefs.current.findIndex((el) => el === deepActiveElement())
       if (e.key === 'ArrowDown') move(nextEnabledIndex(flags, focused, 1))
       else if (e.key === 'ArrowUp') move(nextEnabledIndex(flags, focused, -1))
       else if (e.key === 'Home') move(nextEnabledIndex(flags, -1, 1))
@@ -285,6 +287,6 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
         )}
       </div>
     </div>,
-    document.body
+    container
   )
 }

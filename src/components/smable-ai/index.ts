@@ -21,6 +21,7 @@ export {
   type SmableAiWidgetContextValue,
   type SmableAiWidgetPlacement,
 } from './SmableAiWidget'
+export { SmableAiPortalProvider, useSmableAiPortalContainer } from './SmableAiPortal'
 export { SMABLE_AI_DESKTOP_QUERY, SMABLE_AI_PANEL_WIDTH } from './widget'
 export {
   SmableAiMemoryNotice,

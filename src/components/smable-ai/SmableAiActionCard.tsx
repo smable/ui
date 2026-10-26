@@ -16,6 +16,7 @@ import {
 import clsx from 'clsx'
 import { SmableButton } from '../SmableButton'
 import { actionButtonsVisible } from './actions'
+import { deepActiveElement } from './dom'
 import type { SmableAiActionLabels, SmableAiActionRow, SmableAiActionStatus } from './types'
 
 export interface SmableAiActionCardProps {
@@ -75,7 +76,7 @@ export function SmableAiActionCard({
     const lost = hadButtons.current && !buttons && clicked
     hadButtons.current = buttons
     if (!lost) return
-    const active = document.activeElement
+    const active = deepActiveElement()
     if (!active || active === document.body || cardRef.current?.contains(active)) {
       statusRef.current?.focus({ preventScroll: true })
     }

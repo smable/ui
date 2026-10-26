@@ -22,6 +22,8 @@ import {
   widgetExpandAction,
   type SmableAiWidgetPlacement,
 } from './widget'
+import { deepActiveElement, isEventInPopover, isEventInside } from './dom'
+import { useSmableAiPortalContainer } from './SmableAiPortal'
 import type { SmableAiConversationData, SmableAiLabels } from './types'
 
 export type { SmableAiWidgetPlacement } from './widget'
@@ -143,19 +145,20 @@ function focusBody(body: HTMLElement | null): boolean {
   const target =
     body.querySelector<HTMLElement>('textarea:not([disabled])') ?? body.querySelector<HTMLElement>(FOCUSABLE)
   target?.focus()
-  return target != null && document.activeElement === target
+  return target != null && deepActiveElement() === target
 }
 
 /** Fokus jen na vykreslený prvek — skryté pole (ikona na telefonu, `className` hosta) přeskočí. */
 function focusIfVisible(el: HTMLElement | null | undefined): boolean {
   if (!el || el.getClientRects().length === 0) return false
   el.focus()
-  return document.activeElement === el
+  return deepActiveElement() === el
 }
 
 export function SmableAiWidget(props: SmableAiWidgetProps) {
+  const container = useSmableAiPortalContainer()
   if (typeof document === 'undefined') return null
-  return createPortal(<WidgetRoot {...props} />, document.body)
+  return createPortal(<WidgetRoot {...props} />, container)
 }
 
 function WidgetRoot({
@@ -216,7 +219,7 @@ function WidgetRoot({
     if (before.open === open && before.placement === placement) return
     const restore = focusOnCollapse.current
     focusOnCollapse.current = true
-    const active = document.activeElement
+    const active = deepActiveElement()
     const lost = !active || active === document.body
     const inside = !lost && Boolean(rootRef.current?.contains(active))
 
@@ -240,7 +243,7 @@ function WidgetRoot({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing) return
-      if (!rootRef.current?.contains(document.activeElement)) return
+      if (!rootRef.current?.contains(deepActiveElement())) return
       const action = widgetEscapeAction({ placement, expanded, historyOpen })
       if (action === 'none') return
       e.preventDefault()
@@ -258,8 +261,7 @@ function WidgetRoot({
   useEffect(() => {
     if (!historyOpen) return
     const onPointerDown = (e: PointerEvent) => {
-      const t = e.target as Node
-      if (panelRef.current?.contains(t) || toggleRef.current?.contains(t)) return
+      if (isEventInside(e, panelRef.current) || isEventInside(e, toggleRef.current)) return
       setHistoryOpen(false)
     }
     document.addEventListener('pointerdown', onPointerDown)
@@ -269,9 +271,9 @@ function WidgetRoot({
   useEffect(() => {
     if (!collapseOnOutsideClick || panel || !expanded) return
     const onPointerDown = (e: PointerEvent) => {
-      if (rootRef.current?.contains(e.target as Node)) return
+      if (isEventInside(e, rootRef.current)) return
       // Nabídka „+“ pole dotazu je portál mimo widget, ale patří k němu.
-      if (e.target instanceof Element && e.target.closest('[data-smable-ai-popover]')) return
+      if (isEventInPopover(e)) return
       focusOnCollapse.current = false
       latest.current.onExpandedChange(false)
       // Host sbalení může odmítnout — příznak nesmí přežít do dalšího (šipka, Esc) sbalení.
