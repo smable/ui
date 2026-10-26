@@ -157,7 +157,7 @@ function focusIfVisible(el: HTMLElement | null | undefined): boolean {
 
 export function SmableAiWidget(props: SmableAiWidgetProps) {
   const container = useSmableAiPortalContainer()
-  if (typeof document === 'undefined') return null
+  if (typeof document === 'undefined' || !container) return null
   return createPortal(<WidgetRoot {...props} />, container)
 }
 

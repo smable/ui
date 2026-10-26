@@ -1,4 +1,5 @@
 import { createContext, useContext, type ReactNode } from 'react'
+import { resolvePortalContainer } from './dom'
 
 const PortalContainerContext = createContext<HTMLElement | null>(null)
 
@@ -10,6 +11,7 @@ export function SmableAiPortalProvider({ container, children }: { container: HTM
   return <PortalContainerContext.Provider value={container}>{children}</PortalContainerContext.Provider>
 }
 
-export function useSmableAiPortalContainer(): HTMLElement {
-  return useContext(PortalContainerContext) ?? document.body
+/** Bez DOMu (SSR) vrací `null` — místa s portálem se pak nevykreslí. */
+export function useSmableAiPortalContainer(): HTMLElement | null {
+  return resolvePortalContainer(useContext(PortalContainerContext), typeof document === 'undefined' ? undefined : document)
 }

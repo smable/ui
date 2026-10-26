@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { deepActiveElement, isEventInPopover, isEventInside, rootOf } from './dom.ts'
+import { deepActiveElement, isEventInPopover, isEventInside, resolvePortalContainer, rootOf } from './dom.ts'
 
 test('deepActiveElement sestoupí přes dvě úrovně shadow rootů', () => {
   const inner = { name: 'textarea' }
@@ -49,4 +49,13 @@ test('rootOf vrátí kořen uzlu, jinak document', () => {
   } finally {
     delete globalThis.document
   }
+})
+
+test('resolvePortalContainer: kontejner z provideru, jinak body, bez DOMu null', () => {
+  const ctx = { name: 'container' }
+  const body = { name: 'body' }
+  assert.equal(resolvePortalContainer(ctx, { body }), ctx)
+  assert.equal(resolvePortalContainer(null, { body }), body)
+  assert.equal(resolvePortalContainer(ctx, undefined), ctx)
+  assert.equal(resolvePortalContainer(null, undefined), null)
 })

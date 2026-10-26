@@ -40,6 +40,8 @@ export function SmableAiSlashMenu({ anchor, id, commands, active, label, emptyLa
     if (active >= 0) rootOf(anchor).getElementById(`${id}-${active}`)?.scrollIntoView({ block: 'nearest' })
   }, [id, active, anchor])
 
+  if (!container) return null
+
   return createPortal(
     <div data-smable-ai-popover="" style={{ left: pos.left, bottom: pos.bottom, width: pos.width }} className={POPOVER}>
       <ul id={id} role="listbox" aria-label={label} className="min-h-0 overflow-y-auto">

@@ -20,6 +20,11 @@ export function isEventInPopover(event: Event): boolean {
   return event.composedPath().some((n) => (n as Element).hasAttribute?.('data-smable-ai-popover'))
 }
 
+/** Kontejner pro portály: předaný z provideru, jinak `body`; bez DOMu (SSR) `null`. */
+export function resolvePortalContainer(ctx: HTMLElement | null, doc: Document | undefined): HTMLElement | null {
+  return ctx ?? doc?.body ?? null
+}
+
 /** Kořen, ve kterém uzel žije (`Document` nebo `ShadowRoot`); jinak `document`. */
 export function rootOf(node: Node | null): Document | ShadowRoot {
   const root = node?.getRootNode()

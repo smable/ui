@@ -198,6 +198,8 @@ export function SmableAiComposerMenu({ anchor, trigger, items, label, backLabel,
     <p className="px-2.5 py-2 text-[13px] text-neutral-500 dark:text-neutral-400">{submenu.emptyLabel}</p>
   ) : null
 
+  if (!container) return null
+
   return createPortal(
     <div
       ref={popRef}
