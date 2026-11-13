@@ -2,6 +2,47 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.28.0 — 2026-11-13
+
+### ✨ Overlaye a hlášky (fáze 1 auditu UI app.smable.cz)
+
+- **`SmableDialog`** (nový): vycentrovaný modál přes portál do `body`, `z-[60]` nad `SmableDrawer`. Hlavička
+  s nadpisem, `subtitle` a křížkem vpravo (`closeLabel` je povinný, bez výchozí češtiny), tělo se posouvá
+  (panel max. 85vh), `footer` zůstává vidět a tlačítka zarovná vpravo. `size` `sm` / `md` / `lg`
+  (max-w-md / xl / 2xl, výchozí `md`), `bodyFlush` pro výběrová okna se SearchBarem nahoře,
+  `initialFocusRef`. `dismissible={false}` vypne Esc, klik na pozadí i křížek (běžící request).
+  `role="dialog"`, `aria-modal`, `aria-labelledby` na nadpis, `aria-describedby` na podtitulek. Pole
+  uvnitř mají výchozí variantu i v dialogu otevřeném z draweru.
+- **Společné chování overlayů** (interní hook `useOverlay`): Esc zavře jen naposledy otevřený dialog
+  (ConfirmDialog nad SmableDialogem už nezavře oba), zámek posunu vrátí předchozí `overflow`, po zavření
+  se fokus vrátí na prvek, odkud se dialog otevřel. Esc, který už zpracoval prvek uvnitř
+  (`defaultPrevented`) nebo který patří IME, dialog nezavře. `SmableDrawer` a `PosSheet` hook zatím
+  nepoužívají — Esc nad dialogem otevřeným z draweru zavře i drawer, stejně jako dřív.
+- **`ConfirmDialog`** stojí na stejném rámu. Nové volitelné props: `children` (pod popisem — pole
+  „opiš název“, výběr důvodu), `confirmDisabled`, `size` (výchozí `sm` = dnešní šířka). Vzhled, `busy`,
+  `error`, fokus na Zrušit a `role="alertdialog"` zůstávají; chyba má navíc `role="alert"`
+  a po zavření se fokus vrací.
+- **`ToastProvider` + `useToast`** (nové): stejný tvar jako lokální `Toast.tsx` v crm, helpdesku
+  a partneru (`show(tone, message)`, `success`, `error`, `info`) — přechod je změna importu a `closeLabel`
+  u provideru. Navíc: druhý argument `{ duration, action }`, chyby `role="alert"` a 8 s, ostatní
+  `role="status"` a 4 s, `duration: null` (i 0) drží do zavření, pauza při najetí myší a fokusu,
+  časovače se při odpojení ruší, vidět nejvýš `max` hlášek (výchozí 3). Nad limit se vytlačí nejstarší
+  běžná hláška, chyby a hlášky bez časovače až nakonec. Fronta je čistý modul s testy.
+- **`AlertBanner`**: typ `success`, ikona podle typu (✓ / ⚠ / ! / i — dřív všude trojúhelník),
+  `message` bere `ReactNode`, nové `title`, `action` (`{ label, onClick }`, např. „Zkusit znovu“)
+  a `className`. Bez `className` zůstává `mb-6`, předané třídy ho nahradí — konec hacku `[&>div]:mb-0`.
+  Typ `error` má `role="alert"`.
+- **`SmableDrawer description`**: popis pod velkým nadpisem (jen s `largeTitle`).
+- **`SmableButton`**: velikost `xs` (h-8), varianta `danger-ghost` (červený text bez pozadí — koš
+  v řádku), `iconOnly` (čtverec 32 / 36 / 40 / 44 px, vždy s `aria-label`; při `loading` jen spinner),
+  `pressed` (`aria-pressed` + aktivní vzhled u secondary / ghost / danger-ghost). `SmableActionsMenu`
+  zná velikost `xs`.
+
+Zpětně kompatibilní: nové props jsou volitelné, výchozí hodnoty i barvy existujících variant se nemění
+(`primary` zůstává černé). Viditelné změny bez nových props: ikony `AlertBanner` u typů error a info
+a návrat fokusu po zavření `ConfirmDialog`. Typy `SmableButtonVariant`, `SmableButtonSize`
+a `AlertBannerType` se rozšířily — kdo nad nimi má vyčerpávající `Record`, doplní klíče.
+
 ## 0.27.1 — 2026-11-13
 
 ### 🐛 Opravy z auditu UI app.smable.cz

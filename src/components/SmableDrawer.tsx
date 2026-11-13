@@ -38,6 +38,8 @@ export interface SmableDrawerProps {
    * Dokud je videt velky nadpis, hlavicka nese jen krizek — nazev by tam stal dvakrat.
    */
   largeTitle?: boolean
+  /** Popis pod velkým nadpisem (jen s `largeTitle`). */
+  description?: ReactNode
 }
 
 export function SmableDrawer({
@@ -53,6 +55,7 @@ export function SmableDrawer({
   bodyRef,
   bodyFlush = false,
   largeTitle = false,
+  description,
 }: SmableDrawerProps) {
   // Hlidka hned pod velkym nadpisem: dokud je videt, hlavicka nazev neukazuje. IntersectionObserver
   // misto posluchace posunu — nepocita se pri kazdem pixelu a nezalezi na vysce nadpisu.
@@ -162,8 +165,18 @@ export function SmableDrawer({
         >
           {largeTitle && title && (
             <>
-              <h2 className="mb-4 text-[28px] font-bold leading-tight text-neutral-900 dark:text-white">{title}</h2>
+              <h2
+                className={clsx(
+                  'text-[28px] font-bold leading-tight text-neutral-900 dark:text-white',
+                  description ? 'mb-1' : 'mb-4'
+                )}
+              >
+                {title}
+              </h2>
               <div ref={sentinel} aria-hidden className="h-px" />
+              {description && (
+                <div className="mb-4 text-sm text-neutral-500 dark:text-neutral-400">{description}</div>
+              )}
             </>
           )}
           <FieldVariantProvider variant="floating">{children}</FieldVariantProvider>

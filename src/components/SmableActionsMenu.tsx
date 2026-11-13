@@ -22,6 +22,7 @@ export interface SmableActionsMenuProps {
 }
 
 const SIZE: Record<SmableButtonSize, string> = {
+  xs: 'h-8 px-2.5 text-xs',
   sm: 'h-9 px-3.5 text-xs',
   md: 'h-10 px-4 text-sm',
   lg: 'h-11 px-6 text-sm',

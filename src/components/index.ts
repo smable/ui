@@ -1,6 +1,7 @@
 export { SmableButton, type SmableButtonProps, type SmableButtonVariant, type SmableButtonSize } from './SmableButton'
 export { SmableDatePicker, type SmableDatePickerProps } from './SmableDatePicker'
 export { SmableDrawer, type SmableDrawerProps } from './SmableDrawer'
+export { SmableDialog, type SmableDialogProps, type SmableDialogSize } from './SmableDialog'
 export { SmableActionsMenu, type SmableActionsMenuProps, type SmableActionItem } from './SmableActionsMenu'
 
 export * from './AlertBanner'
@@ -32,6 +33,7 @@ export * from './Select'
 export * from './SelectionBar'
 export * from './StatusTabs'
 export * from './Textarea'
+export * from './Toast'
 export * from './Toggle'
 export * from './ViewToggle'
 

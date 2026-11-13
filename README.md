@@ -73,12 +73,16 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 
 ## Components
 
-- `SmableButton` — primary / secondary / ghost variants, sizes, loading state
+- `SmableButton` — primary / secondary / ghost / danger / danger-ghost variants, sizes xs–lg, loading state, `iconOnly` (square, needs `aria-label`), `pressed` (toolbar toggle)
 - `SmableInput` — floating-label text input
 - `SmableSelect` — floating-label native select
 - `SmableTextarea` — floating-label textarea
 - `SmableDatePicker` — date / datetime / range picker (requires `react-day-picker`, `date-fns`)
-- `SmableDrawer` — side drawer / modal
+- `SmableDrawer` — side drawer; `largeTitle` + `description`
+- `SmableDialog` — centered modal: header with close button, scrolling body, sticky footer, `dismissible`, `bodyFlush`, `initialFocusRef`
+- `ConfirmDialog` — confirmation of an irreversible action (`busy`, `error`, `children`, `confirmDisabled`)
+- `ToastProvider` + `useToast` — toasts top right (`success` / `error` / `info`, `duration`, `action`, `max`)
+- `AlertBanner` — inline banner `success` / `warning` / `error` / `info` with optional `title`, `action`, dismiss
 - `SmableActionsMenu` — dropdown action menu
 - `DataTable` — TanStack tabulka: řazení, filtry, stránkování (i serverové), hromadný výběr podle id
   (`getRowId`, `canSelectRow`, Shift + klik, menu Stránku / Vše podle filtru), lepivá hlavička, hustota, export
