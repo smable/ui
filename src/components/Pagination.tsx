@@ -1,6 +1,22 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
 
+export interface PaginationLabels {
+  showing: string
+  of: string
+  perPage: (limit: number) => string
+  previous: string
+  next: string
+}
+
+const DEFAULT_LABELS: PaginationLabels = {
+  showing: 'Zobrazeno',
+  of: 'z',
+  perPage: (limit) => `${limit} položek`,
+  previous: 'Předchozí stránka',
+  next: 'Další stránka',
+}
+
 interface PaginationProps {
   page: number
   totalPages: number
@@ -9,6 +25,8 @@ interface PaginationProps {
   onPageChange: (page: number) => void
   onLimitChange?: (limit: number) => void
   limitOptions?: number[]
+  /** Texty komponenty; výchozí jsou česky. */
+  labels?: Partial<PaginationLabels>
 }
 
 export function Pagination({
@@ -19,7 +37,9 @@ export function Pagination({
   onPageChange,
   onLimitChange,
   limitOptions = [20, 50, 100],
+  labels,
 }: PaginationProps) {
+  const l = { ...DEFAULT_LABELS, ...labels }
   if (total === 0) return null
 
   const from = (page - 1) * limit + 1
@@ -29,9 +49,9 @@ export function Pagination({
     <div className="px-4 sm:px-6 py-4 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3">
       <div className="flex items-center gap-4">
         <span className="text-sm text-neutral-500">
-          Zobrazeno{' '}
+          {l.showing}{' '}
           <span className="font-medium text-neutral-700 dark:text-neutral-300">{from}–{to}</span>
-          {' '}z{'\u00a0'}
+          {' '}{l.of}{'\u00a0'}
           <span className="font-medium text-neutral-700 dark:text-neutral-300">{total}</span>
         </span>
         {onLimitChange && (
@@ -41,14 +61,14 @@ export function Pagination({
             className="h-8 px-3 text-sm bg-neutral-50 dark:bg-neutral-800 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-neutral-600 dark:text-neutral-400"
           >
             {limitOptions.map(opt => (
-              <option key={opt} value={opt}>{opt} položek</option>
+              <option key={opt} value={opt}>{l.perPage(opt)}</option>
             ))}
           </select>
         )}
       </div>
       <div className="flex items-center gap-1">
         <button type="button"
-          aria-label="Předchozí stránka"
+          aria-label={l.previous}
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
           className={clsx(
@@ -64,7 +84,7 @@ export function Pagination({
           {page} / {totalPages}
         </span>
         <button type="button"
-          aria-label="Další stránka"
+          aria-label={l.next}
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
           className={clsx(

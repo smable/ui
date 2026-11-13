@@ -41,6 +41,8 @@ interface FloatingInputProps extends BaseInputProps {
    * pole a překryly se.
    */
   placeholder?: string
+  /** Jednotka vpravo v poli (Kč, ks). Má-li pole i `trailing`, vyhrává `trailing`. */
+  suffix?: ReactNode
 }
 
 export type InputProps = DefaultInputProps | FloatingInputProps
@@ -56,8 +58,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
   const resolvedVariant = props.variant ?? contextVariant
   const autoId = useId()
   if (resolvedVariant === 'floating') {
-    const floatingProps = props as FloatingInputProps
-    const { label, error, trailing, size = 'large', className, id, required, placeholder, variant: _v, ...rest } = floatingProps
+    // Variantu často určí kontext (SmableDrawer), takže sem chodí i props
+    // default varianty. `prefix` a `labelAction` floating neumí — vyjmout,
+    // ať neskončí jako atributy na <input>.
+    const floatingProps = props as FloatingInputProps & Pick<DefaultInputProps, 'prefix' | 'labelAction'>
+    const { label, error, trailing: trailingProp, suffix, prefix: _prefix, labelAction: _labelAction, size = 'large', className, id, required, placeholder, variant: _v, ...rest } = floatingProps
+    const trailing = trailingProp ?? (suffix ? <span className="text-sm text-neutral-500 dark:text-neutral-400 pointer-events-none">{suffix}</span> : undefined)
     const inputId = id ?? `input-${autoId}`
     const hasError = Boolean(error)
     const sizeClasses = size === 'large' ? 'h-16 pt-6 pb-2 text-base' : 'h-12 pt-5 pb-1 text-sm'

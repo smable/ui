@@ -4,9 +4,10 @@ interface SearchBarProps {
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  clearLabel?: string
 }
 
-export function SearchBar({ value, onChange, placeholder = 'Hledat...' }: SearchBarProps) {
+export function SearchBar({ value, onChange, placeholder = 'Hledat...', clearLabel = 'Vymazat hledání' }: SearchBarProps) {
   return (
     <div className="relative flex-1 max-w-md">
       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
@@ -20,7 +21,7 @@ export function SearchBar({ value, onChange, placeholder = 'Hledat...' }: Search
       />
       {value && (
         <button type="button"
-          aria-label="Vymazat hledání"
+          aria-label={clearLabel}
           onClick={() => onChange('')}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
         >

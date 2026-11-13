@@ -14,6 +14,7 @@ export interface HeroCardProps {
   icon: React.ElementType
   isLoading?: boolean
   highlight?: boolean
+  hrefLabel?: string
 }
 
 export function HeroCard({
@@ -24,7 +25,8 @@ export function HeroCard({
   href,
   icon: Icon,
   isLoading,
-  highlight
+  highlight,
+  hrefLabel = 'Zobrazit detail',
 }: HeroCardProps) {
   const cardContent = (
     <div className={clsx(
@@ -75,7 +77,7 @@ export function HeroCard({
 
       {href && (
         <div className="flex items-center gap-1 mt-3 text-brand-600 dark:text-brand-400 text-sm font-medium">
-          Zobrazit detail
+          {hrefLabel}
           <ChevronRight className="w-4 h-4" />
         </div>
       )}

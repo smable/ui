@@ -7,6 +7,7 @@ export interface AlertBannerProps {
   href?: string
   onDismiss?: () => void
   dismissible?: boolean
+  dismissLabel?: string
 }
 
 export function AlertBanner({
@@ -14,7 +15,8 @@ export function AlertBanner({
   message,
   href,
   onDismiss,
-  dismissible = false
+  dismissible = false,
+  dismissLabel = 'Zavřít upozornění',
 }: AlertBannerProps) {
   const [isVisible, setIsVisible] = useState(true)
 
@@ -44,7 +46,7 @@ export function AlertBanner({
       <p className="flex-1 text-sm font-medium">{message}</p>
       {dismissible && (
         <button type="button"
-          aria-label="Zavřít upozornění"
+          aria-label={dismissLabel}
           onClick={handleDismiss}
           className="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded"
         >

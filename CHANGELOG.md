@@ -2,6 +2,20 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.27.1 — 2026-11-13
+
+### 🐛 Opravy z auditu UI app.smable.cz
+
+- **`Input` floating vykreslí `suffix`** (jednotka vpravo v poli). Dřív se `suffix`, `prefix` a `labelAction`
+  rozprostřely jako atributy na `<input>` a jednotka nebyla vidět. Floating variantu často určí kontext
+  (`SmableDrawer`), takže se to týkalo i polí bez `variant`. Má-li pole `trailing`, vyhrává `trailing`.
+- **`Select` bez druhé šipky:** `bg-none` v obou variantách. `@tailwindcss/forms` kreslí na každý `<select>`
+  šipku jako `background-image`, vedle vlastní `ChevronDown` byly v poli dvě.
+- **`SmableActionsMenu`:** panel má `role="menu"`, položky `role="menuitem"`, oddělovač `role="separator"`.
+- **Texty přes props** (výchozí zůstávají česky, chování se nemění): `Pagination labels`,
+  `BulkActionsBar clearLabel`, `SearchBar clearLabel`, `AlertBanner dismissLabel`, `ViewToggle labels`,
+  `HeroCard hrefLabel`. Anglická verze aplikace tak nemusí ukazovat češtinu.
+
 ## 0.27.0 — 2026-10-26
 
 ### ⚡ Smable AI — popis dovednosti v seznamu po „/“

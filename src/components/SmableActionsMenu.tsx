@@ -68,18 +68,21 @@ export function SmableActionsMenu({
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
+            role="menu"
+            aria-label={label}
             className={clsx(
               'absolute top-full mt-2 min-w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50',
               align === 'right' ? 'right-0' : 'left-0'
             )}
           >
             {items.map((item, i) => (
-              <div key={item.key}>
+              <div key={item.key} role="none">
                 {item.divider && i > 0 && (
-                  <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
+                  <div role="separator" className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
                 )}
                 <button
                   type="button"
+                  role="menuitem"
                   disabled={item.disabled}
                   onClick={() => {
                     item.onClick()

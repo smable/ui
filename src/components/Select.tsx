@@ -32,7 +32,9 @@ interface FloatingSelectProps extends BaseSelectProps {
 
 export type SelectProps = DefaultSelectProps | FloatingSelectProps
 
-const defaultBase = "w-full h-10 px-3 pr-10 text-sm bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-neutral-300 dark:hover:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors appearance-none cursor-pointer"
+// `bg-none`: @tailwindcss/forms kreslí na každý <select> šipku jako background-image,
+// vedle vlastní ChevronDown by byly v poli dvě.
+const defaultBase = "w-full h-10 px-3 pr-10 text-sm bg-white bg-none dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-neutral-300 dark:hover:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-colors appearance-none cursor-pointer"
 const defaultLabel = "block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5"
 const errorMsgClass = "mt-1.5 text-xs text-red-600 dark:text-red-400"
 
@@ -59,7 +61,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
             className={clsx(
               'peer block w-full px-4 pr-10',
               'text-neutral-900 dark:text-white',
-              'bg-white dark:bg-neutral-900',
+              'bg-white bg-none dark:bg-neutral-900',
               'border rounded-xl appearance-none transition-colors cursor-pointer',
               'focus:outline-none focus:ring-0',
               sizeClasses,

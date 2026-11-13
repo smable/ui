@@ -6,6 +6,7 @@ interface BulkActionsBarProps {
   label?: (count: number) => string
   children: ReactNode
   onClear: () => void
+  clearLabel?: string
 }
 
 function defaultLabel(count: number): string {
@@ -27,7 +28,7 @@ const POSITION = {
   maxWidth: 'calc(100% - var(--smable-ai-inset-left, 0px) - var(--smable-ai-inset-right, 0px) - 2rem)',
 } satisfies CSSProperties
 
-export function BulkActionsBar({ count, label = defaultLabel, children, onClear }: BulkActionsBarProps) {
+export function BulkActionsBar({ count, label = defaultLabel, children, onClear, clearLabel = 'Zrušit výběr' }: BulkActionsBarProps) {
   if (count === 0) return null
 
   return (
@@ -36,7 +37,7 @@ export function BulkActionsBar({ count, label = defaultLabel, children, onClear 
       <div className="w-px h-5 bg-neutral-700 dark:bg-neutral-300" />
       {children}
       <button type="button"
-        aria-label="Zrušit výběr"
+        aria-label={clearLabel}
         onClick={onClear}
         className="p-1.5 hover:bg-neutral-800 dark:hover:bg-neutral-200 rounded-lg transition-colors"
       >
