@@ -43,6 +43,10 @@ je shodné, liší se jen třídy `rounded-*` a `shadow-sm` karty).
 - Oprava: řízený `columnOrder` se použije i bez `draggableColumns` a `persistKey` (dřív se tiše ignoroval; žádný konzument ho dnes takto nepředává).
 - `DataTableColumnsMenu` přepíná sloupec podle aktuálního stavu tabulky (`toggleVisibility()`), ne podle
   stavu z posledního vykreslení menu.
+- Karta (`appearance="card"`) má na úzkém displeji menší odsazení buněk (`px-2`, kraje `pl-3`/`pr-3`,
+  od `md` beze změny `px-4`, `pl-6`/`pr-6`) — na telefonu se do tabulky vejde víc obsahu. Viditelné ve všech portálech.
+- Výběr řádků: klik kamkoli do buňky se zaškrtávátkem přepne výběr a řádek neotevře (dřív jen zaškrtávátko 20 px,
+  klik vedle otevřel řádek přes `onRowClick`).
 - Známé: vestavěné stránkování DataTable má dál natvrdo češtinu („Zobrazeno … z“, „Stránka … z“,
   „N položek“) — dvojjazyčné stránky ať použijí `pagination`. Natvrdo česky jsou i texty
   `DataTableExport` („Export“, „N záznamů“, názvy formátů) a placeholder výchozího filtru „Filtr...“.

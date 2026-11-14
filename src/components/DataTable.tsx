@@ -488,7 +488,7 @@ export function DataTable<T>({
   const setDensity = onDensityChange ?? setInternalDensity
   const plain = appearance === 'plain'
   const cellPadding = (plain ? PLAIN_DENSITY_CLASS : DATA_TABLE_DENSITY_CLASS)[density]
-  const cellX = plain ? 'px-3' : 'px-4 first:pl-6 last:pr-6'
+  const cellX = plain ? 'px-3' : 'px-2 md:px-4 first:pl-3 md:first:pl-6 last:pr-3 md:last:pr-6'
   // Kotva pro Shift + klik — id naposledy přepnutého řádku.
   const lastToggledRef = useRef<string | null>(null)
 
@@ -977,7 +977,7 @@ export function DataTable<T>({
                       key={header.id}
                       aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
                       className={clsx(
-                        plain ? `px-3 py-2 ${align} transition-all group` : `px-4 py-3.5 ${align} first:pl-6 last:pr-6 transition-all group`,
+                        plain ? `px-3 py-2 ${align} transition-all group` : `px-2 md:px-4 first:pl-3 md:first:pl-6 last:pr-3 md:last:pr-6 py-3.5 ${align} transition-all group`,
                         plain
                           ? stickyHeader && "bg-white dark:bg-neutral-900"
                           : stickyHeader ? "bg-neutral-50 dark:bg-neutral-800" : "bg-neutral-50/80 dark:bg-neutral-800/40",
@@ -1030,7 +1030,7 @@ export function DataTable<T>({
                 {table.getHeaderGroups()[0]?.headers.map(header => (
                   <th
                     key={header.id}
-                    className={clsx(plain ? "px-3 py-2" : "px-4 py-2.5 first:pl-6 last:pr-6", cellAlignClass(columnMeta(header.column)?.align))}
+                    className={clsx(plain ? "px-3 py-2" : "px-2 md:px-4 first:pl-3 md:first:pl-6 last:pr-3 md:last:pr-6 py-2.5", cellAlignClass(columnMeta(header.column)?.align))}
                     style={columnWidthStyle(header.getSize(), { fixedLayout, fill: columnMeta(header.column)?.fill, kind: 'cell' })}
                   >
                     {header.column.getCanFilter() ? (
@@ -1090,11 +1090,17 @@ export function DataTable<T>({
                 >
                   {row.getVisibleCells().map(cell => {
                     const meta = columnMeta(cell.column)
+                    const selectCell = selectable && cell.column.id === 'select' && row.getCanSelect()
                     return (
                       <td
                         key={cell.id}
-                        className={clsx(cellX, cellPadding, cellAlignClass(meta?.align), dropIndicatorClass(cell.column.id))}
+                        className={clsx(cellX, cellPadding, cellAlignClass(meta?.align), dropIndicatorClass(cell.column.id), selectCell && 'cursor-pointer')}
                         style={columnWidthStyle(cell.column.getSize(), { fixedLayout, fill: meta?.fill, kind: 'cell' })}
+                        // Celá buňka výběru přepíná výběr (větší plocha než samotné zaškrtávátko), řádek se neotevře.
+                        onClick={selectCell ? (e) => {
+                          e.stopPropagation()
+                          if (!isInteractiveTarget(e.target as HTMLElement)) row.toggleSelected()
+                        } : undefined}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
@@ -1120,7 +1126,7 @@ export function DataTable<T>({
                       <td
                         key={header.id}
                         colSpan={header.colSpan}
-                        className={clsx(plain ? "px-3 py-2" : "px-4 py-4 first:pl-6 last:pr-6", "font-medium text-neutral-700 dark:text-neutral-300", cellAlignClass(columnMeta(header.column)?.align))}
+                        className={clsx(plain ? "px-3 py-2" : "px-2 md:px-4 first:pl-3 md:first:pl-6 last:pr-3 md:last:pr-6 py-4", "font-medium text-neutral-700 dark:text-neutral-300", cellAlignClass(columnMeta(header.column)?.align))}
                         style={columnWidthStyle(header.getSize(), { fixedLayout, fill: columnMeta(header.column)?.fill, kind: 'cell' })}
                       >
                         {header.isPlaceholder
