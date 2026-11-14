@@ -20,3 +20,16 @@ export function getDateRange(preset: DatePreset, now: Date = new Date()): { star
       return { start: day(0), end: endOfDay(0) }
   }
 }
+
+/**
+ * Custom range from the calendar: the first day from 00:00, the last day until 23:59:59.999.
+ * The calendar hands over the time it was opened at, and for a single day the same Date
+ * object as start and end, so both days are copied before normalising.
+ */
+export function customDateRange(startRaw: Date | string, endRaw: Date | string): { start: Date; end: Date } {
+  const start = new Date(startRaw)
+  const end = new Date(endRaw)
+  start.setHours(0, 0, 0, 0)
+  end.setHours(23, 59, 59, 999)
+  return { start, end }
+}

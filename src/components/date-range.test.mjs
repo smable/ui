@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { getDateRange } from './date-range.ts'
+import { customDateRange, getDateRange } from './date-range.ts'
 
 // Ranges are local calendar days. Around the DST switch a day has 23 or 25
 // hours, so the cases below only bite when the process runs in a zone with
@@ -43,4 +43,18 @@ test('last_week on Mon 26. 10. 2026 is 19.–25. 10.', () => {
 
 test('this_month on 25. 10. 2026 ends today 23:59:59', () => {
   assert.deepEqual(range('this_month', '2026-10-25T12:00:00'), ['2026-10-01 00:00:00', '2026-10-25 23:59:59'])
+})
+
+test('vlastní období začíná půlnocí prvního dne, i když kalendář pošle aktuální čas', () => {
+  const r = customDateRange(new Date(2026, 8, 27, 11, 33, 7), new Date(2026, 8, 28, 11, 33, 7))
+  assert.equal(local(r.start), '2026-09-27 00:00:00')
+  assert.equal(local(r.end), '2026-09-28 23:59:59')
+})
+
+test('jeden den ze stejného Date objektu dá celý den a vstup nezmění', () => {
+  const picked = new Date(2026, 8, 28, 11, 33, 7)
+  const r = customDateRange(picked, picked)
+  assert.equal(local(r.start), '2026-09-28 00:00:00')
+  assert.equal(local(r.end), '2026-09-28 23:59:59')
+  assert.equal(local(picked), '2026-09-28 11:33:07')
 })

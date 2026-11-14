@@ -2,6 +2,15 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.30.1 — 2026-11-14
+
+### 🐛 DateRangePicker: vlastní období od půlnoci
+
+- Začátek vlastního období je 00:00 prvního dne. Dřív nesl čas, kdy se kalendář otevřel, takže účty
+  z prvního dne před tímto časem chyběly.
+- Výběr jednoho dne vrací celý den. Kalendář posílá stejný `Date` jako začátek i konec a nastavení
+  konce na 23:59:59 posunulo i začátek, takže okno mělo nulovou délku.
+
 ## 0.30.0 — 2026-11-14
 
 ### ✨ Zobrazení dat (fáze 3 auditu UI app.smable.cz)

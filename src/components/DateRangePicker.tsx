@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Datepicker from 'react-tailwindcss-datepicker'
 import clsx from 'clsx'
-import type { DatePreset } from './date-range'
+import { customDateRange, type DatePreset } from './date-range'
 
 export { getDateRange, type DatePreset } from './date-range'
 
@@ -30,9 +30,7 @@ export function DateRangePicker({ preset, dateRange, onPresetChange, onCustomRan
   const handlePickerChange = (newValue: any) => {
     if (newValue?.startDate && newValue?.endDate) {
       setPickerValue(newValue)
-      const start = newValue.startDate instanceof Date ? newValue.startDate : new Date(newValue.startDate)
-      const end = newValue.endDate instanceof Date ? newValue.endDate : new Date(newValue.endDate)
-      end.setHours(23, 59, 59, 999)
+      const { start, end } = customDateRange(newValue.startDate, newValue.endDate)
       onCustomRange(start, end)
     }
   }
