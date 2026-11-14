@@ -56,17 +56,18 @@ const toneClass: Record<BadgeTone, string> = {
   brand: 'bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300',
 }
 
+// Nejsvětlejší odstín, na kterém má bílý text-xs kontrast aspoň 4,5:1 (hlídá badge-contrast.test.mjs).
 const solidClass: Record<BadgeTone, string> = {
   neutral: 'bg-neutral-500 text-white',
-  blue: 'bg-blue-500 text-white',
-  cyan: 'bg-cyan-500 text-white',
-  purple: 'bg-purple-500 text-white',
-  pink: 'bg-pink-500 text-white',
-  amber: 'bg-amber-500 text-white',
-  orange: 'bg-orange-500 text-white',
-  emerald: 'bg-emerald-500 text-white',
-  red: 'bg-red-500 text-white',
-  brand: 'bg-brand-500 text-white',
+  blue: 'bg-blue-600 text-white',
+  cyan: 'bg-cyan-700 text-white',
+  purple: 'bg-purple-600 text-white',
+  pink: 'bg-pink-600 text-white',
+  amber: 'bg-amber-700 text-white',
+  orange: 'bg-orange-700 text-white',
+  emerald: 'bg-emerald-700 text-white',
+  red: 'bg-red-600 text-white',
+  brand: 'bg-brand-700 text-white',
 }
 
 const dotClass: Record<BadgeTone, string> = {

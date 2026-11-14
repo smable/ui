@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { formatDelta } from './delta-format.ts'
 
 const NB = ' '
+const MINUS = '\u2212'
 
 test('null, undefined and non-finite render nothing', () => {
   assert.equal(formatDelta(null), null)
@@ -23,7 +24,8 @@ test('negative value goes down, red', () => {
   const d = formatDelta(-3.5)
   assert.equal(d.direction, 'down')
   assert.equal(d.sentiment, 'negative')
-  assert.match(d.number, /^[-−]3,5$/)
+  assert.equal(d.number, `${MINUS}3,5`)
+  assert.equal(d.text, `${MINUS}3,5${NB}%`)
 })
 
 test('integers have no trailing decimals', () => {
@@ -62,4 +64,14 @@ test('percentage points use p. b. by default, unitLabel overrides it', () => {
 
 test('locale changes the decimal separator', () => {
   assert.equal(formatDelta(12.34, { locale: 'en-US' }).number, '+12.3')
+})
+
+test('negative numbers use the typographic minus U+2212, never a hyphen, in every locale', () => {
+  for (const locale of ['cs-CZ', 'en-US', 'sv-SE']) {
+    const d = formatDelta(-4.5, { locale })
+    assert.ok(d.number.startsWith(MINUS), `${locale}: ${d.number}`)
+    assert.ok(!d.text.includes('-'), `${locale}: ${d.text}`)
+  }
+  assert.equal(formatDelta(-4.5, { locale: 'en-US' }).number, `${MINUS}4.5`)
+  assert.equal(formatDelta(-1.2, { unit: 'pp' }).text, `${MINUS}1,2${NB}p. b.`)
 })

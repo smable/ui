@@ -2,6 +2,53 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.31.0 (komponenty) — 2026-11-14
+
+### ✨ Výběr souboru, spinner, datum ve výchozím vzhledu (fáze 4 auditu UI app.smable.cz)
+
+Nové props jsou volitelné. Dnešní volání `SmableDatePicker` (floating, i otevřený výběr) a `Badge`
+ve vzhledu `soft` se vykreslí stejně jako v 0.30.0 (ověřeno porovnáním SSR a otevřeného stavu v jsdom).
+Viditelně se mění jen `HeroCard`, `Badge variant="solid"` a znak minus v `Delta` — viz níže.
+
+**Nové komponenty**
+- **`FileInput`** — výběr jednoho souboru. `variant` `dropzone` (výchozí: čárkovaná plocha `rounded-xl`
+  s ikonou, nadpisem a nápovědou; soubor jde i přetáhnout, plocha se při tom zvýrazní brand barvou) /
+  `button` (vzhled `SmableButton variant="secondary"`, nápověda pod ním). Props `onFile(file)`, `accept`,
+  `label`, `hint`, `icon` (komponenta, výchozí `Upload`), `disabled`, `loading` (spinner + „Nahrávání…“,
+  výběr ani přetažení nejde), `error` (`string | boolean`), `fileName` (název vybraného souboru — pro
+  formuláře, které soubor odešlou až později), `onReject(file)`, `labels` (`pick`, `drop`, `loading`,
+  `rejected`), `id`, `name`, `className`. `ref` dává `open()`. Soubor, který neodpovídá `accept`
+  (přetažený i vybraný přes „Všechny soubory“), nejde do `onFile` a pod polem se ukáže `labels.rejected`.
+  Hodnota `<input>` se po každém výběru vynuluje, takže jde vybrat stejný soubor znovu — ruční
+  `e.target.value = ''` v app odpadá. Čistá funkce `matchesAccept` (přípony bez ohledu na velikost
+  písmen, MIME, `image/*`) je exportovaná, s testy.
+- **`Spinner`** — malý ukazatel načítání (lucide `Loader2` + `animate-spin`, stejný vzhled jako
+  dnešní ruční `<Loader2>` v app). `size` `xs` 12 / `sm` 14 / `md` 16 (výchozí) / `lg` 24 px, `tone`
+  `current` (výchozí, barva okolního textu) / `neutral` (neutral-400) / `brand`, `label` (s ním
+  `role="status"` + skrytý text, bez něj `aria-hidden`), `className`. **Nový kód má místo ručního
+  `<Loader2 className="animate-spin">` používat `Spinner`**; celostránkové načítání dál `LoadingOverlay`,
+  tlačítko dál `SmableButton loading` (obě beze změny).
+
+**Rozšíření**
+- **`SmableDatePicker`**: `variant="default"` — popisek nad polem, `h-10` (`size="small"` `h-9`),
+  `rounded-lg`, okraj a focus ring jako `Input variant="default"`; k tomu `hint`, `error: string | boolean`
+  a `aria-label` (pole bez viditelného popisku, např. filtr). Bez `variant` zůstává floating — i uvnitř
+  `FieldVariantProvider variant="default"`; z kontextu se varianta nebere, aby se dnešní pickery mimo
+  drawer nezměnily. Nově `labels` (`clear`, `time`, `done`; výchozí „Vymazat“, „Čas“, „Hotovo“) a výběr
+  zavře i Escape (fokus se vrátí na pole; drawer nebo dialog kolem zůstane otevřený) — v obou variantách.
+- **`HeroCard`** `size="sm"`: dlouhá hodnota se zkrátí výpustkou (`truncate`, celý text v `title`)
+  místo přetečení přes dlaždici; karta má `min-w-0` (s `href` i odkaz). Popisek změny („vs. minulý
+  týden“) se v úzké dlaždici zalomí celý pod šipku s číslem, ne napůl vedle ní.
+- **`HeroCard`** `size="lg"` (výchozí): zaoblení `rounded-lg` → **`rounded-xl`** (rozhodnutí 7 — karty
+  jako `Card`). Jinak beze změny.
+- **`Badge variant="solid"`**: tmavší odstíny, aby bílý text měl kontrast aspoň 4,5:1 (WCAG AA). Blue,
+  purple, pink a red 500 → 600; cyan, amber, orange, emerald a brand 500 → 700; neutral-500 zůstává.
+  Týká se app (`FeatureGatePage`, `FeatureTeaser`, `StepImportMenu`). `soft` beze změny. Hlídá test
+  `badge-contrast.test.mjs`.
+- **`Delta` / `formatDelta`**: záporná čísla s typografickým minus U+2212 (`−4,5 %`) místo spojovníku,
+  v každém locale. Zastaralý tvar `HeroCard change={{ value, isPositive }}` u `lg` píše dál „-12%“
+  (beze změny).
+
 ## 0.30.0 — 2026-11-14
 
 ### ✨ Zobrazení dat (fáze 3 auditu UI app.smable.cz)
