@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
+import clsx from 'clsx'
 
 /**
  * Badge — UI primitive pro stage / status / score / severity chips.
@@ -12,6 +13,8 @@ import type { ReactNode } from 'react'
  *   <Badge tone="red" size="sm" icon={<AlertOctagon className="w-3 h-3" />}>
  *     Kritické
  *   </Badge>
+ *   <Badge tone="emerald" dot="pulse">Online</Badge>
+ *   <Badge tone="red" variant="solid" title="3 nepřečtené">3</Badge>
  */
 export type BadgeTone =
   | 'neutral'
@@ -27,9 +30,15 @@ export type BadgeTone =
 
 export type BadgeSize = 'sm' | 'md'
 
-export interface BadgeProps {
+export type BadgeVariant = 'soft' | 'solid'
+
+export interface BadgeProps extends Omit<HTMLAttributes<HTMLSpanElement>, 'children'> {
   tone?: BadgeTone
   size?: BadgeSize
+  /** `soft` (výchozí) = světlé pozadí, `solid` = plná barva tónu a bílý text. */
+  variant?: BadgeVariant
+  /** Tečka před textem v barvě tónu; `pulse` = živý stav (pulzuje). */
+  dot?: boolean | 'pulse'
   icon?: ReactNode
   children: ReactNode
 }
@@ -47,16 +56,66 @@ const toneClass: Record<BadgeTone, string> = {
   brand: 'bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300',
 }
 
+const solidClass: Record<BadgeTone, string> = {
+  neutral: 'bg-neutral-500 text-white',
+  blue: 'bg-blue-500 text-white',
+  cyan: 'bg-cyan-500 text-white',
+  purple: 'bg-purple-500 text-white',
+  pink: 'bg-pink-500 text-white',
+  amber: 'bg-amber-500 text-white',
+  orange: 'bg-orange-500 text-white',
+  emerald: 'bg-emerald-500 text-white',
+  red: 'bg-red-500 text-white',
+  brand: 'bg-brand-500 text-white',
+}
+
+const dotClass: Record<BadgeTone, string> = {
+  neutral: 'bg-neutral-500',
+  blue: 'bg-blue-500',
+  cyan: 'bg-cyan-500',
+  purple: 'bg-purple-500',
+  pink: 'bg-pink-500',
+  amber: 'bg-amber-500',
+  orange: 'bg-orange-500',
+  emerald: 'bg-emerald-500',
+  red: 'bg-red-500',
+  brand: 'bg-brand-500',
+}
+
 const sizeClass: Record<BadgeSize, string> = {
   sm: 'px-1.5 py-0.5 text-2xs gap-0.5',
   md: 'px-2 py-0.5 text-xs gap-1',
 }
 
-export function Badge({ tone = 'neutral', size = 'md', icon, children }: BadgeProps) {
+export function Badge({
+  tone = 'neutral',
+  size = 'md',
+  variant = 'soft',
+  dot,
+  icon,
+  children,
+  className,
+  ...rest
+}: BadgeProps) {
+  const dotColor = variant === 'solid' ? 'bg-white' : dotClass[tone]
   return (
     <span
-      className={`inline-flex items-center font-medium rounded-md ${toneClass[tone]} ${sizeClass[size]}`}
+      {...rest}
+      className={clsx(
+        'inline-flex items-center font-medium rounded-md',
+        variant === 'solid' ? solidClass[tone] : toneClass[tone],
+        sizeClass[size],
+        className,
+      )}
     >
+      {dot && (
+        <span className="relative flex h-1.5 w-1.5 shrink-0" aria-hidden="true">
+          {dot === 'pulse' && (
+            <span className={clsx('absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping motion-reduce:animate-none', dotColor)} />
+          )}
+          <span className={clsx('relative inline-flex h-1.5 w-1.5 rounded-full', dotColor)} />
+        </span>
+      )}
       {icon}
       {children}
     </span>

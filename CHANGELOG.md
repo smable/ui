@@ -2,6 +2,48 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.30.0 — 2026-11-14 (display)
+
+### ✨ Zobrazení dat (fáze 3 auditu UI app.smable.cz)
+
+Zpětně kompatibilní: nové props jsou volitelné a dnešní volání `HeroCard`, `Badge` a `LoadingOverlay`
+se vykreslí stejně jako v 0.29.1 (ověřeno porovnáním SSR výstupu). Jediná změna výstupu jsou atributy
+`role="status"` a `aria-live="polite"` u `LoadingOverlay`.
+
+**Nové komponenty**
+- **`Card`** — rámeček obsahu: `rounded-xl`, okraj neutral-200/800, bílé/neutral-900 pozadí, bez stínu.
+  `title`, `description`, `icon` (čtverec 9×9 jako karty nastavení), `actions` (vpravo v záhlaví),
+  `header` `inline` / `bar` (šedý pruh s nadpisem velkými písmeny jako detail objednávky),
+  `padding` `none` / `md` / `lg` (0 / p-4 / p-6, výchozí md; u `bar` platí pro obsah pod pruhem),
+  `tone` `default` / `muted`, `onClick` (celá karta je `<button>` s focus ringem), `href` +
+  `linkComponent` (typ `ShellLink`, výchozí `<a>`), `selected` (okraj brand-500 + pozadí brand-50,
+  u tlačítka `aria-pressed`), `disabled`, `className`. Klikací karta nesmí uvnitř mít další ovládací prvky.
+- **`Delta`** — změna oproti minulému období: šipka a barva (růst emerald, pokles red, `invert` prohodí
+  barvy, šipka ukazuje skutečný směr). `value: number | null` (null nevykreslí nic, nula je šedá bez
+  šipky), `unit` `%` / `pp`, `suffix`, `size` `xs` / `sm`, `unitLabel` (výchozí „%“ a „p. b.“), `locale`
+  (výchozí `cs-CZ`), `fractionDigits` (výchozí 1). Čistá funkce `formatDelta` je exportovaná, s testy.
+- **`Skeleton`** — `className`, `width`, `height`, `rounded` `md` / `lg` / `xl` / `full`;
+  `bg-neutral-200 dark:bg-neutral-800 animate-pulse`, `aria-hidden`. Základ shodný s crm/helpdesk/partner.
+- **`KeyValueList` + `KeyValueRow`** — „popisek → hodnota“ jako `<dl>` s tmavým režimem. List:
+  `divided`, `tone` `plain` / `muted` (šedý box), `size` `sm` / `md`, `columns` 1–3 (mřížka pro
+  skládané řádky). Řádek: `emphasis` `default` / `strong` / `positive` / `negative` / `muted`,
+  `layout` `inline` / `stacked`, `icon`, `href`, `mono`. `PosKeyValueRow` zůstává beze změny.
+
+**Rozšíření**
+- **`HeroCard`**: `icon` je volitelná; `size` `lg` (výchozí, dnešní vzhled) / `sm` (KPI dlaždice: p-4,
+  hodnota text-2xl, ikona v tónovaném čtverci 40 px vpravo, rounded-xl); `iconTone` (`BadgeTone`);
+  `tone` `default` / `brand` / `positive` / `negative`; `valueTone` `default` / `positive` /
+  `negative` / `warning`; `subtitle: ReactNode`. `change` přijímá `{ value: number | null, label?,
+  unit?, invert?, isPositive? }` a nový tvar kreslí přes `Delta`. Dosavadní `{ value, label, isPositive }`
+  se u `lg` vykreslí přesně jako dřív (bez šipky, „+12%“, zelená/červená podle `isPositive`).
+  `highlight` je zastaralý alias pro **`tone="negative"`** (dnešní červená karta), ne pro `brand`:
+  používají ho poplachové karty (nízký sklad, po splatnosti, nepřiřazené leady), které musí zůstat červené.
+- **`Badge`**: `variant` `soft` (výchozí) / `solid` (plná barva tónu, bílý text), `dot` `true` / `'pulse'`
+  (tečka v barvě tónu, pulse = živý stav, respektuje `prefers-reduced-motion`), HTML atributy `<span>`
+  (`title`, `className`, `data-*`, `aria-*`).
+- **`LoadingOverlay`**: `fill` `viewport` (výchozí, `min-h-[80vh]`) / `container` (`py-12`, vyplní
+  rodiče), `role="status"` + `aria-live="polite"`. Exportovaný typ `LoadingOverlayProps`.
+
 ## 0.29.1 — 2026-11-14
 
 ### 🐛 Pagination: šipka výběru počtu na stránku
