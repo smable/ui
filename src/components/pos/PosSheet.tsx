@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { useOverlay } from '../overlay'
 
 export interface PosSheetProps {
   open: boolean
@@ -20,12 +21,9 @@ export interface PosSheetProps {
 export function PosSheet({ open, onClose, title, children, footer, closeLabel = 'Zavřít' }: PosSheetProps) {
   const panelRef = useRef<HTMLDivElement>(null)
   const [shown, setShown] = useState(false)
-  // Fokus, zámek posunu i Esc se nastavují jen při otevření/zavření. Kdyby efekt závisel na `onClose`
-  // (konzumenti ho píší inline), každé překreslení rodiče by vzalo fokus z pole uvnitř panelu.
-  const onCloseRef = useRef(onClose)
-  useEffect(() => {
-    onCloseRef.current = onClose
-  }, [onClose])
+  // Esc a zámek posunu přes sdílený useOverlay (zásobník vrstev, počítaný zámek). Fokus řeší
+  // efekt níže jen při otevření/zavření — závislost na inline `onClose` by brala fokus z pole.
+  useOverlay(open, { onEscape: onClose, restoreFocus: false })
 
   useEffect(() => {
     if (!open) {
@@ -37,16 +35,8 @@ export function PosSheet({ open, onClose, title, children, footer, closeLabel = 
       setShown(true)
       panelRef.current?.focus()
     })
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCloseRef.current()
-    }
-    document.addEventListener('keydown', onKey)
-    const overflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
     return () => {
       cancelAnimationFrame(frame)
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = overflow
       if (previous && document.contains(previous)) previous.focus()
     }
   }, [open])

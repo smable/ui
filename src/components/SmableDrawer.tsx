@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
+import { useOverlay } from './overlay'
 import { X } from 'lucide-react'
 import clsx from 'clsx'
 import { FieldVariantProvider } from './FieldVariantContext'
@@ -40,6 +41,8 @@ export interface SmableDrawerProps {
   largeTitle?: boolean
   /** Popis pod velkým nadpisem (jen s `largeTitle`). */
   description?: ReactNode
+  /** aria-label křížku v hlavičce. */
+  closeLabel?: string
 }
 
 export function SmableDrawer({
@@ -56,24 +59,16 @@ export function SmableDrawer({
   bodyFlush = false,
   largeTitle = false,
   description,
+  closeLabel = 'Zavřít',
 }: SmableDrawerProps) {
   // Hlidka hned pod velkym nadpisem: dokud je videt, hlavicka nazev neukazuje. IntersectionObserver
   // misto posluchace posunu — nepocita se pri kazdem pixelu a nezalezi na vysce nadpisu.
   const sentinel = useRef<HTMLDivElement>(null)
   const [scrolledPastTitle, setScrolledPastTitle] = useState(false)
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      document.body.style.overflow = prev
-    }
-  }, [open, onClose])
+  // Esc a zámek posunu sdílí s dialogy (useOverlay): Esc v dialogu nad drawerem zavře jen dialog
+  // a zámek přežije libovolné pořadí zavírání. Dřív efekt závisel na `onClose` a při každém
+  // překreslení rodiče s inline funkcí si znovu uložil `overflow` — i `hidden` od dialogu.
+  useOverlay(open, { onEscape: onClose })
 
   useEffect(() => {
     if (!open || !largeTitle || !title) {
@@ -123,7 +118,7 @@ export function SmableDrawer({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Zavřít"
+            aria-label={closeLabel}
             className="-ml-1.5 p-2 rounded-lg text-neutral-500 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
           >
             <X className="w-5 h-5" />

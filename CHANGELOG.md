@@ -2,6 +2,18 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.28.1 — 2026-11-14
+
+### 🐛 Overlaye: zámek posunu a Esc přes všechny vrstvy
+
+- **Stránka už nezůstane bez posuvníku** po zavření `ConfirmDialog`/`SmableDialog` otevřeného nad
+  `SmableDrawer`. Drawer, dialogy i `PosSheet` sdílí jeden počítaný zámek posunu (`scroll-lock`): první
+  vrstva uloží původní `overflow`, poslední ho vrátí, pořadí zavírání nehraje roli. Dřív si drawer při
+  každém překreslení rodiče (inline `onClose`) uložil `hidden` od dialogu a po zavření ho vrátil.
+- **Esc zavře jen nejvrchnější vrstvu**: `SmableDrawer` a `PosSheet` jdou přes `useOverlay` jako dialogy,
+  takže Esc v potvrzení nad drawerem zavře jen potvrzení. `SmableDrawer` navíc po zavření vrací fokus.
+- **`SmableDrawer closeLabel`** (výchozí „Zavřít“): popisek křížku pro čtečky, např. v angličtině.
+
 ## 0.28.0 — 2026-11-13
 
 ### ✨ Overlaye a hlášky (fáze 1 auditu UI app.smable.cz)

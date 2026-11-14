@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { scrollLock } from './scroll-lock'
 
 export interface UseOverlayOptions {
   /** Esc nad nejvrchnějším otevřeným overlayem. Bez handleru Esc nic nedělá. */
@@ -42,14 +43,13 @@ export function useOverlay(
     }
     document.addEventListener('keydown', onKey)
 
-    const overflow = document.body.style.overflow
-    if (lockScroll) document.body.style.overflow = 'hidden'
+    if (lockScroll) scrollLock.acquire()
 
     return () => {
       document.removeEventListener('keydown', onKey)
       const i = stack.indexOf(token)
       if (i !== -1) stack.splice(i, 1)
-      if (lockScroll) document.body.style.overflow = overflow
+      if (lockScroll) scrollLock.release()
       if (restoreFocus && previous && document.contains(previous)) previous.focus()
     }
   }, [open, lockScroll, restoreFocus])
