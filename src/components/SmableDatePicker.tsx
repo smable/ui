@@ -70,6 +70,8 @@ type VariantProps =
       error?: string
       /** `large` (výchozí) 64 px, `medium` 48 px. */
       size?: 'medium' | 'large'
+      /** Nápovědu pod polem umí jen `variant="default"`. */
+      hint?: never
     }
   | {
       /** `default`: popisek nad polem jako `Input variant="default"`. */
