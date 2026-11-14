@@ -70,7 +70,7 @@ export function Pagination({
           <select
             value={limit}
             onChange={(e) => onLimitChange(Number(e.target.value))}
-            className="h-8 px-3 text-sm bg-neutral-50 dark:bg-neutral-800 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-neutral-600 dark:text-neutral-400"
+            className="h-8 pl-3 pr-8 text-sm bg-neutral-50 dark:bg-neutral-800 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-neutral-600 dark:text-neutral-400"
           >
             {limitOptions.map(opt => (
               <option key={opt} value={opt}>{l.perPage(opt)}</option>

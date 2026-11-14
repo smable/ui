@@ -2,6 +2,12 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.29.1 — 2026-11-14
+
+### 🐛 Pagination: šipka výběru počtu na stránku
+
+- `<select>` „20 položek“ má `pr-8`. Šipka, kterou kreslí `@tailwindcss/forms`, se jinak překrývala s textem.
+
 ## 0.29.0 — 2026-11-14
 
 ### ✨ Tlačítka a formuláře (fáze 2 auditu UI app.smable.cz)
