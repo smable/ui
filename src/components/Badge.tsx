@@ -102,7 +102,7 @@ export function Badge({
     <span
       {...rest}
       className={clsx(
-        'inline-flex items-center font-medium rounded-md',
+        'inline-flex items-center font-medium rounded-md whitespace-nowrap',
         variant === 'solid' ? solidClass[tone] : toneClass[tone],
         sizeClass[size],
         className,

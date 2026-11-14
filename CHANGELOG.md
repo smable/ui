@@ -38,6 +38,7 @@ se vykreslí stejně jako v 0.29.1 (ověřeno porovnáním SSR výstupu). Jedin�
   se u `lg` vykreslí přesně jako dřív (bez šipky, „+12%“, zelená/červená podle `isPositive`).
   `highlight` je zastaralý alias pro **`tone="negative"`** (dnešní červená karta), ne pro `brand`:
   používají ho poplachové karty (nízký sklad, po splatnosti, nepřiřazené leady), které musí zůstat červené.
+- **`Badge`**: text se nezalamuje (`whitespace-nowrap`) — v úzkém sloupci tabulky se dřív „Připravuje se“ rozpadlo na dva řádky.
 - **`Badge`**: `variant` `soft` (výchozí) / `solid` (plná barva tónu, bílý text), `dot` `true` / `'pulse'`
   (tečka v barvě tónu, pulse = živý stav, respektuje `prefers-reduced-motion`), HTML atributy `<span>`
   (`title`, `className`, `data-*`, `aria-*`).
