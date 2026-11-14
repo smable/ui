@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 import clsx from 'clsx'
 
-export type TextButtonTone = 'brand' | 'neutral' | 'danger'
+export type TextButtonTone = 'brand' | 'neutral' | 'danger' | 'inherit'
 export type TextButtonSize = 'xs' | 'sm' | 'inherit'
 
 /**
@@ -9,7 +9,7 @@ export type TextButtonSize = 'xs' | 'sm' | 'inherit'
  * pro přechod na jinou stránku patří `<a>` / router link.
  */
 export interface TextButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  /** Výchozí `brand`. */
+  /** Výchozí `brand`. `inherit` převezme barvu okolního textu (odkaz v barevném banneru). */
   tone?: TextButtonTone
   /** `inherit` (výchozí) převezme velikost písma z okolního textu. */
   size?: TextButtonSize
@@ -24,6 +24,7 @@ const TONE: Record<TextButtonTone, string> = {
   brand: 'text-brand-600 dark:text-brand-400 enabled:hover:text-brand-700 dark:enabled:hover:text-brand-300',
   neutral: 'text-neutral-600 dark:text-neutral-400 enabled:hover:text-neutral-900 dark:enabled:hover:text-white',
   danger: 'text-red-600 dark:text-red-400 enabled:hover:text-red-700 dark:enabled:hover:text-red-300',
+  inherit: 'text-current',
 }
 
 const SIZE: Record<TextButtonSize, string> = {

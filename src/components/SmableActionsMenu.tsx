@@ -43,6 +43,8 @@ export interface SmableActionsMenuProps {
   active?: boolean
   /** Menu pod spouštěčem (výchozí), nebo nad ním (uživatelské menu dole v liště). */
   placement?: 'bottom' | 'top'
+  /** Strop výšky panelu (číslo = px), delší seznam se posouvá. Výchozí bez omezení. */
+  maxHeight?: number | string
 }
 
 const SIZE: Record<SmableButtonSize, string> = {
@@ -73,6 +75,7 @@ export function SmableActionsMenu({
   icon,
   active = false,
   placement = 'bottom',
+  maxHeight,
 }: SmableActionsMenuProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -178,10 +181,12 @@ export function SmableActionsMenu({
           <div
             role="menu"
             aria-label={label}
+            style={maxHeight !== undefined ? { maxHeight } : undefined}
             className={clsx(
               'absolute min-w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50',
               placement === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
-              align === 'right' ? 'right-0' : 'left-0'
+              align === 'right' ? 'right-0' : 'left-0',
+              maxHeight !== undefined && 'overflow-y-auto'
             )}
           >
             {items.map((item, i) => {

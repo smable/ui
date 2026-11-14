@@ -74,7 +74,7 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 ## Components
 
 - `SmableButton` — primary / secondary / ghost / danger / danger-ghost variants, sizes xs–lg, loading state, `iconOnly` (square, needs `aria-label`), `pressed` (toolbar toggle)
-- `TextButton` — link-looking button (`tone` brand / neutral / danger, `size`, `icon`, `iconRight`, `underline`)
+- `TextButton` — link-looking button (`tone` brand / neutral / danger / inherit, `size`, `icon`, `iconRight`, `underline`)
 - `Chip` — interactive pill for filters (`selected`, `tone`, `count`, `icon`, `onRemove`, `size`); `Badge` stays non-interactive
 - `SmableInput` — floating-label text input
 - `SmableSelect` — floating-label native select
@@ -85,15 +85,17 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 - `ConfirmDialog` — confirmation of an irreversible action (`busy`, `error`, `children`, `confirmDisabled`)
 - `ToastProvider` + `useToast` — toasts (`success` / `error` / `info`, `duration`, `action`, `max`, `position`)
 - `AlertBanner` — inline banner `success` / `warning` / `error` / `info` with optional `title`, `action`, dismiss
-- `SmableActionsMenu` — dropdown action menu; `trigger` default / icon / toolbar / custom element, `placement`, items with `selected` and `meta`
+- `SmableActionsMenu` — dropdown action menu; `trigger` default / icon / toolbar / custom element, `placement`, `maxHeight`, items with `selected` and `meta`
 - `Input` / `Select` / `Textarea` — default or floating variant (`FieldVariantContext`), `size="small"` for table cells, `hint`, `error` (string or `true`)
-- `Combobox` — autocomplete over local `options` or `loadOptions` (debounce, abort), `onCreate`, `clearOnSelect`, `renderOption`, keyboard + listbox ARIA
+- `Combobox` — autocomplete over local `options` or `loadOptions` (debounce, abort), `onCreate`, `clearOnSelect`, `renderOption`, keyboard + listbox ARIA;
+  free text via `inputValue` / `onInputChange` / `freeSolo`, `openOnFocus`, `openOnEnter`, `clearable`, `onKeyDown`
 - `FormSection` — titled group of form fields, optional `description`, `action`, `collapsible`
 - `StatusTabs` — tabs / segmented control (`count` optional, `size`, `fullWidth`, `icon`); falls back to `<select>` when too wide
 - `Pagination` — range text, page size, prev / next, optional `showPageNumbers` (`pageWindow` helper)
 - `SearchBar` — search field with clear button, `shortcut` hint, `onEnter`, `size`, `forwardRef`
 - `DataTable` — TanStack tabulka: řazení, filtry, stránkování (i serverové), hromadný výběr podle id
-  (`getRowId`, `canSelectRow`, Shift + klik, menu Stránku / Vše podle filtru), lepivá hlavička, hustota, export
+  (`getRowId`, `canSelectRow`, Shift + klik, menu Stránku / Vše podle filtru), lepivá hlavička, hustota, export;
+  `appearance="plain"` (bez karty, do detailů a dialogů), `sortable={false}`, `loading` (skeleton, `aria-busy`)
 - `DataTableBulkSelect`, `DataTableDensityMenu`, `DataTableColumnsMenu`, `DataTableExport` — díly DataTable pro vlastní TanStack instance
 - `Checkbox` — včetně `indeterminate` a `disabled`; `label`, `description`, `bordered`, `onCheckedChange`
 - `Switch` / `Toggle` — přepínač (`size`, `tone`, `disabled`) a řádek s popiskem nad ním

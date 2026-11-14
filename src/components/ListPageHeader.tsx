@@ -1,16 +1,36 @@
 import { Children, Fragment, isValidElement, useEffect, useId, useRef, useState } from 'react'
 import type { MouseEvent as ReactMouseEvent, ReactElement, ReactNode } from 'react'
-import { MoreHorizontal, Plus } from 'lucide-react'
+import { ArrowLeft, MoreHorizontal, Plus } from 'lucide-react'
 import clsx from 'clsx'
+import type { ShellLink } from './app-shell/types'
+import { DefaultShellLink } from './app-shell/link'
 
-interface ListPageHeaderProps {
+/** Odkaz „Zpět“ nad hlavičkou detailu. S `href` se vykreslí jako odkaz, jinak jako tlačítko. */
+export interface ListPageHeaderBack {
+  label: string
+  onClick?: () => void
+  href?: string
+}
+
+export interface ListPageHeaderProps {
   title: string
   subtitle?: string
   onAdd?: () => void
   addLabel?: string
   actions?: ReactNode
   moreLabel?: string
+  back?: ListPageHeaderBack
+  /** Komponenta odkazu pro `back.href` (např. react-router `Link`), výchozí `<a>`. */
+  linkComponent?: ShellLink
+  /** Vedle titulku, např. odznak stavu. */
+  titleAddon?: ReactNode
 }
+
+const backClass = clsx(
+  'inline-flex items-center gap-1.5 text-sm font-medium rounded-sm transition-colors',
+  'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white',
+  'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500'
+)
 
 function countActions(node: ReactNode): number {
   return Children.toArray(node).reduce<number>((sum, child) => {
@@ -30,6 +50,9 @@ export function ListPageHeader({
   addLabel = 'Přidat',
   actions,
   moreLabel = 'Další akce',
+  back,
+  linkComponent: Link = DefaultShellLink,
+  titleAddon,
 }: ListPageHeaderProps) {
   const actionCount = countActions(actions)
   const collapse = actionCount > 0 && actionCount + (onAdd ? 1 : 0) >= 2
@@ -66,7 +89,9 @@ export function ListPageHeader({
     setOpen(false)
   }
 
-  return (
+  const heading = <h1 className="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">{title}</h1>
+
+  const header = (
     <div
       className={clsx(
         'flex gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between',
@@ -74,7 +99,14 @@ export function ListPageHeader({
       )}
     >
       <div className="min-w-0">
-        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">{title}</h1>
+        {titleAddon ? (
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            {heading}
+            {titleAddon}
+          </div>
+        ) : (
+          heading
+        )}
         {subtitle && (
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{subtitle}</p>
         )}
@@ -137,6 +169,33 @@ export function ListPageHeader({
           </button>
         )}
       </div>
+    </div>
+  )
+
+  if (!back) return header
+
+  const backContent = (
+    <>
+      <ArrowLeft aria-hidden className="w-4 h-4" />
+      {back.label}
+    </>
+  )
+
+  // Odkaz nad celou hlavičkou (jako detaily v app), akce vpravo zůstávají zarovnané k titulku.
+  return (
+    <div>
+      <div className="mb-4">
+        {back.href !== undefined ? (
+          <Link href={back.href} onClick={back.onClick} className={backClass}>
+            {backContent}
+          </Link>
+        ) : (
+          <button type="button" onClick={back.onClick} className={backClass}>
+            {backContent}
+          </button>
+        )}
+      </div>
+      {header}
     </div>
   )
 }
