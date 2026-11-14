@@ -17,7 +17,7 @@ je shodné, liší se jen třídy `rounded-*` a `shadow-sm` karty).
 - Typ **`DataTableColumnMeta<T>`** = `DataTableColumnExportMeta<T>` + `align` + `fill` (původní typ
   zůstává). Konzument s augmentací `ColumnMeta` (app `src/types/tanstack-table.d.ts`) ji přepne na
   `extends DataTableColumnMeta<TData>`. Typy `DataTableAlign`, `DataTableMobileBreakpoint`.
-- **`pagination`** (`{ labels?, limitOptions?, showPageNumbers? }`, typ `DataTablePaginationOptions`) —
+- **`pagination`** (`{ labels?, limitOptions?, showPageNumbers? }`, typ `DataTablePaginationOptions`; `limitOptions` výchozí 10, 20, 50, 100 jako vestavěné) —
   místo vestavěného stránkování se v kartě vykreslí knihovní `Pagination`: stránka a velikost ze stavu
   tabulky, změny přes `onPaginationChange` (nebo vnitřní stav + `persistKey`), celkem `totalCount`
   u `manualPagination`, jinak počet řádků po filtru. Je vidět, kdykoli je aspoň jeden záznam (i na
@@ -40,7 +40,7 @@ je shodné, liší se jen třídy `rounded-*` a `shadow-sm` karty).
 - **`emptyAction`** — akce pod prázdným stavem bez filtru (např. „Přidat položku“).
 - **`labels.moreFilters`** (výchozí „Více filtrů“, dřív natvrdo i v `aria-label`) a **`labels.columns`**
   (`{ label?, title? }` pro menu sloupců u `columnToggle`).
-- Oprava: řízený `columnOrder` se použije i bez `draggableColumns` a `persistKey` (dřív se tiše ignoroval).
+- Oprava: řízený `columnOrder` se použije i bez `draggableColumns` a `persistKey` (dřív se tiše ignoroval; žádný konzument ho dnes takto nepředává).
 - `DataTableColumnsMenu` přepíná sloupec podle aktuálního stavu tabulky (`toggleVisibility()`), ne podle
   stavu z posledního vykreslení menu.
 - Známé: vestavěné stránkování DataTable má dál natvrdo češtinu („Zobrazeno … z“, „Stránka … z“,

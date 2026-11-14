@@ -71,7 +71,7 @@ export interface DataTableColumnMeta<T = any> extends DataTableColumnExportMeta<
 /** Knihovní `Pagination` místo vestavěného stránkování — viz prop `pagination`. */
 export interface DataTablePaginationOptions {
   labels?: Partial<PaginationLabels>
-  /** Volby počtu na stránku (výchozí jako `Pagination`: 20, 50, 100). */
+  /** Volby počtu na stránku (výchozí jako vestavěné stránkování: 10, 20, 50, 100). */
   limitOptions?: number[]
   /** Čísla stránek mezi šipkami (na mobilu zůstává „3 / 12“). */
   showPageNumbers?: boolean
@@ -1247,7 +1247,7 @@ export function DataTable<T>({
           limit={currentPageSize}
           onPageChange={p => table.setPageIndex(p - 1)}
           onLimitChange={size => table.setPageSize(size)}
-          limitOptions={pagination?.limitOptions}
+          limitOptions={pagination?.limitOptions ?? [10, 20, 50, 100]}
           showPageNumbers={pagination?.showPageNumbers}
           labels={pagination?.labels}
         />
