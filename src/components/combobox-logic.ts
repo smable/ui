@@ -42,3 +42,29 @@ export function highlightRange(text: string, query: string, normalize: Normalize
   const start = haystack.indexOf(q)
   return start < 0 ? null : [start, start + q.length]
 }
+
+export interface ComboboxTextMode {
+  clearOnSelect: boolean
+  freeSolo: boolean
+}
+
+/**
+ * Opuštění pole: `clear-value` (text vymazaný, hodnota se zruší), `revert` (text zpět na vybranou
+ * hodnotu, prázdný bez hodnoty), `none`. S `freeSolo` rozepsaný text zůstává, s `clearOnSelect` vždy.
+ */
+export function comboboxBlurAction(text: string, hasValue: boolean, mode: ComboboxTextMode): 'none' | 'clear-value' | 'revert' {
+  if (mode.clearOnSelect) return 'none'
+  if (text.trim() === '' && hasValue) return 'clear-value'
+  return mode.freeSolo ? 'none' : 'revert'
+}
+
+/** Esc u otevřeného seznamu vrátí text vybrané hodnoty — kromě `clearOnSelect` a `freeSolo`. */
+export function comboboxEscapeReverts(mode: ComboboxTextMode): boolean {
+  return !mode.clearOnSelect && !mode.freeSolo
+}
+
+/** Enter: vybrat aktivní položku otevřeného seznamu, otevřít zavřený (`openOnEnter`), jinak nic (formulář se odešle). */
+export function comboboxEnterAction(open: boolean, activeEnabled: boolean, openOnEnter: boolean): 'choose' | 'open' | 'none' {
+  if (open) return activeEnabled ? 'choose' : 'none'
+  return openOnEnter ? 'open' : 'none'
+}

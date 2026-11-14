@@ -2,6 +2,7 @@
 
 All notable changes to `@smable/ui`.
 
+<<<<<<< HEAD
 ## 0.30.0 — 2026-11-14 (display)
 
 ### ✨ Zobrazení dat (fáze 3 auditu UI app.smable.cz)
@@ -44,6 +45,38 @@ se vykreslí stejně jako v 0.29.1 (ověřeno porovnáním SSR výstupu). Jedin�
 - **`LoadingOverlay`**: `fill` `viewport` (výchozí, `min-h-[80vh]`) / `container` (`py-12`, vyplní
   rodiče), `role="status"` + `aria-live="polite"`. Exportovaný typ `LoadingOverlayProps`.
 
+=======
+## 0.30.0 — 2026-11-14 (data)
+
+### ✨ Tabulky a hlavičky detailů (fáze 3 auditu UI app.smable.cz) + mezery z fáze 2
+
+Zpětně kompatibilní: všechny nové props jsou volitelné a bez nich se komponenty vykreslí i chovají
+stejně jako v 0.29.1 (ověřeno porovnáním SSR i otevřených stavů v jsdom).
+
+- **`DataTable`**: `appearance` `card` (výchozí, dosavadní karta) / `plain` (bez karty a stínu,
+  odsazení `px-3 py-2`, pro malé tabulky v detailech, dialozích a drawerech; export, sloupce, hustota,
+  výběr, patička, lepivá hlavička i `maxBodyHeight` fungují v obou). `sortable={false}` vypne řazení
+  celé tabulky (i uložené). `loading` vykreslí skeletonové řádky (`animate-pulse`, podle počtu
+  sloupců) a `aria-busy` na tabulce, prázdný stav se během načítání neukáže; počet řádků `loadingRows`,
+  jinak kolik je jich na stránce, jinak 5. Typ `DataTableAppearance`.
+- **`ListPageHeader`**: `back` (`{ label, onClick?, href? }`, odkaz „Zpět“ s šipkou nad hlavičkou
+  jako v detailech app; s `href` odkaz, jinak tlačítko), `linkComponent` (router link pro `back.href`,
+  typ `ShellLink`), `titleAddon` (např. odznak vedle titulku). Exportované typy `ListPageHeaderProps`,
+  `ListPageHeaderBack`.
+- **`Combobox`**: řízený text `inputValue` + `onInputChange(text, reason)` (`input` / `select` /
+  `clear` / `reset`, nezávislý na `value`), `freeSolo` (blur ani Esc nevrací rozepsaný text),
+  `openOnFocus` (výchozí `true`), `openOnEnter` (Enter otevře zavřený seznam), `clearable` (výchozí
+  `true`; s `false` je vpravo `suffix` i u vybrané hodnoty), `onKeyDown` (před vlastní obsluhou,
+  `preventDefault()` ji přeskočí). Pokryje lokální `ElementCombobox` příjemky v app — mapování je
+  v komentáři u komponenty. Typ `ComboboxInputChangeReason`.
+- **`SmableActionsMenu`**: `maxHeight` (číslo = px nebo CSS délka), delší menu se posouvá.
+  Nahrazuje hack `[&_[role=menu]]:max-h-64`.
+- **`SelectionAction`**: `disabled`, `iconOnlyOnMobile` (pod `sm` jen ikona, text jako aria-label).
+  Exportovaný typ `SelectionActionProps`.
+- **`TextButton`**: `tone="inherit"` — barva z okolního textu (`text-current`), pro odkazy v barevných
+  bannerech.
+
+>>>>>>> feat/audit-faze3-data
 ## 0.29.1 — 2026-11-14
 
 ### 🐛 Pagination: šipka výběru počtu na stránku

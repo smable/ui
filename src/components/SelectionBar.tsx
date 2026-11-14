@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import clsx from 'clsx'
 import { BulkActionsBar } from './BulkActionsBar'
 
 interface SelectionBarProps {
@@ -21,18 +22,31 @@ export function SelectionBar({ count, label = 'vybráno', children, onClear }: S
   )
 }
 
+export interface SelectionActionProps {
+  icon?: ReactNode
+  label: string
+  onClick: () => void
+  danger?: boolean
+  disabled?: boolean
+  /** Pod `sm` jen ikona, `label` zůstane jako aria-label. */
+  iconOnlyOnMobile?: boolean
+}
+
 /** Standardní tlačítko do tmavé lišty hromadných akcí (SelectionBar / BulkActionsBar). */
-export function SelectionAction({ icon, label, onClick, danger }: {
-  icon?: ReactNode; label: string; onClick: () => void; danger?: boolean
-}) {
+export function SelectionAction({ icon, label, onClick, danger, disabled, iconOnlyOnMobile }: SelectionActionProps) {
   return (
     <button type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-lg transition-colors hover:bg-neutral-800 dark:hover:bg-neutral-200 ${
-        danger ? 'text-red-400 dark:text-red-600' : ''
-      }`}
+      disabled={disabled}
+      aria-label={iconOnlyOnMobile ? label : undefined}
+      className={clsx(
+        'inline-flex items-center gap-1.5 h-8 px-3 text-sm font-medium rounded-lg transition-colors',
+        disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-800 dark:hover:bg-neutral-200',
+        danger && 'text-red-400 dark:text-red-600'
+      )}
     >
-      {icon}{label}
+      {icon}
+      {iconOnlyOnMobile ? <span className="hidden sm:inline">{label}</span> : label}
     </button>
   )
 }

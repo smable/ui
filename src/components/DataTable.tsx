@@ -27,6 +27,7 @@ import { DataTableBulkSelect } from './DataTableBulkSelect'
 import { DataTableDensityMenu, DATA_TABLE_DENSITY_CLASS, type DataTableDensity, type DataTableDensityLabels } from './DataTableDensityMenu'
 import { Checkbox } from './Checkbox'
 import { columnDropSide, moveColumn, type ColumnDropSide } from './column-reorder'
+import { skeletonBarWidth, skeletonRowCount } from './data-table-skeleton'
 import { usePersistentTableState, type UsePersistentTableStateOptions } from '../lib/usePersistentTableState'
 import { normalize } from '../lib/search'
 
@@ -67,6 +68,19 @@ const DEFAULT_LABELS: DataTableLabels = {
   previousPage: 'Předchozí stránka',
   nextPage: 'Další stránka',
   density: {},
+}
+
+/**
+ * `card` — samostatná tabulka na stránce (karta se stínem, výchozí).
+ * `plain` — bez karty a stínu, menší odsazení; pro malé tabulky v detailech, dialozích a drawerech.
+ */
+export type DataTableAppearance = 'card' | 'plain'
+
+/** Svislý padding buňky ve vzhledu `plain` (`normal` = py-2). */
+const PLAIN_DENSITY_CLASS: Record<DataTableDensity, string> = {
+  compact: 'py-1.5',
+  normal: 'py-2',
+  relaxed: 'py-3',
 }
 
 /** Klik nebo klávesa v ovládacím prvku řádku nesmí zároveň otevřít detail řádku. */
@@ -186,6 +200,14 @@ interface DataTableProps<T> {
   announceSelection?: boolean
 
   // Display
+  /** Výchozí `card`. */
+  appearance?: DataTableAppearance
+  /** `false` vypne řazení celé tabulky (i uložené řazení z `persistKey`). Výchozí `true`. */
+  sortable?: boolean
+  /** Místo řádků skeleton (`animate-pulse`), tabulka má `aria-busy`. Prázdný stav se během načítání neukáže. */
+  loading?: boolean
+  /** Počet skeletonových řádků; bez něj tolik, kolik je řádků na stránce, jinak 5. */
+  loadingRows?: number
   /** Hlavička drží při svislém posunu; výšku těla omezuje `maxBodyHeight`. */
   stickyHeader?: boolean
   maxBodyHeight?: string
@@ -294,6 +316,10 @@ export function DataTable<T>({
   allFilteredCount,
   onSelectAllFiltered,
   announceSelection = true,
+  appearance = 'card',
+  sortable = true,
+  loading = false,
+  loadingRows,
   stickyHeader = false,
   maxBodyHeight = '60vh',
   density: externalDensity,
@@ -335,7 +361,9 @@ export function DataTable<T>({
   const [internalDensity, setInternalDensity] = useState<DataTableDensity>('normal')
   const density = externalDensity ?? internalDensity
   const setDensity = onDensityChange ?? setInternalDensity
-  const cellPadding = DATA_TABLE_DENSITY_CLASS[density]
+  const plain = appearance === 'plain'
+  const cellPadding = (plain ? PLAIN_DENSITY_CLASS : DATA_TABLE_DENSITY_CLASS)[density]
+  const cellX = plain ? 'px-3' : 'px-4 first:pl-6 last:pr-6'
   // Kotva pro Shift + klik — id naposledy přepnutého řádku.
   const lastToggledRef = useRef<string | null>(null)
 
@@ -518,6 +546,7 @@ export function DataTable<T>({
       return terms.some(term => normalizedValue.includes(term))
     },
     manualSorting,
+    ...(sortable ? {} : { enableSorting: false }),
     ...(manualPagination
       ? {
           manualPagination: true,
@@ -585,6 +614,7 @@ export function DataTable<T>({
   const selectableTotal = manualPagination
     ? (allFilteredCount ?? totalCount ?? table.getRowModel().rows.length)
     : table.getFilteredRowModel().rows.filter(r => r.getCanSelect()).length
+  const skeletonCount = skeletonRowCount(loadingRows, table.getRowModel().rows.length, currentPageSize)
   const rangeFrom = currentPage * currentPageSize + 1
   const rangeTo = manualPagination
     ? currentPage * currentPageSize + table.getRowModel().rows.length
@@ -712,12 +742,12 @@ export function DataTable<T>({
         </div>
       )}
 
-    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
+    <div className={plain ? undefined : "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm"}>
       <div
         className={stickyHeader ? "overflow-auto" : "overflow-x-auto"}
         style={stickyHeader ? { maxHeight: maxBodyHeight } : undefined}
       >
-        <table className="w-full" style={fixedLayout ? { tableLayout: 'fixed' } : undefined}>
+        <table className="w-full" style={fixedLayout ? { tableLayout: 'fixed' } : undefined} aria-busy={loading || undefined}>
           {/* Header */}
           {/* Lepivá je celá hlavička (i řádek filtrů); pozadí proto musí být neprůhledné. */}
           <thead className={clsx(stickyHeader && "sticky top-0 z-10 shadow-[0_1px_0_rgb(229_229_229)] dark:shadow-[0_1px_0_rgb(38_38_38)]")}>
@@ -725,14 +755,16 @@ export function DataTable<T>({
               <tr key={headerGroup.id} className="border-b border-neutral-100 dark:border-neutral-800">
                 {headerGroup.headers.map(header => {
                   const canDrag = draggableColumns && header.column.id !== 'select' && header.column.id !== 'actions'
-                  const sorted = header.column.getIsSorted()
+                  const sorted = sortable ? header.column.getIsSorted() : false
                   return (
                     <th
                       key={header.id}
                       aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
                       className={clsx(
-                        "px-4 py-3.5 text-left first:pl-6 last:pr-6 transition-all group",
-                        stickyHeader ? "bg-neutral-50 dark:bg-neutral-800" : "bg-neutral-50/80 dark:bg-neutral-800/40",
+                        plain ? "px-3 py-2 text-left transition-all group" : "px-4 py-3.5 text-left first:pl-6 last:pr-6 transition-all group",
+                        plain
+                          ? stickyHeader && "bg-white dark:bg-neutral-900"
+                          : stickyHeader ? "bg-neutral-50 dark:bg-neutral-800" : "bg-neutral-50/80 dark:bg-neutral-800/40",
                         draggedColumn === header.column.id && "opacity-50 bg-brand-100 dark:bg-brand-900/30",
                         dropIndicatorClass(header.column.id)
                       )}
@@ -781,7 +813,7 @@ export function DataTable<T>({
                 {table.getHeaderGroups()[0]?.headers.map(header => (
                   <th
                     key={header.id}
-                    className="px-4 py-2.5 first:pl-6 last:pr-6"
+                    className={plain ? "px-3 py-2" : "px-4 py-2.5 first:pl-6 last:pr-6"}
                     style={fixedLayout ? { width: header.getSize(), minWidth: header.getSize() } : undefined}
                   >
                     {header.column.getCanFilter() ? (
@@ -797,9 +829,27 @@ export function DataTable<T>({
 
           {/* Body */}
           <tbody>
-            {table.getRowModel().rows.length === 0 ? (
+            {loading ? (
+              Array.from({ length: skeletonCount }, (_, r) => (
+                <tr
+                  key={`skeleton-${r}`}
+                  aria-hidden
+                  className={clsx("animate-pulse", r !== skeletonCount - 1 && "border-b border-neutral-100 dark:border-neutral-800/50")}
+                >
+                  {table.getVisibleLeafColumns().map((column, c) => (
+                    <td
+                      key={column.id}
+                      className={clsx(cellX, cellPadding)}
+                      style={fixedLayout ? { width: column.getSize(), minWidth: column.getSize() } : undefined}
+                    >
+                      <div className={clsx("h-4 rounded bg-neutral-200 dark:bg-neutral-800", column.id === 'select' ? "w-4" : skeletonBarWidth(r, c))} />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : table.getRowModel().rows.length === 0 ? (
               <tr>
-                <td colSpan={table.getVisibleLeafColumns().length} className="px-4 py-16 text-center">
+                <td colSpan={table.getVisibleLeafColumns().length} className={plain ? "px-3 py-10 text-center" : "px-4 py-16 text-center"}>
                   <div className="flex flex-col items-center">
                     {emptyIcon && (
                       <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-400">
@@ -851,7 +901,7 @@ export function DataTable<T>({
                   {row.getVisibleCells().map(cell => (
                     <td
                       key={cell.id}
-                      className={clsx("px-4 first:pl-6 last:pr-6", cellPadding, dropIndicatorClass(cell.column.id))}
+                      className={clsx(cellX, cellPadding, dropIndicatorClass(cell.column.id))}
                       style={fixedLayout ? { width: cell.column.getSize(), minWidth: cell.column.getSize() } : undefined}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -877,7 +927,7 @@ export function DataTable<T>({
                       <td
                         key={header.id}
                         colSpan={header.colSpan}
-                        className="px-4 py-4 first:pl-6 last:pr-6 font-medium text-neutral-700 dark:text-neutral-300"
+                        className={clsx(plain ? "px-3 py-2" : "px-4 py-4 first:pl-6 last:pr-6", "font-medium text-neutral-700 dark:text-neutral-300")}
                         style={fixedLayout ? { width: header.getSize(), minWidth: header.getSize() } : undefined}
                       >
                         {header.isPlaceholder
@@ -901,7 +951,7 @@ export function DataTable<T>({
 
       {/* Pagination */}
       {showPagination && (
-        <div className="px-6 py-4 border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className={clsx(plain ? "px-3 py-3" : "px-6 py-4", "border-t border-neutral-100 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-3")}>
           <div className="flex items-center gap-4">
             {totalRows !== undefined ? (
               <span className="text-sm text-neutral-500">

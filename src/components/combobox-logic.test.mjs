@@ -1,6 +1,15 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { canCreateOption, comboboxQuery, firstEnabled, highlightRange, stepActive } from './combobox-logic.ts'
+import {
+  canCreateOption,
+  comboboxBlurAction,
+  comboboxEnterAction,
+  comboboxEscapeReverts,
+  comboboxQuery,
+  firstEnabled,
+  highlightRange,
+  stepActive,
+} from './combobox-logic.ts'
 import { normalize, smartFilter } from '../lib/search.ts'
 
 const none = () => false
@@ -68,4 +77,43 @@ test('default filter (smartFilter) matches label and description, all words', ()
   assert.deepEqual(smartFilter(options, '0,5', text).map((o) => o.value), [2])
   assert.deepEqual(smartFilter(options, 'coko', text).map((o) => o.value), [3])
   assert.equal(smartFilter(options, '', text).length, 3)
+})
+
+const plain = { clearOnSelect: false, freeSolo: false }
+const freeSolo = { clearOnSelect: false, freeSolo: true }
+const clearOnSelect = { clearOnSelect: true, freeSolo: false }
+
+test('blur without freeSolo keeps the old behaviour: revert text, empty text clears the value', () => {
+  assert.equal(comboboxBlurAction('Káv', true, plain), 'revert')
+  assert.equal(comboboxBlurAction('neznámé', false, plain), 'revert')
+  assert.equal(comboboxBlurAction('', true, plain), 'clear-value')
+  assert.equal(comboboxBlurAction('   ', true, plain), 'clear-value')
+  assert.equal(comboboxBlurAction('', false, plain), 'revert')
+})
+
+test('blur with freeSolo keeps typed text, empty text still clears the value', () => {
+  assert.equal(comboboxBlurAction('Nová surovina', false, freeSolo), 'none')
+  assert.equal(comboboxBlurAction('Káv', true, freeSolo), 'none')
+  assert.equal(comboboxBlurAction('', true, freeSolo), 'clear-value')
+  assert.equal(comboboxBlurAction('', false, freeSolo), 'none')
+})
+
+test('blur with clearOnSelect never touches text or value', () => {
+  assert.equal(comboboxBlurAction('', true, clearOnSelect), 'none')
+  assert.equal(comboboxBlurAction('abc', false, clearOnSelect), 'none')
+})
+
+test('escape reverts the text only without freeSolo and clearOnSelect', () => {
+  assert.equal(comboboxEscapeReverts(plain), true)
+  assert.equal(comboboxEscapeReverts(freeSolo), false)
+  assert.equal(comboboxEscapeReverts(clearOnSelect), false)
+})
+
+test('enter chooses in an open list and opens a closed one only with openOnEnter', () => {
+  assert.equal(comboboxEnterAction(true, true, false), 'choose')
+  assert.equal(comboboxEnterAction(true, true, true), 'choose')
+  assert.equal(comboboxEnterAction(true, false, true), 'none')
+  assert.equal(comboboxEnterAction(false, false, false), 'none')
+  assert.equal(comboboxEnterAction(false, true, false), 'none')
+  assert.equal(comboboxEnterAction(false, false, true), 'open')
 })

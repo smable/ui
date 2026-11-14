@@ -15,7 +15,16 @@ import { ChevronDown, Loader2, Plus, X } from 'lucide-react'
 import { normalize, smartFilter } from '../lib/search'
 import { useFieldVariant, type FieldVariant } from './FieldVariantContext'
 import { fieldMessages, hintClass } from './field-messages'
-import { canCreateOption, comboboxQuery, firstEnabled, highlightRange, stepActive } from './combobox-logic'
+import {
+  canCreateOption,
+  comboboxBlurAction,
+  comboboxEnterAction,
+  comboboxEscapeReverts,
+  comboboxQuery,
+  firstEnabled,
+  highlightRange,
+  stepActive,
+} from './combobox-logic'
 
 export interface ComboboxOption<T = unknown> {
   value: string | number
@@ -43,6 +52,12 @@ const DEFAULT_LABELS: ComboboxLabels = {
   minChars: (n) => `Zadejte alespoň ${n} ${n === 1 ? 'znak' : n < 5 ? 'znaky' : 'znaků'}`,
 }
 
+/**
+ * Proč se text pole změnil: `input` psaní, `select` výběr (a vytvoření s `clearOnSelect`),
+ * `clear` křížek, `reset` návrat textu vybrané hodnoty při blur / Esc.
+ */
+export type ComboboxInputChangeReason = 'input' | 'select' | 'clear' | 'reset'
+
 export interface ComboboxOptionState {
   active: boolean
   selected: boolean
@@ -55,6 +70,29 @@ export interface ComboboxProps<T = unknown> {
   'aria-label'?: string
   value: ComboboxOption<T> | null
   onChange: (option: ComboboxOption<T> | null) => void
+  /**
+   * Řízený text pole, nezávislý na `value`. Bez něj drží text Combobox sám a při změně `value`
+   * ho přepíše na její název; v řízeném režimu text mění jen rodič (přes `onInputChange`).
+   */
+  inputValue?: string
+  /**
+   * Každá změna textu z pole (v řízeném i neřízeném režimu), ne změna `value` zvenku.
+   * Při výběru se volá až po `onChange`.
+   */
+  onInputChange?: (text: string, reason: ComboboxInputChangeReason) => void
+  /** Volný text: blur ani Esc ho nevrací na vybranou hodnotu (vymazané pole dál zruší `value`). */
+  freeSolo?: boolean
+  /** Otevřít seznam při fokusu, výchozí `true`. Klik ho otevře vždy. */
+  openOnFocus?: boolean
+  /** Enter u zavřeného seznamu ho otevře (a neodešle formulář). Výchozí `false`. */
+  openOnEnter?: boolean
+  /** Křížek u vybrané hodnoty, výchozí `true`. S `false` je vpravo vždy `suffix` (šipka). */
+  clearable?: boolean
+  /**
+   * Volá se před obsluhou Comboboxu, `e.preventDefault()` ji přeskočí.
+   * Otevřený seznam pozná podle `e.currentTarget.getAttribute('aria-expanded') === 'true'`.
+   */
+  onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void
   /** Lokální zdroj — filtruje se přes `filter` (výchozí `smartFilter` nad label + description). */
   options?: ComboboxOption<T>[]
   /** Serverový zdroj — volá se s debounce, starší dotazy se ruší přes signal. */
@@ -124,11 +162,45 @@ function highlightMatch(text: string, query: string): ReactNode {
 
 type Item<T> = { kind: 'option'; option: ComboboxOption<T>; disabled: boolean } | { kind: 'create' }
 
+/**
+ * Výběr z nabídky s hledáním. Lokální (`options`) i serverový (`loadOptions`) zdroj.
+ *
+ * Volný text, ze kterého vzniká nová položka (příjemka v app), = `inputValue` + `onInputChange` + `freeSolo`.
+ * Lokální `ElementCombobox` (app, `pages/Inventory/receipt/ReceiptLinesTable.tsx`) se nahradí takto,
+ * `paired = matched || newElement`:
+ * - `inputValue={line.itemName}`, `onInputChange={(text, reason) => reason === 'input' && onChange({ itemName: text,
+ *   matchedElementId: null, ...(newElement ? { newElement: { ...newElement, name: text } } : {}) })}` — psaní ruší
+ *   spárování; text po výběru nastaví `pick` sám, proto se `select` / `reset` ignorují.
+ * - `value={matched ? { value: line.matchedElementId, label: line.itemName, data: el } : null}` — label vždy z `itemName`
+ *   (kopie příjemky nese název z dokladu, který se od karty může lišit), spárovaný řádek pak nabízí všechny karty;
+ *   `onChange={(o) => o && pick(o.data)}`.
+ * - `freeSolo` — blur ani Esc text nevrátí, zůstane jako název nové karty.
+ * - `onCreate={create}`, `labels={{ create: (q) => t.receive.newElement.create.replace('{name}', q) }}`,
+ *   `emptyText={t.common.noResults}`.
+ * - `filter={(opts, q) => …}` — přesná shoda EAN / kódu napřed, pak název; `q` ořízni (limit 50 je výchozí).
+ * - `clearable={false}` + `suffix={matched ? <Check /> : newElement ? <Plus /> : <Search />}` — ✓ / + místo křížku.
+ * - `openOnFocus={!paired}` — spárovaný řádek seznam při fokusu neotevře, klikem ano.
+ * - `openOnEnter` + `onKeyDown={(e) => { if (e.key === 'Enter' && paired && e.currentTarget.getAttribute('aria-expanded')
+ *   !== 'true') { e.preventDefault(); onPicked() } }}` — Enter otevře seznam, ze spárovaného řádku skočí na množství.
+ * - `renderOption` (název, EAN / kód · jednotka, cena), `disabled={readOnly}`, `inputRef`, `placeholder`, `aria-label`.
+ * - Řádek stavu (spárováno / nová karta / Zpět) zůstává v app pod Comboboxem, ne v `hint` (byl by `<p>` v `<p>`).
+ *
+ * Rozdíly proti ElementComboboxu: „Vytvořit …“ se nenabídne, když se volba jmenuje stejně bez ohledu na diakritiku
+ * („kava“ / „Káva“) — `filter` proto porovnávej přes `normalize`, ať se „Káva“ najde; šipka dolů u zavřeného seznamu
+ * ho jen otevře (ElementCombobox zároveň posunul výběr na druhou položku).
+ */
 export function Combobox<T = unknown>({
   label,
   'aria-label': ariaLabel,
   value,
   onChange,
+  inputValue,
+  onInputChange,
+  freeSolo = false,
+  openOnFocus = true,
+  openOnEnter = false,
+  clearable = true,
+  onKeyDown,
   options,
   loadOptions,
   debounceMs = 250,
@@ -167,16 +239,25 @@ export function Combobox<T = unknown>({
   const listRef = useRef<HTMLUListElement>(null)
 
   const selectedLabel = clearOnSelect ? undefined : value?.label
-  const [text, setText] = useState(selectedLabel ?? '')
+  const controlled = inputValue !== undefined
+  const [innerText, setInnerText] = useState(selectedLabel ?? '')
+  const text = controlled ? inputValue : innerText
+  const mode = { clearOnSelect, freeSolo }
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
   const [remote, setRemote] = useState<ComboboxOption<T>[]>([])
   const [loading, setLoading] = useState(false)
 
   // Jen při skutečné změně hodnoty — nový objekt se stejnou hodnotou nesmí přepsat rozepsaný text.
+  // Řízený text drží rodič, ten se tu nepřepisuje.
   useEffect(() => {
-    if (!clearOnSelect) setText(value?.label ?? '')
-  }, [value?.value, value?.label, clearOnSelect])
+    if (!controlled && !clearOnSelect) setInnerText(value?.label ?? '')
+  }, [value?.value, value?.label, clearOnSelect, controlled])
+
+  const setText = (next: string, reason: ComboboxInputChangeReason) => {
+    if (!controlled) setInnerText(next)
+    if (next !== text) onInputChange?.(next, reason)
+  }
 
   const query = comboboxQuery(text, selectedLabel)
   const belowMin = minChars > 0 && query.trim().length < minChars
@@ -261,13 +342,13 @@ export function Combobox<T = unknown>({
 
   const select = (option: ComboboxOption<T>) => {
     onChange(option)
-    setText(clearOnSelect ? '' : option.label)
+    setText(clearOnSelect ? '' : option.label, 'select')
     setOpen(false)
   }
 
   const create = () => {
     onCreate?.(query.trim())
-    if (clearOnSelect) setText('')
+    if (clearOnSelect) setText('', 'select')
     setOpen(false)
   }
 
@@ -280,13 +361,14 @@ export function Combobox<T = unknown>({
 
   const clear = () => {
     onChange(null)
-    setText('')
+    setText('', 'clear')
     setOpen(true)
     innerRef.current?.focus()
   }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.nativeEvent.isComposing) return
+    onKeyDown?.(e)
+    if (e.defaultPrevented || e.nativeEvent.isComposing) return
     if (e.key === 'ArrowDown') {
       e.preventDefault()
       if (!open) setOpen(true)
@@ -295,9 +377,13 @@ export function Combobox<T = unknown>({
       e.preventDefault()
       if (open) setActive((i) => stepActive(items.length, i, -1, isDisabled))
     } else if (e.key === 'Enter') {
-      if (open && active >= 0 && !isDisabled(active)) {
+      const action = comboboxEnterAction(open, active >= 0 && !isDisabled(active), openOnEnter)
+      if (action === 'choose') {
         e.preventDefault()
         choose(active)
+      } else if (action === 'open') {
+        e.preventDefault()
+        setOpen(true)
       }
     } else if (e.key === 'Escape') {
       if (open) {
@@ -305,16 +391,16 @@ export function Combobox<T = unknown>({
         e.preventDefault()
         e.stopPropagation()
         setOpen(false)
-        if (!clearOnSelect) setText(value?.label ?? '')
+        if (comboboxEscapeReverts(mode)) setText(value?.label ?? '', 'reset')
       }
     }
   }
 
   const handleBlur = () => {
     setOpen(false)
-    if (clearOnSelect) return
-    if (text.trim() === '' && value) onChange(null)
-    else setText(value?.label ?? '')
+    const action = comboboxBlurAction(text, Boolean(value), mode)
+    if (action === 'clear-value') onChange(null)
+    else if (action === 'revert') setText(value?.label ?? '', 'reset')
   }
 
   const { hasError, errorMessage, showHint, describedBy } = fieldMessages(inputId, error, hint)
@@ -351,10 +437,10 @@ export function Combobox<T = unknown>({
       value={text}
       placeholder={floating ? (hasPlaceholder ? placeholder : ' ') : placeholder}
       onChange={(e) => {
-        setText(e.target.value)
+        setText(e.target.value, 'input')
         setOpen(true)
       }}
-      onFocus={() => setOpen(true)}
+      onFocus={() => openOnFocus && setOpen(true)}
       onClick={() => setOpen(true)}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
@@ -390,7 +476,7 @@ export function Combobox<T = unknown>({
     <div className={clsx('absolute top-1/2 -translate-y-1/2 flex items-center text-neutral-400', floating ? 'right-3' : 'right-2.5')}>
       {loading && open ? (
         <Loader2 aria-hidden className="w-4 h-4 animate-spin" />
-      ) : value && !disabled && !clearOnSelect ? (
+      ) : value && clearable && !disabled && !clearOnSelect ? (
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
