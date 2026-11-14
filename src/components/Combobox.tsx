@@ -171,7 +171,9 @@ type Item<T> = { kind: 'option'; option: ComboboxOption<T>; disabled: boolean } 
  * - `inputValue={line.itemName}`, `onInputChange={(text, reason) => reason === 'input' && onChange({ itemName: text,
  *   matchedElementId: null, ...(newElement ? { newElement: { ...newElement, name: text } } : {}) })}` — psaní ruší
  *   spárování; text po výběru nastaví `pick` sám, proto se `select` / `reset` ignorují.
- * - `value={matched ? volba karty : null}` (label = název karty = `itemName`), `onChange={(o) => o && pick(o.data)}`.
+ * - `value={matched ? { value: line.matchedElementId, label: line.itemName, data: el } : null}` — label vždy z `itemName`
+ *   (kopie příjemky nese název z dokladu, který se od karty může lišit), spárovaný řádek pak nabízí všechny karty;
+ *   `onChange={(o) => o && pick(o.data)}`.
  * - `freeSolo` — blur ani Esc text nevrátí, zůstane jako název nové karty.
  * - `onCreate={create}`, `labels={{ create: (q) => t.receive.newElement.create.replace('{name}', q) }}`,
  *   `emptyText={t.common.noResults}`.
