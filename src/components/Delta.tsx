@@ -9,7 +9,7 @@ export { formatDelta, type DeltaParts, type DeltaFormatOptions } from './delta-f
 /**
  * Delta — změna oproti předchozímu období: šipka a barevné číslo.
  * Růst je zelený, pokles červený, `invert` barvy prohodí (náklady, storna). `null` nevykreslí nic,
- * nula (i po zaokrouhlení) je šedá bez šipky.
+ * nula (i po zaokrouhlení) je šedá bez šipky. Záporné číslo má typografické minus („−1,2 p. b.“).
  *
  * @example
  *   <Delta value={12.3} suffix="vs. minulý týden" />

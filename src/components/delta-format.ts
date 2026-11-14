@@ -12,7 +12,7 @@ export interface DeltaFormatOptions {
 }
 
 export interface DeltaParts {
-  /** Číslo se znaménkem bez jednotky, např. „+12,3“. */
+  /** Číslo se znaménkem bez jednotky, např. „+12,3“ nebo „−4,5“ (typografické minus U+2212). */
   number: string
   /** Číslo s jednotkou oddělenou pevnou mezerou, např. „+12,3 %“. */
   text: string
@@ -26,6 +26,7 @@ export const DELTA_UNIT_LABELS: Record<DeltaUnit, string> = { '%': '%', pp: 'p. 
  * Rozloží změnu na text a směr. Směr se určuje až po zaokrouhlení, takže 0,04 s jedním
  * desetinným místem je „0“ bez šipky a neutrální. `invert` prohodí barvu (pokles nákladů
  * je dobrá zpráva), šipka dál ukazuje skutečný směr. `null` a nečíselné hodnoty vrací `null`.
+ * Záporné číslo má typografické minus U+2212 („−4,5 %“), ne spojovník — v každém locale.
  */
 export function formatDelta(value: number | null | undefined, options: DeltaFormatOptions = {}): DeltaParts | null {
   if (value === null || value === undefined || !Number.isFinite(value)) return null
@@ -41,7 +42,7 @@ export function formatDelta(value: number | null | undefined, options: DeltaForm
   const number = new Intl.NumberFormat(locale, {
     maximumFractionDigits: fractionDigits,
     signDisplay: 'exceptZero',
-  }).format(signed)
+  }).format(signed).replace(/-/g, '\u2212')
 
   return { number, text: `${number} ${unitLabel ?? DELTA_UNIT_LABELS[unit]}`, direction, sentiment }
 }

@@ -147,18 +147,21 @@ export function HeroCard({
   )
 
   const cardContent = size === 'sm' ? (
-    <div className={clsx('p-4 rounded-xl border transition-colors', CARD_TONE[cardTone], href && HOVER)}>
+    <div className={clsx('min-w-0 p-4 rounded-xl border transition-colors', CARD_TONE[cardTone], href && HOVER)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-xs font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">{title}</h3>
           {isLoading ? (
             <Skeleton className="mt-1 h-8 w-24" />
           ) : (
-            <p className={clsx('mt-1 text-2xl font-bold tabular-nums', valueClass)}>{value}</p>
+            <p className={clsx('mt-1 truncate text-2xl font-bold tabular-nums', valueClass)} title={String(value)}>{value}</p>
           )}
           {change && change.value !== null && (
-            <div className="mt-1">
-              <Delta value={change.value} unit={change.unit} invert={deltaInvert(change)} suffix={change.label} />
+            <div className="mt-1 flex flex-wrap items-center gap-x-1">
+              <Delta value={change.value} unit={change.unit} invert={deltaInvert(change)} />
+              {change.label && (
+                <span className="min-w-0 truncate text-xs text-neutral-500 dark:text-neutral-400">{change.label}</span>
+              )}
             </div>
           )}
           {subtitle != null && subtitle !== false && subtitle !== '' && (
@@ -174,7 +177,7 @@ export function HeroCard({
       {link}
     </div>
   ) : (
-    <div className={clsx('p-6 rounded-lg border transition-colors', CARD_TONE[cardTone], href && HOVER)}>
+    <div className={clsx('p-6 rounded-xl border transition-colors', CARD_TONE[cardTone], href && HOVER)}>
       <div className="flex items-center gap-3 mb-3">
         {Icon && (
           <Icon className={clsx('w-5 h-5', iconTone ? ICON_TONE[iconTone] : ICON_BY_TONE[cardTone])} />
@@ -218,7 +221,7 @@ export function HeroCard({
   )
 
   if (href) {
-    return <a href={href}>{cardContent}</a>
+    return <a href={href} className={size === 'sm' ? 'block min-w-0' : undefined}>{cardContent}</a>
   }
 
   return cardContent
