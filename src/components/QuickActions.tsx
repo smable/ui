@@ -41,7 +41,7 @@ export interface QuickActionsProps {
 export function QuickActions({ isLoading }: QuickActionsProps) {
   if (isLoading) {
     return (
-      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
         <div className="h-5 w-24 bg-neutral-200 dark:bg-neutral-700 rounded mb-4 animate-pulse" />
         <div className="space-y-2">
           {[...Array(4)].map((_, i) => (
@@ -52,7 +52,7 @@ export function QuickActions({ isLoading }: QuickActionsProps) {
     )
   }
   return (
-    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg p-4">
+    <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
       <h3 className="text-sm font-semibold text-neutral-900 dark:text-white mb-4">
         Rychlé akce
       </h3>

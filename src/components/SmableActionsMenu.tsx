@@ -33,7 +33,7 @@ export interface SmableActionsMenuProps {
    * Vzhled spouštěče:
    * - `default` — tlačítko s ikonou, textem a šipkou (dosavadní vzhled),
    * - `icon` — jen ikona (kebab v řádku), `label` je aria-label,
-   * - `toolbar` — vzhled `DataTableColumnsMenu` (h-9, rounded-xl, okraj), např. filtr,
+   * - `toolbar` — vzhled `DataTableColumnsMenu` (h-9, rounded-lg, okraj), např. filtr,
    * - vlastní element — dostane `onClick`, `aria-haspopup` a `aria-expanded`.
    */
   trigger?: SmableActionsMenuTrigger
@@ -140,7 +140,7 @@ export function SmableActionsMenu({
         aria-expanded={open}
         aria-label={icon ? label : undefined}
         className={clsx(
-          'inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-xl border transition-all',
+          'inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-lg border transition-all',
           FOCUS,
           active
             ? 'bg-brand-50 dark:bg-brand-950/30 text-brand-700 dark:text-brand-300 border-brand-200 dark:border-brand-800'

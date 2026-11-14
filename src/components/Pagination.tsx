@@ -84,7 +84,7 @@ export function Pagination({
           onClick={() => onPageChange(page - 1)}
           disabled={page === 1}
           className={clsx(
-            'inline-flex items-center justify-center w-9 h-9 rounded-xl transition-colors',
+            'inline-flex items-center justify-center w-9 h-9 rounded-lg transition-colors',
             page === 1
               ? 'text-neutral-300 dark:text-neutral-700 cursor-not-allowed'
               : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
@@ -105,7 +105,7 @@ export function Pagination({
                   aria-current={item === page ? 'page' : undefined}
                   onClick={() => item !== page && onPageChange(item)}
                   className={clsx(
-                    'inline-flex items-center justify-center min-w-9 h-9 px-1 text-sm font-medium rounded-xl tabular-nums transition-colors',
+                    'inline-flex items-center justify-center min-w-9 h-9 px-1 text-sm font-medium rounded-lg tabular-nums transition-colors',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
                     item === page
                       ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
@@ -127,7 +127,7 @@ export function Pagination({
           onClick={() => onPageChange(page + 1)}
           disabled={page === totalPages}
           className={clsx(
-            'inline-flex items-center justify-center w-9 h-9 rounded-xl transition-colors',
+            'inline-flex items-center justify-center w-9 h-9 rounded-lg transition-colors',
             page === totalPages
               ? 'text-neutral-300 dark:text-neutral-700 cursor-not-allowed'
               : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'

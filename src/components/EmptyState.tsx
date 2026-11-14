@@ -22,7 +22,7 @@ export function EmptyState({ icon, title, description, onAdd, addLabel }: EmptyS
       {onAdd && addLabel && (
         <button type="button"
           onClick={onAdd}
-          className="mt-4 inline-flex items-center justify-center gap-2 h-10 px-5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-semibold rounded-xl hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-all"
+          className="mt-4 inline-flex items-center justify-center gap-2 h-10 px-5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-semibold rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-all"
         >
           <Plus className="w-4 h-4" />
           {addLabel}

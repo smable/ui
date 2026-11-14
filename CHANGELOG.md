@@ -2,6 +2,66 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.31.0 (tabulky a zaoblení) — 2026-11-14
+
+### ✨ DataTable pro hlavní tabulky app (fáze 4 auditu UI app.smable.cz)
+
+Zpětně kompatibilní: všechny nové props jsou volitelné a bez nich se DataTable vykreslí stejně jako
+v 0.30.0 — kromě karty a zaoblení níže (ověřeno porovnáním SSR na 57 dnešních voláních: HTML bez tříd
+je shodné, liší se jen třídy `rounded-*` a `shadow-sm` karty).
+
+- **`meta.align`** (`'left' | 'center' | 'right'`) na `ColumnDef` — zarovná hlavičku (`justify-end` /
+  `justify-center` ve flexu s názvem a šipkou řazení, `text-right` / `text-center` na `<th>`), buňky
+  těla, patičky, řádku filtrů i skeletonový pruh. Částky a čísla tak mají nadpis vpravo nad hodnotou.
+- **`meta.fill`** — sloupec nedostane šířku a vyplní zbytek tabulky (ve `fixedLayout` typicky název).
+- Typ **`DataTableColumnMeta<T>`** = `DataTableColumnExportMeta<T>` + `align` + `fill` (původní typ
+  zůstává). Konzument s augmentací `ColumnMeta` (app `src/types/tanstack-table.d.ts`) ji přepne na
+  `extends DataTableColumnMeta<TData>`. Typy `DataTableAlign`, `DataTableMobileBreakpoint`.
+- **`pagination`** (`{ labels?, limitOptions?, showPageNumbers? }`, typ `DataTablePaginationOptions`) —
+  místo vestavěného stránkování se v kartě vykreslí knihovní `Pagination`: stránka a velikost ze stavu
+  tabulky, změny přes `onPaginationChange` (nebo vnitřní stav + `persistKey`), celkem `totalCount`
+  u `manualPagination`, jinak počet řádků po filtru. Je vidět, kdykoli je aspoň jeden záznam (i na
+  jediné stránce — kvůli výběru počtu). Serverové stránkování bez `totalCount` celkový počet nezná,
+  zůstane vestavěné. Výpočet je čistá funkce s testy (`data-table-layout.ts`).
+- **`mobileRow`** (`(row) => ReactNode`) + **`mobileBreakpoint`** (`'sm' | 'md'`, výchozí `md`) — pod
+  breakpointem místo tabulky seznam `<ul>`: řádky s dělicí čarou, klik / Enter / Mezerník volají
+  `onRowClick` (kliky na tlačítka a pole uvnitř se ignorují), focus ring, `rowClassName` a zvýraznění
+  výběru jako u tabulky. Stránkování, prázdný stav i `loading` (skeleton, `aria-busy`) platí pro oba
+  pohledy. Na mobilu není patička ani zaškrtávátka výběru.
+- **`filterToggle`** (výchozí `true`) — s `false` se nekreslí vestavěné „Více filtrů“ ani křížek
+  „Zrušit filtry“; řádek filtrů řídí `filterable` + `showColumnFilters` (stránka má vlastní přepínač).
+  Prázdná lišta se nevykreslí vůbec.
+- **`toolbar`** smí být funkce `(table) => ReactNode` — kreslí se při každé změně stavu tabulky, takže do
+  ní patří `DataTableColumnsMenu` / `DataTableDensityMenu` k tabulce z DataTable. Přes `tableRef` mimo
+  DataTable se po přepnutí sloupce nepřekreslily fajfky (řízený stav o krok pozadu, neřízený vůbec)
+  a druhý klik přepnul špatným směrem — ověřeno v jsdom. `tableRef` je teď layout effect (instance je
+  u rodiče ještě před prvním vykreslením, `DataTableExport` v hlavičce neproblikne) a JSDoc popisuje,
+  na co stačí (export, hromadné akce — čtou instanci až při interakci).
+- **`emptyAction`** — akce pod prázdným stavem bez filtru (např. „Přidat položku“).
+- **`labels.moreFilters`** (výchozí „Více filtrů“, dřív natvrdo i v `aria-label`) a **`labels.columns`**
+  (`{ label?, title? }` pro menu sloupců u `columnToggle`).
+- Oprava: řízený `columnOrder` se použije i bez `draggableColumns` a `persistKey` (dřív se tiše ignoroval).
+- `DataTableColumnsMenu` přepíná sloupec podle aktuálního stavu tabulky (`toggleVisibility()`), ne podle
+  stavu z posledního vykreslení menu.
+- Známé: vestavěné stránkování DataTable má dál natvrdo češtinu („Zobrazeno … z“, „Stránka … z“,
+  „N položek“) — dvojjazyčné stránky ať použijí `pagination`. Natvrdo česky jsou i texty
+  `DataTableExport` („Export“, „N záznamů“, názvy formátů) a placeholder výchozího filtru „Filtr...“.
+
+### 🎨 Zaoblení a karty (rozhodnutí 3 a 7)
+
+Mění výchozí vzhled — týká se všech konzumentů (app, crm, helpdesk, fakturace-cockpit, partner …).
+
+- **Karta `DataTable`** (`appearance="card"`): `rounded-2xl` + `shadow-sm` → `rounded-xl` bez stínu, okraj
+  zůstává (jako `Card`). **`QuickActions`** a **`AlertBanner`**: `rounded-lg` → `rounded-xl`.
+- **Ovládací prvky `rounded-xl` → `rounded-lg`** (jako `SmableButton` a výchozí `Input`): CTA „Přidat“
+  a mobilní tlačítko „Další akce“ v `ListPageHeader`, CTA v `EmptyState`, pole `SearchBar`, spouštěč
+  `SmableActionsMenu` `trigger="toolbar"`, spouštěče `DataTableColumnsMenu`, `DataTableDensityMenu`,
+  `DataTableExport` a `ExportMenu`, v DataTable „Více filtrů“, křížek a tlačítko „Zrušit filtry“
+  v prázdném stavu a tlačítka vestavěného stránkování, v `Pagination` šipky a čísla stránek.
+- Šipka menu výběru `DataTableBulkSelect` `rounded` → `rounded-lg`, výchozí filtr sloupce (`Filtr...`)
+  `rounded-md` → `rounded-lg`.
+- Beze změny zůstávají panely menu, dialogy a rozbalený panel akcí `ListPageHeader` (`rounded-xl`).
+
 ## 0.30.0 — 2026-11-14
 
 ### ✨ Zobrazení dat (fáze 3 auditu UI app.smable.cz)

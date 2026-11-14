@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, type ReactNode } from 'react'
+import { useState, useLayoutEffect, useRef, type KeyboardEvent, type MouseEvent, type ReactNode } from 'react'
 import {
   useReactTable,
   getCoreRowModel,
@@ -18,18 +18,67 @@ import {
   type OnChangeFn,
   type Row,
   type Table,
+  type Column,
 } from '@tanstack/react-table'
 import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, GripVertical, Columns3, X } from 'lucide-react'
 import clsx from 'clsx'
-import { DataTableExport, type ExportFormat, type DataTableExportExtraOption } from './DataTableExport'
+import { DataTableExport, type ExportFormat, type DataTableExportExtraOption, type DataTableColumnExportMeta } from './DataTableExport'
 import { DataTableColumnsMenu } from './DataTableColumnsMenu'
 import { DataTableBulkSelect } from './DataTableBulkSelect'
 import { DataTableDensityMenu, DATA_TABLE_DENSITY_CLASS, type DataTableDensity, type DataTableDensityLabels } from './DataTableDensityMenu'
 import { Checkbox } from './Checkbox'
 import { columnDropSide, moveColumn, type ColumnDropSide } from './column-reorder'
 import { skeletonBarWidth, skeletonRowCount } from './data-table-skeleton'
+import {
+  cellAlignClass,
+  columnWidthStyle,
+  dataTablePagerState,
+  headerAlignClass,
+  headerJustifyClass,
+  mobileViewClasses,
+  skeletonAlignClass,
+  type DataTableAlign,
+  type DataTableMobileBreakpoint,
+} from './data-table-layout'
+import { Pagination, type PaginationLabels } from './Pagination'
 import { usePersistentTableState, type UsePersistentTableStateOptions } from '../lib/usePersistentTableState'
 import { normalize } from '../lib/search'
+
+export type { DataTableAlign, DataTableMobileBreakpoint }
+
+/**
+ * `meta` sloupce, které DataTable čte (rozšiřuje `DataTableColumnExportMeta`):
+ *
+ *   { accessorKey: 'price', header: 'Cena', size: 100, meta: { align: 'right' } }
+ *   { accessorKey: 'name', header: 'Název', meta: { fill: true } }
+ *
+ * TanStack má `ColumnMeta` prázdný; pro typovou kontrolu ho konzument rozšíří
+ * (module augmentation) o `DataTableColumnMeta<TData>` místo `DataTableColumnExportMeta`.
+ */
+export interface DataTableColumnMeta<T = any> extends DataTableColumnExportMeta<T> {
+  /**
+   * Zarovnání hlavičky (flex `justify-*`), buněk těla, patičky, řádku filtrů a skeletonu.
+   * Výchozí vlevo. Čísla a částky `right`.
+   */
+  align?: DataTableAlign
+  /**
+   * Sloupec nedostane šířku a vyplní zbytek tabulky — ve `fixedLayout` typicky název
+   * (ostatní sloupce mají pevnou šířku ze `size`). Platí pro hlavičku i buňky.
+   */
+  fill?: boolean
+}
+
+/** Knihovní `Pagination` místo vestavěného stránkování — viz prop `pagination`. */
+export interface DataTablePaginationOptions {
+  labels?: Partial<PaginationLabels>
+  /** Volby počtu na stránku (výchozí jako `Pagination`: 20, 50, 100). */
+  limitOptions?: number[]
+  /** Čísla stránek mezi šipkami (na mobilu zůstává „3 / 12“). */
+  showPageNumbers?: boolean
+}
+
+const columnMeta = <T,>(column: Column<T, unknown>) =>
+  column.columnDef.meta as DataTableColumnMeta<T> | undefined
 
 export interface DataTableLabels {
   selectRow: string
@@ -44,9 +93,13 @@ export interface DataTableLabels {
   itemCount: (n: number) => string
   selectionAnnouncement: (selected: number, total: number) => string
   clearFilters: string
+  /** Tlačítko řádku filtrů v liště (text i aria-label). */
+  moreFilters: string
   previousPage: string
   nextPage: string
   density: Partial<DataTableDensityLabels>
+  /** Tlačítko a nadpis menu sloupců (`columnToggle`); výchozí „Sloupce“ / „Zobrazit sloupce“. */
+  columns: { label?: string; title?: string }
 }
 
 const czItems = (n: number) =>
@@ -65,13 +118,15 @@ const DEFAULT_LABELS: DataTableLabels = {
   itemCount: czItems,
   selectionAnnouncement: (selected, total) => `Vybráno ${selected} z ${czItems(total)}.`,
   clearFilters: 'Zrušit filtry',
+  moreFilters: 'Více filtrů',
   previousPage: 'Předchozí stránka',
   nextPage: 'Další stránka',
   density: {},
+  columns: {},
 }
 
 /**
- * `card` — samostatná tabulka na stránce (karta se stínem, výchozí).
+ * `card` — samostatná tabulka na stránce (karta `rounded-xl` s okrajem, výchozí).
  * `plain` — bez karty a stínu, menší odsazení; pro malé tabulky v detailech, dialozích a drawerech.
  */
 export type DataTableAppearance = 'card' | 'plain'
@@ -96,7 +151,7 @@ function DefaultColumnFilter({ column }: { column: any }) {
       value={value}
       onChange={e => column.setFilterValue(e.target.value || undefined)}
       placeholder="Filtr..."
-      className="w-full h-8 px-2 text-xs bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-md focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-transparent transition-colors"
+      className="w-full h-8 px-2 text-xs bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-brand-500 focus:border-transparent transition-colors"
     />
   )
 }
@@ -162,6 +217,15 @@ interface DataTableProps<T> {
   onSortingChange?: OnChangeFn<SortingState>
 
   // Pagination (controlled / server-side)
+  /**
+   * Místo vestavěného stránkování knihovní `Pagination` (stejná jako na stránkách s vlastní
+   * tabulkou): stránka a velikost ze stavu tabulky, změny jdou přes `onPaginationChange`
+   * (resp. vnitřní stav + `persistKey`). Je vidět, kdykoli je aspoň jeden záznam — i na jediné
+   * stránce, kvůli výběru počtu na stránku. Celkem = `totalCount` u `manualPagination`,
+   * jinak počet řádků po filtru. Serverové stránkování bez `totalCount` celkový počet nezná —
+   * pak zůstává vestavěné stránkování („Stránka X z Y“).
+   */
+  pagination?: DataTablePaginationOptions
   /** Server-side stránkování — `data` je jen aktuální stránka. */
   manualPagination?: boolean
   /** Počet stránek při manualPagination (alternativa: totalCount). */
@@ -229,6 +293,12 @@ interface DataTableProps<T> {
 
   // Column filters
   filterable?: boolean
+  /**
+   * Vestavěné tlačítko „Více filtrů“ a křížek „Zrušit filtry“ v liště. Výchozí `true`.
+   * S `false` je nekreslí (stránka má vlastní přepínač) a řádek filtrů řídí jen
+   * `filterable` + `showColumnFilters`.
+   */
+  filterToggle?: boolean
   columnFilters?: ColumnFiltersState
   onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>
   showColumnFilters?: boolean
@@ -239,7 +309,29 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void
   rowClassName?: (row: T) => string | undefined
 
-  // Fixed layout
+  /**
+   * Obsah řádku v mobilním seznamu. Pod `mobileBreakpoint` se místo tabulky kreslí `<ul>`:
+   * jeden `<li>` na řádek s odsazením a dělicí čárou jako tabulka, klik / Enter / Mezerník
+   * volají `onRowClick` (kliky na tlačítka, odkazy a pole uvnitř se ignorují), `rowClassName`
+   * a zvýraznění výběru platí taky. Stránkování, prázdný stav i `loading` (skeleton) jsou
+   * společné. Na mobilu není patička (`footer`) ani zaškrtávátka výběru — případný výběr
+   * kreslí `mobileRow` sám (`row.getIsSelected()`, `row.toggleSelected()`).
+   *
+   *   mobileRow={row => (
+   *     <div className="flex items-center gap-3">
+   *       <div className="min-w-0 flex-1">{row.original.name}</div>
+   *       <span className="tabular-nums">{row.original.quantity}</span>
+   *     </div>
+   *   )}
+   */
+  mobileRow?: (row: Row<T>) => ReactNode
+  /** Do jaké šířky platí `mobileRow`: pod `md` (výchozí, 768 px) nebo pod `sm` (640 px). */
+  mobileBreakpoint?: DataTableMobileBreakpoint
+
+  /**
+   * `tableLayout: fixed` — šířky sloupců podle `size` (hlavička i buňky). Sloupec
+   * s `meta.fill` šířku nedostane a vyplní zbytek.
+   */
   fixedLayout?: boolean
 
   // Export
@@ -275,14 +367,42 @@ interface DataTableProps<T> {
   emptyFilteredDescription?: string
   /** Tlačítko „Zrušit filtry" v prázdném stavu; bez něj se nabídne jen u sloupcových filtrů. */
   onClearFilters?: () => void
+  /**
+   * Akce pod prázdným stavem bez filtru, např. tlačítko „Přidat položku“. Při prázdnu
+   * kvůli filtru se místo ní nabízí „Zrušit filtry“.
+   */
+  emptyAction?: ReactNode
 
-  /** Texty výběru, hustoty a prázdného stavu — pro konzumenty v jiném jazyce než čeština. */
+  /** Texty výběru, hustoty, filtrů a prázdného stavu — pro konzumenty v jiném jazyce než čeština. */
   labels?: Partial<DataTableLabels>
 
-  // Toolbar (extra content before table)
-  toolbar?: ReactNode
+  /**
+   * Obsah lišty nad tabulkou (obal `flex items-center gap-2 mb-4`, vlastní rozložení dej
+   * do jednoho prvku s `flex-1`). Jako funkce dostane instanci tabulky a kreslí se při každé
+   * změně stavu tabulky — tak patří do lišty `DataTableColumnsMenu`, `DataTableDensityMenu`
+   * a cokoli dalšího, co ze stavu tabulky kreslí (fajfky viditelnosti, počty):
+   *
+   *   toolbar={table => (
+   *     <div className="flex flex-1 items-center gap-2">
+   *       <SearchBar … />
+   *       <DataTableColumnsMenu table={table} label={t.columns} />
+   *     </div>
+   *   )}
+   */
+  toolbar?: ReactNode | ((table: Table<T>) => ReactNode)
 
-  // Table instance ref (for external access, e.g. DataTableExport in header)
+  /**
+   * Instance TanStack tabulky pro prvky mimo DataTable (např. `DataTableExport` v hlavičce
+   * stránky). Instance je po celý život tabulky stejný objekt; volá se před prvním
+   * vykreslením na obrazovku (layout effect, takže tlačítko v hlavičce neproblikne) a při
+   * změně `data`. Obvykle `tableRef={setTable}` s `useState`.
+   *
+   * Instance se čte až při interakci, takže export (počet i data se berou při otevření menu
+   * a kliknutí) a hromadné akce fungují. Komponenta mimo DataTable, která ze stavu tabulky
+   * KRESLÍ, se ale po změně uvnitř tabulky nepřekreslí (a při řízeném stavu v rodiči se
+   * vykreslí dřív než tabulka, tedy o krok pozadu) — `DataTableColumnsMenu` by ukazovalo
+   * staré fajfky. Takové prvky dej do `toolbar` jako funkce.
+   */
   tableRef?: (table: any) => void
 }
 
@@ -300,6 +420,7 @@ export function DataTable<T>({
   manualSorting = false,
   sorting: externalSorting,
   onSortingChange: externalOnSortingChange,
+  pagination,
   manualPagination = false,
   pageCount: externalPageCount,
   totalCount,
@@ -336,6 +457,8 @@ export function DataTable<T>({
   renderColumnFilter,
   onRowClick,
   rowClassName,
+  mobileRow,
+  mobileBreakpoint = 'md',
   fixedLayout = false,
   columnToggle = false,
   onShowColumnFiltersChange,
@@ -347,12 +470,14 @@ export function DataTable<T>({
   exportFetchAllRows,
   emptyIcon,
   filterable = false,
+  filterToggle = true,
   emptyTitle = 'Žádné záznamy',
   emptyDescription,
   hasFilters,
   emptyFilteredTitle,
   emptyFilteredDescription,
   onClearFilters,
+  emptyAction,
   labels: labelOverrides,
   toolbar,
   tableRef,
@@ -533,7 +658,7 @@ export function DataTable<T>({
       globalFilter,
       pagination: paginationState,
       ...(selectable ? { rowSelection: rowSelectionState } : {}),
-      ...(draggableColumns || persistKey ? { columnOrder: columnOrderState } : {}),
+      ...(draggableColumns || persistKey || externalColumnOrder !== undefined ? { columnOrder: columnOrderState } : {}),
       columnVisibility: columnVisibilityState,
       ...(filterable ? { columnFilters: columnFiltersState } : {}),
     },
@@ -586,8 +711,8 @@ export function DataTable<T>({
     } : {}),
   })
 
-  // Expose table instance (only on mount/data change)
-  useEffect(() => {
+  // Instance je stabilní; layout effect ji předá rodiči ještě před prvním vykreslením na obrazovku.
+  useLayoutEffect(() => {
     if (tableRef) tableRef(table)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
@@ -603,9 +728,22 @@ export function DataTable<T>({
   const currentPageSize = table.getState().pagination.pageSize
   const filteredCount = table.getFilteredRowModel().rows.length
   const totalRows = manualPagination ? totalCount : filteredCount
-  const showPagination = manualPagination
+  const pager = pagination
+    ? dataTablePagerState({
+        manual: manualPagination,
+        totalCount,
+        filteredCount,
+        pageIndex: currentPage,
+        pageSize: currentPageSize,
+        pageCount: tablePageCount,
+      })
+    : null
+  const showPagination = !pager && (manualPagination
     ? tablePageCount > 1 || tablePageCount === -1
-    : filteredCount > Math.min(pageSize, currentPageSize)
+    : filteredCount > Math.min(pageSize, currentPageSize))
+  const showFilterToggle = filterable && filterToggle
+  const mobileView = mobileRow ? mobileViewClasses(mobileBreakpoint) : null
+  const pageRows = table.getRowModel().rows
   const isFiltered = hasFilters ?? (data.length > 0 && (!!globalFilter || hasActiveFilters))
   const clearFilters = onClearFilters ?? (hasActiveFilters && !globalFilter ? () => setColumnFilters([]) : undefined)
   const shownEmptyTitle = isFiltered ? (emptyFilteredTitle ?? emptyTitle) : emptyTitle
@@ -663,28 +801,70 @@ export function DataTable<T>({
       ? 'shadow-[inset_2px_0_0_0_theme(colors.brand.500)]'
       : 'shadow-[inset_-2px_0_0_0_theme(colors.brand.500)]')
 
+  // Klik a klávesnice řádku — společné pro řádek tabulky i mobilní seznam.
+  const rowHandlers = (row: Row<T>) => ({
+    // Klikací řádek musí jít otevřít i z klávesnice.
+    tabIndex: onRowClick ? 0 : undefined,
+    onClick: (e: MouseEvent<HTMLElement>) => {
+      if (isInteractiveTarget(e.target as HTMLElement)) return
+      onRowClick?.(row.original)
+    },
+    onKeyDown: onRowClick ? (e: KeyboardEvent<HTMLElement>) => {
+      if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return
+      e.preventDefault()
+      onRowClick(row.original)
+    } : undefined,
+  })
+
+  const emptyContent = (
+    <div className="flex flex-col items-center">
+      {emptyIcon && (
+        <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-400">
+          {emptyIcon}
+        </div>
+      )}
+      <p className="text-neutral-900 dark:text-white font-medium mb-1">{shownEmptyTitle}</p>
+      {shownEmptyDescription && (
+        <p className="text-sm text-neutral-500">{shownEmptyDescription}</p>
+      )}
+      {isFiltered && clearFilters && (
+        <button
+          type="button"
+          onClick={clearFilters}
+          className="mt-4 inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
+        >
+          <X className="w-3.5 h-3.5" />
+          {labels.clearFilters}
+        </button>
+      )}
+      {!isFiltered && emptyAction && <div className="mt-4">{emptyAction}</div>}
+    </div>
+  )
+  const emptyPadding = plain ? "px-3 py-10 text-center" : "px-4 py-16 text-center"
+  const toolbarContent = typeof toolbar === 'function' ? toolbar(table) : toolbar
+
   return (
     <>
       {/* Toolbar — above the table */}
-      {(toolbar || exportable || filterable || columnToggle || densityToggle) && (
+      {(toolbarContent || exportable || showFilterToggle || columnToggle || densityToggle) && (
         <div className="flex items-center gap-2 mb-4">
-          {toolbar}
+          {toolbarContent}
           {/* More filters toggle */}
-          {filterable && (
+          {showFilterToggle && (
               <>
                 <button type="button"
                   onClick={() => toggleShowFilters()}
-                  aria-label="Více filtrů"
+                  aria-label={labels.moreFilters}
                   aria-pressed={isShowFilters}
                   className={clsx(
-                    "inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-xl border transition-all",
+                    "inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium rounded-lg border transition-all",
                     isShowFilters
                       ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 border-transparent"
                       : "bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700"
                   )}
                 >
                   <Columns3 className="w-4 h-4" />
-                  <span className="hidden sm:inline">Více filtrů</span>
+                  <span className="hidden sm:inline">{labels.moreFilters}</span>
                   {hasActiveFilters && (
                     <span className="flex items-center justify-center w-5 h-5 text-xs font-bold bg-brand-600 text-white rounded-full">
                       {columnFiltersState.length}
@@ -694,7 +874,7 @@ export function DataTable<T>({
                 {hasActiveFilters && (
                   <button type="button"
                     onClick={() => setColumnFilters([])}
-                    className="inline-flex items-center gap-1 h-9 px-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-xl transition-colors"
+                    className="inline-flex items-center gap-1 h-9 px-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
                     title={labels.clearFilters}
                     aria-label={labels.clearFilters}
                   >
@@ -707,16 +887,16 @@ export function DataTable<T>({
             {/* Column visibility toggle */}
             {columnToggle && (
               <>
-                {filterable && (
+                {showFilterToggle && (
                   <div className="hidden sm:block w-px h-6 bg-neutral-200 dark:bg-neutral-800" />
                 )}
-                <DataTableColumnsMenu table={table} className="hidden sm:block" />
+                <DataTableColumnsMenu table={table} label={labels.columns.label} title={labels.columns.title} className="hidden sm:block" />
               </>
             )}
 
             {densityToggle && (
               <>
-                {(filterable || columnToggle) && (
+                {(showFilterToggle || columnToggle) && (
                   <div className="hidden sm:block w-px h-6 bg-neutral-200 dark:bg-neutral-800" />
                 )}
                 <DataTableDensityMenu value={density} onChange={setDensity} labels={labels.density} className="hidden sm:block" />
@@ -726,7 +906,7 @@ export function DataTable<T>({
             {/* Export */}
             {exportable && (
               <>
-                {(filterable || columnToggle || densityToggle) && (
+                {(showFilterToggle || columnToggle || densityToggle) && (
                   <div className="hidden sm:block w-px h-6 bg-neutral-200 dark:bg-neutral-800" />
                 )}
                 <DataTableExport
@@ -742,9 +922,43 @@ export function DataTable<T>({
         </div>
       )}
 
-    <div className={plain ? undefined : "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm"}>
+    <div className={plain ? undefined : "bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden"}>
+      {mobileView && (
+        loading ? (
+          <ul aria-busy className={clsx(mobileView.list, "divide-y divide-neutral-100 dark:divide-neutral-800/50")}>
+            {Array.from({ length: skeletonCount }, (_, r) => (
+              <li key={`skeleton-${r}`} aria-hidden className={clsx("animate-pulse", plain ? "px-3 py-2" : "px-4 py-3")}>
+                <div className={clsx("h-4 rounded bg-neutral-200 dark:bg-neutral-800", skeletonBarWidth(r, 0))} />
+                <div className={clsx("mt-2 h-3 rounded bg-neutral-200 dark:bg-neutral-800", skeletonBarWidth(r, 1))} />
+              </li>
+            ))}
+          </ul>
+        ) : pageRows.length === 0 ? (
+          <div className={clsx(mobileView.list, emptyPadding)}>{emptyContent}</div>
+        ) : (
+          <ul className={clsx(mobileView.list, "divide-y divide-neutral-100 dark:divide-neutral-800/50")}>
+            {pageRows.map(row => (
+              <li
+                key={row.id}
+                {...rowHandlers(row)}
+                className={clsx(
+                  plain ? "px-3 py-2" : "px-4 py-3",
+                  "transition-colors",
+                  onRowClick && "cursor-pointer focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500",
+                  selectable && row.getIsSelected()
+                    ? "bg-brand-50 dark:bg-brand-950/40"
+                    : onRowClick && "hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40 active:bg-neutral-50 dark:active:bg-neutral-800/40",
+                  rowClassName?.(row.original)
+                )}
+              >
+                {mobileRow?.(row)}
+              </li>
+            ))}
+          </ul>
+        )
+      )}
       <div
-        className={stickyHeader ? "overflow-auto" : "overflow-x-auto"}
+        className={clsx(stickyHeader ? "overflow-auto" : "overflow-x-auto", mobileView?.table)}
         style={stickyHeader ? { maxHeight: maxBodyHeight } : undefined}
       >
         <table className="w-full" style={fixedLayout ? { tableLayout: 'fixed' } : undefined} aria-busy={loading || undefined}>
@@ -756,19 +970,21 @@ export function DataTable<T>({
                 {headerGroup.headers.map(header => {
                   const canDrag = draggableColumns && header.column.id !== 'select' && header.column.id !== 'actions'
                   const sorted = sortable ? header.column.getIsSorted() : false
+                  const meta = columnMeta(header.column)
+                  const align = headerAlignClass(meta?.align)
                   return (
                     <th
                       key={header.id}
                       aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : undefined}
                       className={clsx(
-                        plain ? "px-3 py-2 text-left transition-all group" : "px-4 py-3.5 text-left first:pl-6 last:pr-6 transition-all group",
+                        plain ? `px-3 py-2 ${align} transition-all group` : `px-4 py-3.5 ${align} first:pl-6 last:pr-6 transition-all group`,
                         plain
                           ? stickyHeader && "bg-white dark:bg-neutral-900"
                           : stickyHeader ? "bg-neutral-50 dark:bg-neutral-800" : "bg-neutral-50/80 dark:bg-neutral-800/40",
                         draggedColumn === header.column.id && "opacity-50 bg-brand-100 dark:bg-brand-900/30",
                         dropIndicatorClass(header.column.id)
                       )}
-                      style={fixedLayout ? { width: header.getSize(), minWidth: header.getSize() } : (header.getSize() !== 150 ? { width: header.getSize() } : undefined)}
+                      style={columnWidthStyle(header.getSize(), { fixedLayout, fill: meta?.fill, kind: 'header' })}
                       draggable={canDrag}
                       onDragStart={canDrag ? (e) => handleDragStart(header.column.id, e) : undefined}
                       onDragOver={canDrag ? (e) => handleDragOver(header.column.id, e) : undefined}
@@ -780,6 +996,7 @@ export function DataTable<T>({
                         <div
                           className={clsx(
                             "flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500",
+                            headerJustifyClass(meta?.align),
                             header.column.getCanSort() && "cursor-pointer select-none hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
                           )}
                         >
@@ -813,8 +1030,8 @@ export function DataTable<T>({
                 {table.getHeaderGroups()[0]?.headers.map(header => (
                   <th
                     key={header.id}
-                    className={plain ? "px-3 py-2" : "px-4 py-2.5 first:pl-6 last:pr-6"}
-                    style={fixedLayout ? { width: header.getSize(), minWidth: header.getSize() } : undefined}
+                    className={clsx(plain ? "px-3 py-2" : "px-4 py-2.5 first:pl-6 last:pr-6", cellAlignClass(columnMeta(header.column)?.align))}
+                    style={columnWidthStyle(header.getSize(), { fixedLayout, fill: columnMeta(header.column)?.fill, kind: 'cell' })}
                   >
                     {header.column.getCanFilter() ? (
                       renderColumnFilter
@@ -836,77 +1053,53 @@ export function DataTable<T>({
                   aria-hidden
                   className={clsx("animate-pulse", r !== skeletonCount - 1 && "border-b border-neutral-100 dark:border-neutral-800/50")}
                 >
-                  {table.getVisibleLeafColumns().map((column, c) => (
-                    <td
-                      key={column.id}
-                      className={clsx(cellX, cellPadding)}
-                      style={fixedLayout ? { width: column.getSize(), minWidth: column.getSize() } : undefined}
-                    >
-                      <div className={clsx("h-4 rounded bg-neutral-200 dark:bg-neutral-800", column.id === 'select' ? "w-4" : skeletonBarWidth(r, c))} />
-                    </td>
-                  ))}
+                  {table.getVisibleLeafColumns().map((column, c) => {
+                    const meta = columnMeta(column)
+                    return (
+                      <td
+                        key={column.id}
+                        className={clsx(cellX, cellPadding)}
+                        style={columnWidthStyle(column.getSize(), { fixedLayout, fill: meta?.fill, kind: 'cell' })}
+                      >
+                        <div className={clsx("h-4 rounded bg-neutral-200 dark:bg-neutral-800", column.id === 'select' ? "w-4" : skeletonBarWidth(r, c), skeletonAlignClass(meta?.align))} />
+                      </td>
+                    )
+                  })}
                 </tr>
               ))
-            ) : table.getRowModel().rows.length === 0 ? (
+            ) : pageRows.length === 0 ? (
               <tr>
-                <td colSpan={table.getVisibleLeafColumns().length} className={plain ? "px-3 py-10 text-center" : "px-4 py-16 text-center"}>
-                  <div className="flex flex-col items-center">
-                    {emptyIcon && (
-                      <div className="w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center mb-4 text-neutral-400">
-                        {emptyIcon}
-                      </div>
-                    )}
-                    <p className="text-neutral-900 dark:text-white font-medium mb-1">{shownEmptyTitle}</p>
-                    {shownEmptyDescription && (
-                      <p className="text-sm text-neutral-500">{shownEmptyDescription}</p>
-                    )}
-                    {isFiltered && clearFilters && (
-                      <button
-                        type="button"
-                        onClick={clearFilters}
-                        className="mt-4 inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                        {labels.clearFilters}
-                      </button>
-                    )}
-                  </div>
+                <td colSpan={table.getVisibleLeafColumns().length} className={emptyPadding}>
+                  {emptyContent}
                 </td>
               </tr>
             ) : (
-              table.getRowModel().rows.map((row, index) => (
+              pageRows.map((row, index) => (
                 <tr
                   key={row.id}
-                  // Klikací řádek musí jít otevřít i z klávesnice.
-                  tabIndex={onRowClick ? 0 : undefined}
+                  {...rowHandlers(row)}
                   className={clsx(
                     "group transition-all duration-200",
                     onRowClick && "cursor-pointer focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-brand-500",
                     selectable && row.getIsSelected()
                       ? "bg-brand-50 dark:bg-brand-950/40"
                       : onRowClick && "hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40",
-                    index !== table.getRowModel().rows.length - 1 && "border-b border-neutral-100 dark:border-neutral-800/50",
+                    index !== pageRows.length - 1 && "border-b border-neutral-100 dark:border-neutral-800/50",
                     rowClassName?.(row.original)
                   )}
-                  onClick={(e) => {
-                    if (isInteractiveTarget(e.target as HTMLElement)) return
-                    onRowClick?.(row.original)
-                  }}
-                  onKeyDown={onRowClick ? (e) => {
-                    if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return
-                    e.preventDefault()
-                    onRowClick(row.original)
-                  } : undefined}
                 >
-                  {row.getVisibleCells().map(cell => (
-                    <td
-                      key={cell.id}
-                      className={clsx(cellX, cellPadding, dropIndicatorClass(cell.column.id))}
-                      style={fixedLayout ? { width: cell.column.getSize(), minWidth: cell.column.getSize() } : undefined}
-                    >
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
+                  {row.getVisibleCells().map(cell => {
+                    const meta = columnMeta(cell.column)
+                    return (
+                      <td
+                        key={cell.id}
+                        className={clsx(cellX, cellPadding, cellAlignClass(meta?.align), dropIndicatorClass(cell.column.id))}
+                        style={columnWidthStyle(cell.column.getSize(), { fixedLayout, fill: meta?.fill, kind: 'cell' })}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    )
+                  })}
                 </tr>
               ))
             )}
@@ -927,8 +1120,8 @@ export function DataTable<T>({
                       <td
                         key={header.id}
                         colSpan={header.colSpan}
-                        className={clsx(plain ? "px-3 py-2" : "px-4 py-4 first:pl-6 last:pr-6", "font-medium text-neutral-700 dark:text-neutral-300")}
-                        style={fixedLayout ? { width: header.getSize(), minWidth: header.getSize() } : undefined}
+                        className={clsx(plain ? "px-3 py-2" : "px-4 py-4 first:pl-6 last:pr-6", "font-medium text-neutral-700 dark:text-neutral-300", cellAlignClass(columnMeta(header.column)?.align))}
+                        style={columnWidthStyle(header.getSize(), { fixedLayout, fill: columnMeta(header.column)?.fill, kind: 'cell' })}
                       >
                         {header.isPlaceholder
                           ? null
@@ -989,7 +1182,7 @@ export function DataTable<T>({
               aria-label={labels.previousPage}
               disabled={!table.getCanPreviousPage()}
               className={clsx(
-                "inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all",
+                "inline-flex items-center justify-center w-9 h-9 rounded-lg transition-all",
                 table.getCanPreviousPage()
                   ? "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                   : "text-neutral-300 dark:text-neutral-700 cursor-not-allowed"
@@ -1017,7 +1210,7 @@ export function DataTable<T>({
                     onClick={() => table.setPageIndex(pageNum)}
                     aria-current={currentPage === pageNum ? 'page' : undefined}
                     className={clsx(
-                      "w-9 h-9 text-sm font-medium rounded-xl transition-all",
+                      "w-9 h-9 text-sm font-medium rounded-lg transition-all",
                       currentPage === pageNum
                         ? "bg-brand-500 text-white shadow-lg shadow-brand-500/25"
                         : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
@@ -1034,7 +1227,7 @@ export function DataTable<T>({
               aria-label={labels.nextPage}
               disabled={!table.getCanNextPage()}
               className={clsx(
-                "inline-flex items-center justify-center w-9 h-9 rounded-xl transition-all",
+                "inline-flex items-center justify-center w-9 h-9 rounded-lg transition-all",
                 table.getCanNextPage()
                   ? "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800"
                   : "text-neutral-300 dark:text-neutral-700 cursor-not-allowed"
@@ -1044,6 +1237,20 @@ export function DataTable<T>({
             </button>
           </div>
         </div>
+      )}
+
+      {pager?.visible && (
+        <Pagination
+          page={pager.page}
+          totalPages={pager.totalPages}
+          total={pager.total}
+          limit={currentPageSize}
+          onPageChange={p => table.setPageIndex(p - 1)}
+          onLimitChange={size => table.setPageSize(size)}
+          limitOptions={pagination?.limitOptions}
+          showPageNumbers={pagination?.showPageNumbers}
+          labels={pagination?.labels}
+        />
       )}
     </div>
     </>

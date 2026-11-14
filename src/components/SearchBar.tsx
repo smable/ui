@@ -52,7 +52,7 @@ export const SearchBar = forwardRef<HTMLInputElement, SearchBarProps>(function S
         aria-label={ariaLabel ?? placeholder}
         autoFocus={autoFocus}
         className={clsx(
-          'w-full pl-10 pr-10 text-sm bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all hover:border-neutral-300 dark:hover:border-neutral-700',
+          'w-full pl-10 pr-10 text-sm bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all hover:border-neutral-300 dark:hover:border-neutral-700',
           size === 'sm' ? 'h-9' : 'h-10'
         )}
       />

@@ -138,7 +138,7 @@ export function ListPageHeader({
             onClick={onAdd}
             aria-label={addLabel}
             className={clsx(
-              'inline-flex items-center justify-center gap-2 h-10 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-semibold rounded-xl hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-all hover:shadow-lg hover:shadow-neutral-900/10 dark:hover:shadow-white/10 hover:-translate-y-0.5',
+              'inline-flex items-center justify-center gap-2 h-10 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-semibold rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-all hover:shadow-lg hover:shadow-neutral-900/10 dark:hover:shadow-white/10 hover:-translate-y-0.5',
               collapse ? 'w-10 sm:w-auto sm:px-5' : 'px-5'
             )}
           >
@@ -157,7 +157,7 @@ export function ListPageHeader({
             aria-expanded={open}
             aria-controls={panelId}
             className={clsx(
-              'sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border transition-colors',
+              'sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border transition-colors',
               'border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300',
               'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
               open

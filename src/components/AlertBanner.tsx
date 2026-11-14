@@ -73,7 +73,7 @@ export function AlertBanner({
     <div
       role={type === 'error' ? 'alert' : undefined}
       className={clsx(
-        'flex gap-3 p-4 rounded-lg border',
+        'flex gap-3 p-4 rounded-xl border',
         title ? 'items-start' : 'items-center',
         TYPE_CLASSES[type],
         className ?? 'mb-6'

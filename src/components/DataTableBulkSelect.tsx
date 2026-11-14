@@ -103,7 +103,7 @@ export function DataTableBulkSelect({
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
-        className="flex items-center justify-center w-5 h-6 rounded text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 dark:hover:text-neutral-200 dark:hover:bg-neutral-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        className="flex items-center justify-center w-5 h-6 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 dark:hover:text-neutral-200 dark:hover:bg-neutral-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
       >
         <ChevronDown className={clsx('w-3.5 h-3.5 transition-transform', open && 'rotate-180')} />
       </button>

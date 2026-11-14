@@ -7,6 +7,9 @@
  * DataTableExport:
  *
  *   <DataTableColumnsMenu table={table} />
+ *
+ * K tabulce z `DataTable` patří do `toolbar={table => …}` — mimo DataTable
+ * (přes `tableRef`) by se po přepnutí sloupce nepřekreslilo.
  */
 
 import { useState, useRef } from 'react'
@@ -44,7 +47,7 @@ export function DataTableColumnsMenu<T>({
         onClick={() => setIsOpen(!isOpen)}
         aria-label={label}
         aria-expanded={isOpen}
-        className="inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-xl hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
+        className="inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
       >
         <Eye className="w-4 h-4" />
         <span className="hidden sm:inline">{label}</span>
@@ -67,7 +70,7 @@ export function DataTableColumnsMenu<T>({
                     <label
                       key={col.id}
                       className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer transition-colors"
-                      onClick={() => col.toggleVisibility(!isVisible)}
+                      onClick={() => col.toggleVisibility()}
                     >
                       <div
                         className={clsx(
