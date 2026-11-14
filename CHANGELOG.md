@@ -2,8 +2,7 @@
 
 All notable changes to `@smable/ui`.
 
-<<<<<<< HEAD
-## 0.30.0 — 2026-11-14 (display)
+## 0.30.0 — 2026-11-14
 
 ### ✨ Zobrazení dat (fáze 3 auditu UI app.smable.cz)
 
@@ -45,9 +44,6 @@ se vykreslí stejně jako v 0.29.1 (ověřeno porovnáním SSR výstupu). Jedin�
 - **`LoadingOverlay`**: `fill` `viewport` (výchozí, `min-h-[80vh]`) / `container` (`py-12`, vyplní
   rodiče), `role="status"` + `aria-live="polite"`. Exportovaný typ `LoadingOverlayProps`.
 
-=======
-## 0.30.0 — 2026-11-14 (data)
-
 ### ✨ Tabulky a hlavičky detailů (fáze 3 auditu UI app.smable.cz) + mezery z fáze 2
 
 Zpětně kompatibilní: všechny nové props jsou volitelné a bez nich se komponenty vykreslí i chovají
@@ -76,7 +72,6 @@ stejně jako v 0.29.1 (ověřeno porovnáním SSR i otevřených stavů v jsdom)
 - **`TextButton`**: `tone="inherit"` — barva z okolního textu (`text-current`), pro odkazy v barevných
   bannerech.
 
->>>>>>> feat/audit-faze3-data
 ## 0.29.1 — 2026-11-14
 
 ### 🐛 Pagination: šipka výběru počtu na stránku
