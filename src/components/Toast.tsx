@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type FocusEvent,
   type ReactNode,
 } from 'react'
@@ -16,7 +17,7 @@ import { addToast, removeToast, toastDuration, type ToastEntry, type ToastOption
 export type { ToastAction, ToastOptions, ToastTone } from './toast-queue'
 
 /**
- * Krátké hlášky vpravo nahoře („Uloženo“, „Export se nepovedl“).
+ * Krátké hlášky („Uloženo“, „Export se nepovedl“), výchozí vpravo nahoře.
  *
  * Tvar `show` / `success` / `error` / `info` je shodný s lokálními Toast.tsx v crm, helpdesku
  * a partneru — přechod na knihovnu je změna importu a `closeLabel` u provideru.
@@ -38,7 +39,23 @@ export interface ToastProviderProps {
   closeLabel: string
   /** Kolik hlášek je vidět najednou. Výchozí 3. */
   max?: number
+  /**
+   * Umístění, výchozí `top-right`. Vpravo nahoře mohou hlášky zakrýt Uložit v hlavičce
+   * draweru — tam se hodí `bottom-*`; spodní pozice respektují `--smable-ai-bar-reserve`.
+   */
+  position?: ToastPosition
 }
+
+export type ToastPosition = 'top-right' | 'top-center' | 'bottom-right' | 'bottom-center'
+
+const POSITION: Record<ToastPosition, string> = {
+  'top-right': 'right-4 top-4',
+  'top-center': 'left-1/2 top-4 -translate-x-1/2',
+  'bottom-right': 'right-4',
+  'bottom-center': 'left-1/2 -translate-x-1/2',
+}
+
+const BOTTOM_STYLE: CSSProperties = { bottom: 'calc(1rem + var(--smable-ai-bar-reserve, 0px))' }
 
 const ToastContext = createContext<ToastApi | null>(null)
 
@@ -60,7 +77,7 @@ const TONE: Record<ToastTone, { icon: typeof Info; box: string; iconColor: strin
   },
 }
 
-export function ToastProvider({ children, closeLabel, max = 3 }: ToastProviderProps) {
+export function ToastProvider({ children, closeLabel, max = 3, position = 'top-right' }: ToastProviderProps) {
   const [toasts, setToasts] = useState<ToastEntry[]>([])
   const nextId = useRef(1)
 
@@ -95,9 +112,12 @@ export function ToastProvider({ children, closeLabel, max = 3 }: ToastProviderPr
   return (
     <ToastContext.Provider value={api}>
       {children}
-      <div className="pointer-events-none fixed right-4 top-4 z-[100] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2">
+      <div
+        style={position.startsWith('bottom') ? BOTTOM_STYLE : undefined}
+        className={clsx('pointer-events-none fixed z-[100] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2', POSITION[position])}
+      >
         {toasts.map((t) => (
-          <ToastView key={t.id} toast={t} closeLabel={closeLabel} onDismiss={dismiss} />
+          <ToastView key={t.id} toast={t} closeLabel={closeLabel} onDismiss={dismiss} fromBottom={position.startsWith('bottom')} />
         ))}
       </div>
     </ToastContext.Provider>
@@ -108,10 +128,12 @@ function ToastView({
   toast,
   closeLabel,
   onDismiss,
+  fromBottom,
 }: {
   toast: ToastEntry
   closeLabel: string
   onDismiss: (id: number) => void
+  fromBottom: boolean
 }) {
   const [visible, setVisible] = useState(false)
   const [hovered, setHovered] = useState(false)
@@ -152,7 +174,7 @@ function ToastView({
       className={clsx(
         'pointer-events-auto flex items-start gap-3 rounded-lg border p-4 shadow-lg backdrop-blur-md transition-all duration-200 motion-reduce:transition-none',
         box,
-        visible ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0'
+        visible ? 'translate-y-0 opacity-100' : fromBottom ? 'translate-y-2 opacity-0' : '-translate-y-2 opacity-0'
       )}
     >
       <Icon aria-hidden className={clsx('mt-0.5 h-5 w-5 flex-shrink-0', iconColor)} />

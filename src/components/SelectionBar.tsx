@@ -23,7 +23,7 @@ export function SelectionBar({ count, label = 'vybráno', children, onClear }: S
 
 /** Standardní tlačítko do tmavé lišty hromadných akcí (SelectionBar / BulkActionsBar). */
 export function SelectionAction({ icon, label, onClick, danger }: {
-  icon: ReactNode; label: string; onClick: () => void; danger?: boolean
+  icon?: ReactNode; label: string; onClick: () => void; danger?: boolean
 }) {
   return (
     <button type="button"

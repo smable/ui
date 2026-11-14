@@ -74,6 +74,8 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 ## Components
 
 - `SmableButton` — primary / secondary / ghost / danger / danger-ghost variants, sizes xs–lg, loading state, `iconOnly` (square, needs `aria-label`), `pressed` (toolbar toggle)
+- `TextButton` — link-looking button (`tone` brand / neutral / danger, `size`, `icon`, `iconRight`, `underline`)
+- `Chip` — interactive pill for filters (`selected`, `tone`, `count`, `icon`, `onRemove`, `size`); `Badge` stays non-interactive
 - `SmableInput` — floating-label text input
 - `SmableSelect` — floating-label native select
 - `SmableTextarea` — floating-label textarea
@@ -81,13 +83,20 @@ The `node_modules/@smable/ui/dist/**` glob is **required** so Tailwind scans the
 - `SmableDrawer` — side drawer; `largeTitle` + `description`
 - `SmableDialog` — centered modal: header with close button, scrolling body, sticky footer, `dismissible`, `bodyFlush`, `initialFocusRef`
 - `ConfirmDialog` — confirmation of an irreversible action (`busy`, `error`, `children`, `confirmDisabled`)
-- `ToastProvider` + `useToast` — toasts top right (`success` / `error` / `info`, `duration`, `action`, `max`)
+- `ToastProvider` + `useToast` — toasts (`success` / `error` / `info`, `duration`, `action`, `max`, `position`)
 - `AlertBanner` — inline banner `success` / `warning` / `error` / `info` with optional `title`, `action`, dismiss
-- `SmableActionsMenu` — dropdown action menu
+- `SmableActionsMenu` — dropdown action menu; `trigger` default / icon / toolbar / custom element, `placement`, items with `selected` and `meta`
+- `Input` / `Select` / `Textarea` — default or floating variant (`FieldVariantContext`), `size="small"` for table cells, `hint`, `error` (string or `true`)
+- `Combobox` — autocomplete over local `options` or `loadOptions` (debounce, abort), `onCreate`, `clearOnSelect`, `renderOption`, keyboard + listbox ARIA
+- `FormSection` — titled group of form fields, optional `description`, `action`, `collapsible`
+- `StatusTabs` — tabs / segmented control (`count` optional, `size`, `fullWidth`, `icon`); falls back to `<select>` when too wide
+- `Pagination` — range text, page size, prev / next, optional `showPageNumbers` (`pageWindow` helper)
+- `SearchBar` — search field with clear button, `shortcut` hint, `onEnter`, `size`, `forwardRef`
 - `DataTable` — TanStack tabulka: řazení, filtry, stránkování (i serverové), hromadný výběr podle id
   (`getRowId`, `canSelectRow`, Shift + klik, menu Stránku / Vše podle filtru), lepivá hlavička, hustota, export
 - `DataTableBulkSelect`, `DataTableDensityMenu`, `DataTableColumnsMenu`, `DataTableExport` — díly DataTable pro vlastní TanStack instance
-- `Checkbox` — včetně `indeterminate` a `disabled`
+- `Checkbox` — včetně `indeterminate` a `disabled`; `label`, `description`, `bordered`, `onCheckedChange`
+- `Switch` / `Toggle` — přepínač (`size`, `tone`, `disabled`) a řádek s popiskem nad ním
 - `FlowFunnel` — tok ve stylu Sankey (funnel): hlavní pás, větve konverze / bez konverze, samostatné
   uzly bez pásu (`side`), procenta vždy k nadřazenému uzlu; rozložení počítá čistá funkce `layoutFlowFunnel`
 

@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
+import { pageWindow } from './pagination-window'
 
 export interface PaginationLabels {
   showing: string
@@ -7,7 +8,11 @@ export interface PaginationLabels {
   perPage: (limit: number) => string
   previous: string
   next: string
+  /** aria-label tlačítka stránky (jen se `showPageNumbers`). */
+  page?: (page: number) => string
 }
+
+const pageLabel = (page: number) => `Stránka ${page}`
 
 const DEFAULT_LABELS: PaginationLabels = {
   showing: 'Zobrazeno',
@@ -15,6 +20,7 @@ const DEFAULT_LABELS: PaginationLabels = {
   perPage: (limit) => `${limit} položek`,
   previous: 'Předchozí stránka',
   next: 'Další stránka',
+  page: pageLabel,
 }
 
 interface PaginationProps {
@@ -27,6 +33,11 @@ interface PaginationProps {
   limitOptions?: number[]
   /** Texty komponenty; výchozí jsou česky. */
   labels?: Partial<PaginationLabels>
+  /**
+   * Tlačítka stránek mezi šipkami (první, poslední a okno kolem aktuální, mezery „…“)
+   * místo textu „3 / 12“. Na mobilu zůstává text — sedm tlačítek by se nevešlo.
+   */
+  showPageNumbers?: boolean
 }
 
 export function Pagination({
@@ -38,6 +49,7 @@ export function Pagination({
   onLimitChange,
   limitOptions = [20, 50, 100],
   labels,
+  showPageNumbers = false,
 }: PaginationProps) {
   const l = { ...DEFAULT_LABELS, ...labels }
   if (total === 0) return null
@@ -80,9 +92,36 @@ export function Pagination({
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <span className="px-3 text-sm text-neutral-600 dark:text-neutral-400 tabular-nums">
+        <span className={clsx('px-3 text-sm text-neutral-600 dark:text-neutral-400 tabular-nums', showPageNumbers && 'sm:hidden')}>
           {page} / {totalPages}
         </span>
+        {showPageNumbers && (
+          <div className="hidden sm:flex items-center gap-1 mx-1">
+            {pageWindow(page, totalPages).map(item =>
+              typeof item === 'number' ? (
+                <button type="button"
+                  key={item}
+                  aria-label={(l.page ?? pageLabel)(item)}
+                  aria-current={item === page ? 'page' : undefined}
+                  onClick={() => item !== page && onPageChange(item)}
+                  className={clsx(
+                    'inline-flex items-center justify-center min-w-9 h-9 px-1 text-sm font-medium rounded-xl tabular-nums transition-colors',
+                    'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500',
+                    item === page
+                      ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-900'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  )}
+                >
+                  {item}
+                </button>
+              ) : (
+                <span key={item} aria-hidden className="inline-flex items-center justify-center w-9 h-9 text-sm text-neutral-400 dark:text-neutral-500">
+                  …
+                </span>
+              )
+            )}
+          </div>
+        )}
         <button type="button"
           aria-label={l.next}
           onClick={() => onPageChange(page + 1)}

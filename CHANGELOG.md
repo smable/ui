@@ -2,6 +2,86 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.29.0 — 2026-11-14
+
+### ✨ Tlačítka a formuláře (fáze 2 auditu UI app.smable.cz)
+
+Zpětně kompatibilní, výchozí vzhled se nemění: všechny nové props jsou volitelné a bez nich se
+komponenty vykreslí stejně jako v 0.28.1. Výjimky vypsané na konci jsou opravy, o které audit žádal.
+
+**Nové komponenty**
+- **`TextButton`** — tlačítko vzhledu odkazu („Zpět“, „Vymazat vše“): `tone` `brand` / `neutral` /
+  `danger` (výchozí brand), `size` `xs` / `sm` / `inherit` (výchozí inherit), `icon`, `iconRight`,
+  `underline` `hover` / `always` / `none` (výchozí hover), `forwardRef`, `type="button"`. Zakázané
+  tlačítko nemění barvu ani nepodtrhává při najetí.
+- **`Chip`** — interaktivní pill pro filtry a volby: `selected` (`aria-pressed`, barva podle `tone`,
+  sdílený typ `BadgeTone`, výchozí brand), `count` („(n)“, při 0 a nevybraném stavu zakázaný),
+  `icon`, `size` `sm` / `md` (h-7 / h-8). S `onRemove` vykreslí × jako sourozenecké tlačítko
+  (`removeLabel`, výchozí „Odebrat“). `Badge` zůstává neinteraktivní.
+- **`Switch`** — samotný přepínač `role="switch"`: `checked`, `onChange(checked)`, `disabled`,
+  `size` `sm` / `md`, `tone` `green` / `brand` (výchozí zelená jako `Toggle`), `aria-label` /
+  `aria-labelledby`, `forwardRef`. `Toggle` ho používá uvnitř.
+- **`Combobox`** — přesun z app (`components/ui/Combobox.tsx`). Props app zůstávají (`label`, `value`,
+  `onChange`, `options`, `loadOptions`, `debounceMs`, `limit`, `placeholder`, `required`, `error`,
+  `disabled`, `autoFocus`, `highlight`, `emptyText`), app jen mění import. Texty přes
+  `labels` s českými výchozími (`clear`, `loading`, `noResults`, `create(q)`, `minChars(n)`).
+  Nově `minChars`, `filter` (výchozí `smartFilter`), `renderOption(o, { active, selected, query })`,
+  `onCreate(query)` (položka „Vytvořit …“, když se žádná volba nejmenuje stejně), `clearOnSelect`,
+  `getOptionDisabled` (šipky zakázané přeskakují), `prefix`, `suffix`, `inputRef`, `hint`,
+  `error: string | boolean`, `aria-label`, `variant`, `size`. Vzhled podle `FieldVariantContext`
+  jako `Input` (v `SmableDrawer` floating), floating label má kontrast podle WCAG jako `Input`.
+  Esc zavře jen seznam, ne drawer kolem. Čistá logika je v modulu s testy.
+- **`FormSection`** — přesun z app (`FormParts.tsx`), API beze změny (`title`, `action`, `children`,
+  `className`). Nově `description`, `collapsible` + `open` / `defaultOpen` / `onOpenChange`; sbalený
+  obsah zůstává v DOM (`hidden`), rozepsaná pole o hodnotu nepřijdou.
+- **`pageWindow(page, totalPages)`** — čistá funkce pro čísla stránek (exportovaná, s testy).
+
+**Rozšíření**
+- **`SmableActionsMenu`**: `trigger` `default` / `icon` (jen ikona, `label` je aria-label) /
+  `toolbar` (vzhled `DataTableColumnsMenu`: h-9, rounded-xl, okraj) / vlastní element (dostane
+  `onClick`, `aria-haspopup`, `aria-expanded`, vlastní `onClick` se zachová), `icon`, `active`
+  (zvýrazněný toolbar = aktivní filtr), `placement` `bottom` / `top`. Položka: `selected`
+  (fajfka vpravo, `role="menuitemradio"` + `aria-checked`) a `meta` (např. počet vpravo).
+- **`StatusTabs`**: `count` je volitelný (bez něj žádný odznak, v `<select>` na mobilu bez „(n)“),
+  `size` `sm` / `md` (sm = segmentový přepínač), `fullWidth`, `icon` u záložky. Exportované typy
+  `StatusTab`, `StatusTabsProps`.
+- **`ViewToggle`**: `options` (`{ value, icon, label }[]`, generická hodnota) pro vlastní volby,
+  výchozí zůstává Karty / Tabulka a `labels` funguje dál.
+- **`Pagination`**: `showPageNumbers` — tlačítka stránek mezi šipkami (první, poslední, okno 5 stránek
+  u kraje nebo aktuální ± 1, mezery „…“, vždy 7 míst, aby šipky neposkakovaly). Aktivní stránka
+  neutral-900 jako `SmableButton primary`. Na mobilu zůstává text „3 / 12“. Nový volitelný label
+  `page(n)` (aria-label, výchozí „Stránka n“).
+- **`SelectionAction`**: `icon` je volitelná.
+- **`Input` / `Select` / `Textarea`**: `size="small"` pro výchozí variantu (h-9 px-2, u Textarea
+  px-2 py-1.5) do buněk tabulek; bez `variant` vykreslí výchozí variantu i v `SmableDrawer`
+  (floating malou velikost nemá). `hint` pod polem (`aria-describedby`, schová se, když je vidět
+  text chyby), `error: string | boolean` (`true` = jen červený okraj, `aria-invalid` bez popisu).
+- **`Checkbox`**: `label`, `description` (`aria-describedby`), `bordered` (karta, vybraná s okrajem
+  brand), `onCheckedChange(checked)` vedle dosavadního `onChange(e)`. Klik na popisek přepne
+  přes `<label>`. Bez `label` se vykreslí stejně jako dřív; s `label` patří `className` na celý řádek.
+- **`Toggle`**: `disabled`, `tone`. Uvnitř `Switch`; řádek ignoruje kliky z přepínače místo
+  `stopPropagation`, každé místo (přepínač, kulička, popisek) přepne právě jednou.
+- **`SearchBar`**: `forwardRef` na input, `shortcut` (nápověda „⌘K“ u prázdného pole, zkratku obsluhuje
+  konzument), `onEnter(value)`, `size` `sm` / `md` (sm = h-9), `className` (bez něj dál
+  `flex-1 max-w-md`), `autoFocus`, `aria-label` (výchozí dál `placeholder`).
+- **`ToastProvider`**: `position` `top-right` (výchozí) / `top-center` / `bottom-right` /
+  `bottom-center`; spodní pozice počítají s `--smable-ai-bar-reserve`.
+- **`SectionTitle`**: `controlsId` u `collapsible` přidá `aria-controls` a `aria-expanded`.
+
+**Viditelné změny bez nových props**
+- Výchozí `Select` a `Textarea` s `error` mají červený okraj jako `Input` (dřív jen text pod polem).
+- Floating `Select` a `Textarea`: label s kontrastem podle WCAG AA jako floating `Input`
+  (neutral-600 / tmavý neutral-400, chyba red-600 / tmavá red-400).
+- `Toggle`: přepínač se vedle dlouhého popisu už nesmrskne (`flex-shrink-0`; dřív při zalomeném popisu
+  klesl až na 22 px a kulička vyjela ven).
+
+Typy: `error` u polí je `string | boolean`, `StatusTab.count` je volitelný, `ViewToggle` je generický
+(výchozí `'grid' | 'list'`), `SearchBar` je `forwardRef`. Kdo nad nimi staví vlastní typy, ověří je
+typecheckem.
+
+Chyba z boardu „Toggle nereaguje na klik přímo na přepínači“ je opravená od 0.14.0 (`e33f365`): přepínač
+měl `onClick={e => e.stopPropagation()}` bez vlastního přepnutí. Týká se jen konzumentů pod 0.14.
+
 ## 0.28.1 — 2026-11-14
 
 ### 🐛 Overlaye: zámek posunu a Esc přes všechny vrstvy

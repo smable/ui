@@ -7,16 +7,20 @@ interface SectionTitleProps {
   isOpen?: boolean
   onToggle?: () => void
   className?: string
+  /** Jen u `collapsible`: id obsahu, který tlačítko rozbaluje (`aria-controls` + `aria-expanded`). */
+  controlsId?: string
 }
 
 const baseClass = "text-sm font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider"
 
-export function SectionTitle({ children, collapsible, isOpen, onToggle, className }: SectionTitleProps) {
+export function SectionTitle({ children, collapsible, isOpen, onToggle, className, controlsId }: SectionTitleProps) {
   if (collapsible) {
     return (
       <button
         type="button"
         onClick={onToggle}
+        aria-controls={controlsId}
+        aria-expanded={controlsId ? Boolean(isOpen) : undefined}
         className={clsx(baseClass, "flex w-full items-center justify-between", className)}
       >
         {children}

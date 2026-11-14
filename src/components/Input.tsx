@@ -1,12 +1,15 @@
 import { forwardRef, useId, type InputHTMLAttributes, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { useFieldVariant } from './FieldVariantContext'
+import { fieldMessages, hintClass } from './field-messages'
 
 /**
  * Input — unified text input with two visual variants.
  *
  * `variant="default"` (default): label-above, h-10, rounded-lg.
  *   Supports prefix/suffix/labelAction. Used in compact forms, filters.
+ *   `size="small"` (h-9 px-2) for inline table cells — without explicit `variant`
+ *   it always renders the default variant, even inside a SmableDrawer.
  *
  * `variant="floating"`: Square-style floating label. Label acts as
  *   placeholder when empty and floats up on focus/value. Used in
@@ -18,9 +21,16 @@ import { useFieldVariant } from './FieldVariantContext'
 
 interface BaseInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size' | 'prefix' | 'placeholder'> {
   label?: string
-  error?: string
+  /** Text chyby pod polem; `true` = jen červený okraj bez textu. */
+  error?: string | boolean
+  /** Nápověda pod polem (`aria-describedby`). Když se ukazuje text chyby, skryje se. */
+  hint?: ReactNode
   required?: boolean
-  size?: 'medium' | 'large'
+  /**
+   * Default: `small` h-9 px-2 (buňky tabulek), jinak h-10. Floating: `large` h-16 (výchozí), jinak h-12.
+   * `small` bez `variant` vždy vykreslí default variantu — floating malou velikost nemá.
+   */
+  size?: 'small' | 'medium' | 'large'
   trailing?: ReactNode
 }
 
@@ -47,7 +57,8 @@ interface FloatingInputProps extends BaseInputProps {
 
 export type InputProps = DefaultInputProps | FloatingInputProps
 
-const defaultBase = "w-full h-10 px-3 text-sm bg-white dark:bg-neutral-800 border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+const defaultBase = "text-sm bg-white dark:bg-neutral-800 border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+const defaultSize = { small: "h-9 px-2", medium: "h-10 px-3" }
 const defaultNormal = "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
 const defaultError = "border-red-400 dark:border-red-600"
 const defaultLabel = "block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5"
@@ -55,17 +66,17 @@ const errorMsgClass = "mt-1.5 text-xs text-red-600 dark:text-red-400"
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(props, ref) {
   const contextVariant = useFieldVariant()
-  const resolvedVariant = props.variant ?? contextVariant
+  const resolvedVariant = props.variant ?? (props.size === 'small' ? 'default' : contextVariant)
   const autoId = useId()
   if (resolvedVariant === 'floating') {
     // Variantu často určí kontext (SmableDrawer), takže sem chodí i props
     // default varianty. `prefix` a `labelAction` floating neumí — vyjmout,
     // ať neskončí jako atributy na <input>.
     const floatingProps = props as FloatingInputProps & Pick<DefaultInputProps, 'prefix' | 'labelAction'>
-    const { label, error, trailing: trailingProp, suffix, prefix: _prefix, labelAction: _labelAction, size = 'large', className, id, required, placeholder, variant: _v, ...rest } = floatingProps
+    const { label, error, hint, trailing: trailingProp, suffix, prefix: _prefix, labelAction: _labelAction, size = 'large', className, id, required, placeholder, variant: _v, ...rest } = floatingProps
     const trailing = trailingProp ?? (suffix ? <span className="text-sm text-neutral-500 dark:text-neutral-400 pointer-events-none">{suffix}</span> : undefined)
     const inputId = id ?? `input-${autoId}`
-    const hasError = Boolean(error)
+    const { hasError, errorMessage, showHint, describedBy } = fieldMessages(inputId, error, hint)
     const sizeClasses = size === 'large' ? 'h-16 pt-6 pb-2 text-base' : 'h-12 pt-5 pb-1 text-sm'
 
     // Prázdné pole bez placeholderu drží label uprostřed přes
@@ -84,7 +95,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
             required={required}
             placeholder={hasPlaceholder ? placeholder : ' '}
             aria-invalid={hasError || undefined}
-            aria-describedby={hasError ? `${inputId}-error` : undefined}
+            aria-describedby={describedBy}
             className={clsx(
               'peer block w-full px-4',
               'text-neutral-900 dark:text-white',
@@ -136,16 +147,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
             </div>
           )}
         </div>
-        {hasError && (
-          <p id={`${inputId}-error`} className={errorMsgClass}>{error}</p>
+        {errorMessage && (
+          <p id={`${inputId}-error`} className={errorMsgClass}>{errorMessage}</p>
         )}
+        {showHint && <p id={`${inputId}-hint`} className={hintClass}>{hint}</p>}
       </div>
     )
   }
 
   const defaultProps = props as DefaultInputProps
-  const { label, labelAction, error, required, prefix, suffix, className, id, variant: _v, size: _size, trailing: _trailing, ...rest } = defaultProps
+  const { label, labelAction, error, hint, required, prefix, suffix, className, id, variant: _v, size, trailing: _trailing, ...rest } = defaultProps
   const inputId = id ?? `input-${autoId}`
+  const { hasError, errorMessage, showHint, describedBy } = fieldMessages(inputId, error, hint)
   const wrapped = prefix || suffix
   return (
     <div>
@@ -169,11 +182,13 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
           ref={ref}
           id={inputId}
           required={required}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${inputId}-error` : undefined}
+          aria-invalid={hasError || undefined}
+          aria-describedby={describedBy}
           className={clsx(
+            "w-full",
+            size === 'small' ? defaultSize.small : defaultSize.medium,
             defaultBase,
-            error ? defaultError : defaultNormal,
+            hasError ? defaultError : defaultNormal,
             prefix && "pl-9",
             suffix && "pr-12",
             className
@@ -186,7 +201,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(pro
           </div>
         )}
       </div>
-      {error && <p id={`${inputId}-error`} className={errorMsgClass}>{error}</p>}
+      {errorMessage && <p id={`${inputId}-error`} className={errorMsgClass}>{errorMessage}</p>}
+      {showHint && <p id={`${inputId}-hint`} className={hintClass}>{hint}</p>}
     </div>
   )
 })
