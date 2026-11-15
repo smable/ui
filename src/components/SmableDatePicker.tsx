@@ -268,9 +268,9 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
   const toggle = () => !disabled && setOpen((o) => !o)
 
   // Křížek + kalendář zabírají 56 px od pravé hrany; text hodnoty pod ně nesmí zajet.
-  // Varianta `default` (filtry, kompaktní formuláře) místo toho při vyplněné hodnotě ukáže jen křížek.
+  // Filtr s `prefix` (úzké pole) místo toho při vyplněné hodnotě ukáže jen křížek.
   const showClear = clearable && hasValue && !disabled
-  const compact = props.variant === 'default'
+  const compact = props.variant === 'default' && props.prefix != null
   const iconPad = showClear && !compact ? 'pr-16' : 'pr-10'
 
   const icons = (

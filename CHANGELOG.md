@@ -23,8 +23,8 @@ All notable changes to `@smable/ui`.
 - **`SmableDatePicker` kalendář u pravé hrany** — když by kalendář vyjel z okna (pole vpravo na telefonu),
   zarovná se k pravé hraně pole.
 - **`SmableDatePicker` místo pro křížek** — s vyplněnou hodnotou má pole vpravo odsazení i na křížek
-  (`pr-16`), text pod ikony nezajede. Varianta `default` ukáže u vyplněné hodnoty místo kalendáře jen
-  křížek, aby se datum vešlo do úzkého filtru (prázdné pole má dál ikonu kalendáře).
+  (`pr-16`), text pod ikony nezajede. Pole s `prefix` (filtr) ukáže u vyplněné hodnoty místo kalendáře jen
+  křížek, aby se datum vešlo do úzkého filtru; prázdné pole i pole bez `prefix` mají dál ikonu kalendáře.
 
 ## 0.31.0 — 2026-11-14
 
