@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { DayPicker, type DateRange, type Matcher } from 'react-day-picker'
 import { cs } from 'date-fns/locale'
 import { format, isValid, parse } from 'date-fns'
@@ -29,6 +29,7 @@ import 'react-day-picker/dist/style.css'
  *   <SmableDatePicker label="Termín" mode="datetime" value={d} onChange={setD} />
  *   <SmableDatePicker label="Období" mode="range" value={r} onChange={setR} />
  *   <SmableDatePicker variant="default" label="Platnost od" value={d} onChange={setD} hint="Včetně" />
+ *   <SmableDatePicker variant="default" size="small" prefix="Od" value={d} onChange={setD} />  (filtr)
  */
 
 type DateValue = Date | null
@@ -72,6 +73,7 @@ type VariantProps =
       size?: 'medium' | 'large'
       /** Nápovědu pod polem umí jen `variant="default"`. */
       hint?: never
+      prefix?: never
     }
   | {
       /** `default`: popisek nad polem jako `Input variant="default"`. */
@@ -85,6 +87,11 @@ type VariantProps =
       hint?: ReactNode
       /** `medium` (výchozí) h-10, `small` h-9 (filtry, buňky tabulek). */
       size?: 'small' | 'medium'
+      /**
+       * Krátký popisek uvnitř pole před hodnotou (filtr „Od“ / „Do“). Je součástí textu tlačítka,
+       * a tedy i jeho přístupného názvu — `aria-label` vedle něj nepředávej, přebil by i hodnotu.
+       */
+      prefix?: ReactNode
     }
 
 type CommonProps = {
@@ -143,7 +150,10 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
   const inputId = `smable-date-${autoId}`
   const wrapperRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
+  // Kalendář roste doprava od levé hrany pole; u pole vpravo na úzkém displeji se zarovná k pravé hraně.
+  const [alignRight, setAlignRight] = useState(false)
   const [timeText, setTimeText] = useState<string>(() =>
     mode === 'datetime' && props.value ? format(props.value as Date, TIME_FMT) : ''
   )
@@ -174,6 +184,17 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
       document.removeEventListener('mousedown', handler)
       document.removeEventListener('keydown', onKey, true)
     }
+  }, [open])
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setAlignRight(false)
+      return
+    }
+    const anchor = wrapperRef.current?.getBoundingClientRect()
+    const width = popoverRef.current?.offsetWidth
+    if (!anchor || !width) return
+    setAlignRight(anchor.left + width > window.innerWidth - 8 && anchor.right - width >= 8)
   }, [open])
 
   // Sync time text when datetime value changes externally
@@ -246,9 +267,15 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
 
   const toggle = () => !disabled && setOpen((o) => !o)
 
+  // Křížek + kalendář zabírají 56 px od pravé hrany; text hodnoty pod ně nesmí zajet.
+  // Malé pole (filtry) místo toho při vyplněné hodnotě ukáže jen křížek.
+  const showClear = clearable && hasValue && !disabled
+  const compact = props.variant === 'default' && size === 'small'
+  const iconPad = showClear && !compact ? 'pr-16' : 'pr-10'
+
   const icons = (
     <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-      {clearable && hasValue && !disabled && (
+      {showClear && (
         <button
           type="button"
           onClick={handleClear}
@@ -259,14 +286,18 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
           <X className="w-4 h-4" />
         </button>
       )}
-      <Calendar className="w-4 h-4 text-neutral-400 pointer-events-none" />
+      {!(compact && showClear) && <Calendar className="w-4 h-4 text-neutral-400 pointer-events-none" />}
     </div>
   )
 
   const popover = open && !disabled && (
     <div
+      ref={popoverRef}
       role="dialog"
-      className="absolute left-0 top-[calc(100%+6px)] z-50 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl"
+      className={clsx(
+        'absolute top-[calc(100%+6px)] z-50 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xl',
+        alignRight ? 'right-0' : 'left-0'
+      )}
     >
       {mode === 'range' ? (
         <DayPicker
@@ -323,8 +354,13 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
   )
 
   if (props.variant === 'default') {
-    const { hint, 'aria-label': ariaLabel } = props as DefaultVariantProps
+    const { hint, prefix, 'aria-label': ariaLabel } = props as DefaultVariantProps
     const { errorMessage, showHint, describedBy } = fieldMessages(inputId, error, hint)
+    const valueNode = hasValue ? (
+      <span className="block min-w-0 truncate">{display}</span>
+    ) : (
+      <span className="block min-w-0 truncate text-neutral-400 dark:text-neutral-500">{placeholder}</span>
+    )
     return (
       <div ref={wrapperRef}>
         {label && (
@@ -345,7 +381,8 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
             aria-describedby={describedBy}
             aria-label={ariaLabel}
             className={clsx(
-              'block w-full text-left pr-10',
+              'block w-full text-left',
+              iconPad,
               size === 'small' ? 'h-9 px-2' : 'h-10 px-3',
               'text-sm text-neutral-900 dark:text-white bg-white dark:bg-neutral-800',
               'border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent',
@@ -356,10 +393,13 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
               className
             )}
           >
-            {hasValue ? (
-              <span className="block truncate">{display}</span>
+            {prefix ? (
+              <span className="flex min-w-0 items-center gap-2">
+                <span className="shrink-0 text-neutral-500 dark:text-neutral-400">{prefix}</span>
+                {valueNode}
+              </span>
             ) : (
-              <span className="block truncate text-neutral-400 dark:text-neutral-500">{placeholder}</span>
+              valueNode
             )}
           </button>
           {icons}
@@ -383,7 +423,8 @@ export function SmableDatePicker(props: SmableDatePickerProps) {
         aria-expanded={open}
         aria-invalid={hasError || undefined}
         className={clsx(
-          'peer block w-full text-left px-4 pr-10',
+          'peer block w-full text-left px-4',
+          iconPad,
           'text-neutral-900 dark:text-white',
           'bg-white dark:bg-neutral-900',
           'border rounded-xl transition-colors',

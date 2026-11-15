@@ -8,6 +8,7 @@
 
 import { useState, useRef } from 'react'
 import { useMenuAlign } from '../lib/useMenuAlign'
+import { useOverlay } from './overlay'
 import { Rows3, Check } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -48,6 +49,7 @@ export function DataTableDensityMenu({ value, onChange, labels, className }: Dat
   const [isOpen, setIsOpen] = useState(false)
   const anchorRef = useRef<HTMLDivElement>(null)
   const menuAlign = useMenuAlign(isOpen, anchorRef, 192)
+  useOverlay(isOpen, { onEscape: () => setIsOpen(false), lockScroll: false })
   const l = { ...DEFAULT_LABELS, ...labels }
   const options: DataTableDensity[] = ['compact', 'normal', 'relaxed']
 
@@ -67,8 +69,8 @@ export function DataTableDensityMenu({ value, onChange, labels, className }: Dat
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div role="menu" className={clsx('absolute top-full mt-2 w-48 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
-            <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
+          <div role="menu" aria-label={l.title} className={clsx('absolute top-full mt-2 w-48 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
+            <div role="none" className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
               <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">{l.title}</p>
             </div>
             {options.map(option => (

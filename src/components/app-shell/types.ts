@@ -30,6 +30,9 @@ export interface AppRailApp {
  * Link component injected by the consumer (e.g. react-router `Link` or Next.js
  * `Link`). Keeps the package free of any router dependency. Defaults to a plain
  * `<a>` (see `DefaultShellLink`).
+ *
+ * Use `forwardRef` and pass the ref to the `<a>`: `AppRail` puts the link in a Radix
+ * `TooltipTrigger asChild`, which needs the ref to position the tooltip.
  */
 export type ShellLink = React.ComponentType<{
   href: string

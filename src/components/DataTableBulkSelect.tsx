@@ -11,6 +11,7 @@ import { createPortal } from 'react-dom'
 import { ChevronDown } from 'lucide-react'
 import clsx from 'clsx'
 import { Checkbox } from './Checkbox'
+import { useOverlay } from './overlay'
 
 export interface DataTableBulkSelectProps {
   checked: boolean
@@ -62,19 +63,20 @@ export function DataTableBulkSelect({
     setPos({ top: r.bottom + 6, left: Math.max(8, r.left - 28) })
   }, [open])
 
+  useOverlay(open, {
+    onEscape: () => {
+      setOpen(false)
+      triggerRef.current?.focus()
+    },
+    lockScroll: false,
+  })
+
   useEffect(() => {
     if (!open) return
     const close = () => setOpen(false)
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return
-      close()
-      triggerRef.current?.focus()
-    }
-    document.addEventListener('keydown', onKey)
     window.addEventListener('resize', close)
     window.addEventListener('scroll', close, true)
     return () => {
-      document.removeEventListener('keydown', onKey)
       window.removeEventListener('resize', close)
       window.removeEventListener('scroll', close, true)
     }
@@ -116,7 +118,7 @@ export function DataTableBulkSelect({
             style={{ top: pos.top, left: pos.left }}
             className="fixed z-50 min-w-56 py-1 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 normal-case tracking-normal font-normal"
           >
-            <p className="px-4 pt-2 pb-1 text-xs font-medium text-neutral-500 uppercase tracking-wider">{labels.title}</p>
+            <p role="none" className="px-4 pt-2 pb-1 text-xs font-medium text-neutral-500 uppercase tracking-wider">{labels.title}</p>
             <button type="button" role="menuitem" className={item} disabled={pageCount === 0} onClick={pick(onSelectPage)}>
               <span className="block">{labels.page}</span>
               <span className="block text-xs text-neutral-500">{labels.count(pageCount)}</span>
@@ -127,7 +129,7 @@ export function DataTableBulkSelect({
                 <span className="block text-xs text-neutral-500">{labels.count(filteredCount)}</span>
               </button>
             )}
-            <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
+            <div role="separator" className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
             <button type="button" role="menuitem" className={item} disabled={selectedCount === 0} onClick={pick(onClear)}>
               {labels.clear}
             </button>

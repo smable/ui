@@ -1,7 +1,8 @@
-import { cloneElement, isValidElement, useEffect, useRef, useState, type MouseEvent, type ReactElement, type ReactNode } from 'react'
+import { cloneElement, isValidElement, useRef, useState, type MouseEvent, type ReactElement, type ReactNode } from 'react'
 import { Check, ChevronDown, MoreHorizontal } from 'lucide-react'
 import clsx from 'clsx'
 import type { SmableButtonSize } from './SmableButton'
+import { useOverlay } from './overlay'
 
 export interface SmableActionItem {
   key: string
@@ -79,13 +80,7 @@ export function SmableActionsMenu({
 }: SmableActionsMenuProps) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open])
+  useOverlay(open, { onEscape: () => setOpen(false), lockScroll: false })
 
   const toggle = () => setOpen((v) => !v)
   const triggerIcon = icon ?? <MoreHorizontal className="w-4 h-4" />

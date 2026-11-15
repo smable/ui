@@ -2,6 +2,30 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.32.0 — 2026-11-15
+
+### 🧹 Dorovnání po fázi 4 auditu UI app.smable.cz
+
+- **Esc v rozbalovacích menu** — `SmableActionsMenu`, `ExportMenu`, `DataTableExport`,
+  `DataTableColumnsMenu`, `DataTableDensityMenu` a `DataTableBulkSelect` zavírají menu přes `useOverlay`
+  (zásobník vrstev, bez zámku posunu): Esc v menu uvnitř draweru nebo dialogu zavře jen menu, ne i drawer
+  (dřív `SmableActionsMenu` zavřel obojí najednou a ostatní menu na Esc nereagovala vůbec). Fokus se vrací na
+  spouštěč; položka, která otevře `ConfirmDialog`, nechá fokus v dialogu.
+- **`DataTableColumnsMenu` ovladatelné klávesnicí** — položky jsou `<button role="menuitemcheckbox"
+  aria-checked>` v `role="menu"` (dřív `<label>` bez prvku formuláře, na který se nedalo dostat Tabem);
+  spouštěč má `aria-haspopup="menu"`. `ExportMenu` a `DataTableExport` dostaly role `menu` / `menuitem`.
+- **`DefaultShellLink` přes `forwardRef`** — `AppRail` ho vkládá do Radix `TooltipTrigger asChild`, který
+  potřebuje ref; bez něj React hlásil „Function components cannot be given refs“. Vlastní `linkComponent`
+  konzumenta má ref předat taky (JSDoc u `ShellLink`).
+- **`SmableDatePicker` `prefix`** (jen `variant="default"`) — krátký popisek uvnitř pole před hodnotou pro
+  filtry „Od“ / „Do“. Je součástí textu tlačítka, takže čtečka přečte „Od 1. 11. 2026“; `aria-label` vedle
+  něj nepředávat.
+- **`SmableDatePicker` kalendář u pravé hrany** — když by kalendář vyjel z okna (pole vpravo na telefonu),
+  zarovná se k pravé hraně pole.
+- **`SmableDatePicker` místo pro křížek** — s vyplněnou hodnotou má pole vpravo odsazení i na křížek
+  (`pr-16`), text pod ikony nezajede. Malé pole (`variant="default" size="small"`) ukáže místo kalendáře
+  jen křížek, aby se datum vešlo do úzkého filtru.
+
 ## 0.31.0 — 2026-11-14
 
 ### ✨ DataTable pro hlavní tabulky app (fáze 4 auditu UI app.smable.cz)

@@ -11,6 +11,7 @@
 
 import { useState, useRef } from 'react'
 import { useMenuAlign } from '../lib/useMenuAlign'
+import { useOverlay } from './overlay'
 import { Download, ChevronDown, FileSpreadsheet, FileText, Printer, Loader2 } from 'lucide-react'
 import { saveAs } from 'file-saver'
 import * as XLSX from 'xlsx'
@@ -386,6 +387,7 @@ export function DataTableExport<T>({
   const [isOpen, setIsOpen] = useState(false)
   const anchorRef = useRef<HTMLDivElement>(null)
   const menuAlign = useMenuAlign(isOpen, anchorRef, 224)
+  useOverlay(isOpen, { onEscape: () => setIsOpen(false), lockScroll: false })
   // Klíč právě běžící položky menu — formát (`format:csv`) nebo extra option
   // (`extra:{key}`). Dokud běží, je položka disabled (spinner) a ostatní
   // položky jsou guardnuté proti souběhu.
@@ -454,18 +456,19 @@ export function DataTableExport<T>({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50 max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
-            <div className="px-4 py-2 text-xs text-neutral-400 border-b border-neutral-100 dark:border-neutral-800">
+          <div role="menu" aria-label="Export" className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50 max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
+            <div role="none" className="px-4 py-2 text-xs text-neutral-400 border-b border-neutral-100 dark:border-neutral-800">
               {filteredCount} záznamů
             </div>
             {formats.map((format, i) => {
               const isRunning = runningKey === `format:${format}`
               return (
-                <div key={format}>
+                <div key={format} role="none">
                   {format === 'print' && i > 0 && (
-                    <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
+                    <div role="separator" className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
                   )}
                   <button type="button"
+                    role="menuitem"
                     onClick={() => handleExport(format)}
                     disabled={isRunning}
                     className={clsx(
@@ -486,13 +489,14 @@ export function DataTableExport<T>({
             {extraOptions && extraOptions.length > 0 && (
               <>
                 {formats.length > 0 && (
-                  <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
+                  <div role="separator" className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
                 )}
                 {extraOptions.map(option => {
                   const isRunning = runningKey === `extra:${option.key}`
                   return (
                     <button type="button"
                       key={option.key}
+                      role="menuitem"
                       onClick={() => handleExtraSelect(option)}
                       disabled={isRunning}
                       className={clsx(

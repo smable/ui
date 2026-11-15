@@ -14,6 +14,7 @@
 
 import { useState, useRef } from 'react'
 import { useMenuAlign } from '../lib/useMenuAlign'
+import { useOverlay } from './overlay'
 import type { Table } from '@tanstack/react-table'
 import { Eye, Check } from 'lucide-react'
 import clsx from 'clsx'
@@ -40,12 +41,14 @@ export function DataTableColumnsMenu<T>({
   const [isOpen, setIsOpen] = useState(false)
   const anchorRef = useRef<HTMLDivElement>(null)
   const menuAlign = useMenuAlign(isOpen, anchorRef, 224)
+  useOverlay(isOpen, { onEscape: () => setIsOpen(false), lockScroll: false })
 
   return (
     <div ref={anchorRef} className={clsx('relative', className)}>
       <button type="button"
         onClick={() => setIsOpen(!isOpen)}
         aria-label={label}
+        aria-haspopup="menu"
         aria-expanded={isOpen}
         className="inline-flex items-center gap-1.5 h-9 px-3 text-sm font-medium bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 rounded-lg hover:border-neutral-300 dark:hover:border-neutral-700 transition-all"
       >
@@ -55,11 +58,11 @@ export function DataTableColumnsMenu<T>({
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
-            <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
+          <div role="menu" aria-label={title} className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl z-20 py-1 overflow-hidden max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
+            <div role="none" className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800">
               <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider">{title}</p>
             </div>
-            <div className="max-h-64 overflow-y-auto py-1">
+            <div role="none" className="max-h-64 overflow-y-auto py-1">
               {table.getAllLeafColumns()
                 .filter(col => !excludeColumnIds.includes(col.id))
                 .map(col => {
@@ -67,23 +70,27 @@ export function DataTableColumnsMenu<T>({
                   const header = col.columnDef.header
                   const colLabel = typeof header === 'string' ? header : col.id
                   return (
-                    <label
+                    <button
+                      type="button"
                       key={col.id}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer transition-colors"
+                      role="menuitemcheckbox"
+                      aria-checked={isVisible}
+                      className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors focus:outline-none focus-visible:bg-neutral-50 dark:focus-visible:bg-neutral-800/50"
                       onClick={() => col.toggleVisibility()}
                     >
-                      <div
+                      <span
+                        aria-hidden
                         className={clsx(
-                          'w-4 h-4 rounded border-2 flex items-center justify-center transition-colors',
+                          'w-4 h-4 shrink-0 rounded border-2 flex items-center justify-center transition-colors',
                           isVisible
                             ? 'bg-neutral-900 dark:bg-white border-neutral-900 dark:border-white'
                             : 'border-neutral-300 dark:border-neutral-600',
                         )}
                       >
                         {isVisible && <Check className="w-3 h-3 text-white dark:text-neutral-900" />}
-                      </div>
+                      </span>
                       <span className="text-sm text-neutral-700 dark:text-neutral-300">{colLabel}</span>
-                    </label>
+                    </button>
                   )
                 })}
             </div>

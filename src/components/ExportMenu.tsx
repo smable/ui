@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useMenuAlign } from '../lib/useMenuAlign'
+import { useOverlay } from './overlay'
 import { Download, ChevronDown, FileSpreadsheet, Printer } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -24,6 +25,7 @@ export function ExportMenu({ options = defaultOptions }: ExportMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
   const anchorRef = useRef<HTMLDivElement>(null)
   const menuAlign = useMenuAlign(isOpen, anchorRef, 224)
+  useOverlay(isOpen, { onEscape: () => setIsOpen(false), lockScroll: false })
 
   return (
     <div ref={anchorRef} className="relative">
@@ -42,13 +44,14 @@ export function ExportMenu({ options = defaultOptions }: ExportMenuProps) {
       {isOpen && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50 max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
+          <div role="menu" className={clsx('absolute top-full mt-2 w-56 bg-white dark:bg-neutral-900 rounded-xl shadow-lg border border-neutral-200 dark:border-neutral-800 py-1 z-50 max-w-[calc(100vw-1rem)]', menuAlign === 'left' ? 'left-0' : 'right-0')}>
             {options.map((option, i) => (
-              <div key={option.key}>
+              <div key={option.key} role="none">
                 {i > 0 && i === options.length - 1 && options.length > 2 && (
-                  <div className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
+                  <div role="separator" className="h-px bg-neutral-100 dark:bg-neutral-800 my-1" />
                 )}
                 <button type="button"
+                  role="menuitem"
                   onClick={() => { option.onClick(); setIsOpen(false) }}
                   className="w-full px-4 py-2.5 text-left text-sm flex items-center gap-3 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-neutral-700 dark:text-neutral-300"
                 >
