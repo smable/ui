@@ -61,6 +61,8 @@ export function DateRangePicker({ preset, dateRange, onPresetChange, onCustomRan
           value={pickerValue as any}
           onChange={handlePickerChange}
           showShortcuts={false}
+          i18n="cs"
+          startWeekOn="mon"
           primaryColor="teal"
           separator="–"
           displayFormat="DD.MM.YYYY"
