@@ -2,6 +2,10 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.32.1 — 2026-11-19
+
+- **`DateRangePicker` česky** — kalendář vlastního rozsahu má české názvy měsíců a dnů (`i18n="cs"`) a týden začíná pondělím (`startWeekOn="mon"`); dřív anglicky od neděle (BugHerd app #53).
+
 ## 0.32.0 — 2026-11-15
 
 ### 🧹 Dorovnání po fázi 4 auditu UI app.smable.cz
