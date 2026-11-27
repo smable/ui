@@ -104,9 +104,13 @@ const FOCUSABLE =
  * Centrování na obsah: host nastaví `--smable-ai-inset-left` (šířku postranního menu) na `:root`/`body`.
  * `100%` místo `100vw`: u `fixed` je to šířka okna bez posuvníku. Levý okraj se počítá bez transformace,
  * aby lišta nebyla containing block pro `fixed` potomky (nabídky hosta).
+ * `--smable-ai-bar-lift` zvedne lištu a kartu nad pruh, který hostitel drží u spodního okraje okna
+ * (např. řádek součtů v reportech backoffice).
  */
 const ROOT_STYLE = {
   '--smable-ai-panel-width': `${SMABLE_AI_PANEL_WIDTH}px`,
+  '--smable-ai-bottom': 'calc(1rem + var(--smable-ai-bar-lift, 0px))',
+  '--smable-ai-card-height': 'min(640px, calc(100dvh - 2rem - var(--smable-ai-bar-lift, 0px)))',
   '--smable-ai-center': 'calc(var(--smable-ai-inset-left, 0px) + (100% - var(--smable-ai-inset-left, 0px)) / 2)',
   '--smable-ai-bar-width': 'min(480px, calc(100% - var(--smable-ai-inset-left, 0px) - 2rem))',
   '--smable-ai-card-width': 'min(560px, calc(100% - var(--smable-ai-inset-left, 0px) - 2rem))',
@@ -117,7 +121,7 @@ const ROOT_STYLE = {
 const ROOT = 'fixed z-40 flex bg-white outline-none dark:bg-neutral-900'
 
 const BAR = clsx(
-  'bottom-4 right-4 items-end rounded-full shadow-lg',
+  'bottom-[var(--smable-ai-bottom)] right-4 items-end rounded-full shadow-lg',
   'has-[textarea:focus]:ring-2 has-[textarea:focus]:ring-brand-500',
   'lg:right-auto lg:left-[var(--smable-ai-bar-left)] lg:w-[var(--smable-ai-bar-width)]',
   'lg:gap-1 lg:rounded-[22px] lg:border lg:border-neutral-200 lg:px-1.5 lg:py-[5px] dark:lg:border-neutral-800'
@@ -125,7 +129,7 @@ const BAR = clsx(
 
 const CARD = clsx(
   'inset-0 flex-col overflow-hidden',
-  'lg:inset-auto lg:bottom-4 lg:left-[var(--smable-ai-card-left)] lg:h-[min(640px,calc(100dvh-2rem))] lg:w-[var(--smable-ai-card-width)]',
+  'lg:inset-auto lg:bottom-[var(--smable-ai-bottom)] lg:left-[var(--smable-ai-card-left)] lg:h-[var(--smable-ai-card-height)] lg:w-[var(--smable-ai-card-width)]',
   'lg:rounded-3xl lg:border lg:border-neutral-200 lg:shadow-xl dark:lg:border-neutral-800'
 )
 

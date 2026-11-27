@@ -2,6 +2,10 @@
 
 All notable changes to `@smable/ui`.
 
+## 0.32.2 — 2026-11-27
+
+- **`SmableAiWidget` nad patičkou hostitele** — lišta a karta čtou `--smable-ai-bar-lift` (výchozí 0) a zvednou se o něj; vkládací skript ho nastaví, když stránka drží u spodního okraje okna vlastní pruh (řádek součtů v reportech backoffice).
+
 ## 0.32.1 — 2026-11-19
 
 - **`DateRangePicker` česky** — kalendář vlastního rozsahu má české názvy měsíců a dnů (`i18n="cs"`) a týden začíná pondělím (`startWeekOn="mon"`); dřív anglicky od neděle (BugHerd app #53).
